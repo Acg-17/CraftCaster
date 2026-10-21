@@ -1,0 +1,14 @@
+{
+  "generation": {
+    "orm": "nhibernate",
+    "outputDirectory": "generated",
+    "projectName": "CraftCaster",
+    "targetFramework": "net9.0",
+    "database": "sqlite"
+  },
+  "database": {
+    "provider": "sqlite",
+    "name": "CraftCaster",
+    "file": "CraftCaster.db"
+  }
+}

@@ -1,0 +1,56 @@
+@startuml CraftCaster
+skinparam packageStyle rectangle
+title CraftCaster Domain
+
+package "CraftCaster" {
+  class User <<User>> {
+    -id: long <<oid>> <<isToken>>
+    -name: string
+    -password: string <<password>>
+    --
+    +new(p_name: string, p_password: string <<password>>): User <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_name: string, p_password: string <<password>>): void <<Modifier>>
+    +login(p_oid: long <<oid>>, p_password: string <<password>>): string <<Login>>
+  }
+
+  class Deck {
+    -id: long <<oid>>
+  }
+
+  class Card {
+    -id: long <<oid>>
+  }
+
+  class Hability {
+    -id: long <<oid>>
+  }
+
+  class Game {
+    -id: long <<oid>>
+  }
+
+  class GameEntity {
+    -id: long <<oid>>
+  }
+
+  class Player {
+  }
+
+  class Spell {
+  }
+
+  ' Inheritance
+  GameEntity <|-- Player
+  GameEntity <|-- Spell
+
+  ' Relationships
+  User "Usuario\n1" o-- "Cartas\n0..*" Card
+  User "Usuario\n1" o-- "Mazos\n0..*" Deck
+  Deck "Mazo\n1" o-- "Cartas\n0..*" Card
+  User "Usuario\n1..*" -- "Partidas\n0..*" Game
+  Deck "Mazo\n1..*" -- "Partidas\n0..*" Game
+  Game "Partida\n1" *-- "Entidades\n0..*" GameEntity
+  Card "Carta\n1" o-- "Habilidades\n0..*" Hability
+}
+@enduml
