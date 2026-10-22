@@ -3,54 +3,75 @@ skinparam packageStyle rectangle
 title CraftCaster Domain
 
 package "CraftCaster" {
-  class User <<User>> {
+  enum Rareza {
+    Comun
+    Especial
+    Epico
+    Legendario
+  }
+
+  enum EstadoMazo {
+    Incompleto
+    Jugable
+    Completo
+  }
+
+  class Usuario <<User>> {
     -id: long <<oid>> <<isToken>>
-    -name: string
-    -password: string <<password>>
-    --
-    +new(p_name: string, p_password: string <<password>>): User <<New>>
-    +destroy(p_oid: long <<oid>>): void <<Destroy>>
-    +modify(p_oid: long <<oid>>, p_name: string, p_password: string <<password>>): void <<Modifier>>
-    +login(p_oid: long <<oid>>, p_password: string <<password>>): string <<Login>>
+    -nombreUsuario: string
+    -email: string
+    -contrasenia: string <<password>>
+    -fotoPerfil: byte
+    -nivel: int
+    -exp: int
   }
 
-  class Deck {
+  class Mazo {
+    -id: long <<oid>>
+    -nombre: string
+    -costeMedio: float
+    -numCartas: int
+    -estadoMazo: EstadoMazo
+    -valoracion: float
+    -imagen: byte
+    -creador: string
+  }
+
+  class Carta {
+    -id: long <<oid>>
+    -nombre: string
+    -rareza: Rareza
+    -mana: int
+    -descripcion: string
+    -imagen: byte
+  }
+
+  class Estado {
     -id: long <<oid>>
   }
 
-  class Card {
+  class Habilidad {
     -id: long <<oid>>
   }
 
-  class Hability {
+  class Partida {
     -id: long <<oid>>
   }
 
-  class Game {
+  class Turno {
     -id: long <<oid>>
   }
-
-  class GameEntity {
-    -id: long <<oid>>
-  }
-
-  class Player {
-  }
-
-  class Spell {
-  }
-
-  ' Inheritance
-  GameEntity <|-- Player
-  GameEntity <|-- Spell
 
   ' Relationships
-  User "Usuario\n1" o-- "Cartas\n0..*" Card
-  User "Usuario\n1" o-- "Mazos\n0..*" Deck
-  Deck "Mazo\n1" o-- "Cartas\n0..*" Card
-  User "Usuario\n1..*" -- "Partidas\n0..*" Game
-  Deck "Mazo\n1..*" -- "Partidas\n0..*" Game
-  Game "Partida\n1" *-- "Entidades\n0..*" GameEntity
-  Card "Carta\n1" o-- "Habilidades\n0..*" Hability
+  Usuario "Usuario\n1" o-- "Cartas\n0..*" Carta
+  Usuario "Usuario\n1" o-- "Mazos\n0..*" Mazo
+  Mazo "Mazo\n1" o-- "Cartas\n0..*" Carta
+  Usuario "Usuario1\n1" -- "PartidasLocal\n0..*" Partida
+  Usuario "Usuario2\n1" -- "PartidasVisitante\n0..*" Partida
+  Mazo "Mazo1\n1" -- "PartidasLocal\n0..*" Partida
+  Mazo "Mazo2\n1" -- "PartidasVisitante\n0..*" Partida
+  Carta "Carta\n1" *-- "Estados\n0..*" Estado
+  Estado "Estado\n1" o-- "Habilidades\n0..*" Habilidad
+  Partida "Partida\n1" *-- "Turnos\n0..*" Turno
 }
 @enduml
