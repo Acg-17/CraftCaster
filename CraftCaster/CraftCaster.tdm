@@ -72,7 +72,15 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            public new::New (p_nombreUsuario : String, p_email : String, p_contrasenia : Password, p_fotoPerfil : Byte, p_nivel : Integer, p_exp : Integer) : Object->Usuario;
+            public destroy::Destroy (p_oid : OID -> Usuario) : Void;
+            public modify::Modifier (p_oid : OID -> Usuario, p_nombreUsuario : String, p_email : String, p_contrasenia : Password, p_fotoPerfil : Byte, p_nivel : Integer, p_exp : Integer) : Void;
+            public readOID::ReadOID (p_oid : OID -> Usuario) : Object->Usuario;
+            public readAll::ReadAll () : List<Object->Usuario>;
 
+            public login::Login (p_oid : OID -> Usuario, p_contrasenia : Password) : String;
+
+            public addCarta::Relationer -> UsuarioCarta.cartas (p_oid : OID -> Usuario, p_carta_oids : List<OID -> Carta>) : Void;
         }
     };
 
@@ -95,7 +103,13 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            public new::New (p_nombre : String, p_costeMedio : Float, p_numCartas : Integer, p_estadoMazo : EstadoMazo, p_esPublico : Boolean, p_valoracion : Float, p_imagen : Byte, p_creador : String, p_usuario_oid : OID -> Usuario) : Object->Mazo;
+            public destroy::Destroy (p_oid : OID -> Mazo) : Void;
+            public modify::Modifier (p_oid : OID -> Mazo, p_nombre : String, p_costeMedio : Float, p_numCartas : Integer, p_estadoMazo : EstadoMazo, p_esPublico : Boolean, p_valoracion : Float, p_imagen : Byte, p_creador : String, p_usuario_oid : OID -> Usuario) : Void;
+            public readOID::ReadOID (p_oid : OID -> Mazo) : Object->Mazo;
+            public readAll::ReadAll () : List<Object->Mazo>;
 
+            public compartir::Custom (p_oid : OID -> Mazo) : Void;
         }
     };
 
@@ -118,7 +132,13 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            public new::New (p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario, p_mazo_oid : OID -> Mazo) : Object->Carta;
+            public destroy::Destroy (p_oid : OID -> Carta) : Void;
+            public modify::Modifier (p_oid : OID -> Carta, p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario, p_mazo_oid : OID -> Mazo) : Void;
+            public readOID::ReadOID (p_oid : OID -> Carta) : Object->Carta;
+            public readAll::ReadAll () : List<Object->Carta>;
 
+            public compartir::Custom (p_oid : OID -> Carta) : Void;
         }
     };
 
@@ -132,7 +152,13 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_tipo : TipoEstado, p_carta_oid : OID -> Carta) : Object->Estado;
+            public destroy::Destroy (p_oid : OID -> Estado) : Void;
+            public modify::Modifier (p_oid : OID -> Estado, p_tipo : TipoEstado, p_carta_oid : OID -> Carta) : Void;
+            public readOID::ReadOID (p_oid : OID -> Estado) : Object->Estado;
+            public readAll::ReadAll () : List<Object->Estado>;
+
+            public activar::Custom (p_oid : OID -> Estado) : Void;
         }
     };
 
@@ -148,7 +174,13 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_tipo : TipoHabilidad, p_cantidad : Integer, p_objetivo : Objetivo, p_estado_oid : OID -> Estado) : Object->Habilidad;
+            public destroy::Destroy (p_oid : OID -> Habilidad) : Void;
+            public modify::Modifier (p_oid : OID -> Habilidad, p_tipo : TipoHabilidad, p_cantidad : Integer, p_objetivo : Objetivo, p_estado_oid : OID -> Estado) : Void;
+            public readOID::ReadOID (p_oid : OID -> Habilidad) : Object->Habilidad;
+            public readAll::ReadAll () : List<Object->Habilidad>;
+
+            public activar::Custom (p_oid : OID -> Habilidad) : Void;
         }
     };
 
@@ -162,7 +194,14 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_usuario2_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo, p_mazo2_oid : OID -> Mazo) : Object->Partida;
+            public destroy::Destroy (p_oid : OID -> Partida) : Void;
+            public modify::Modifier (p_oid : OID -> Partida, p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_usuario2_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo, p_mazo2_oid : OID -> Mazo) : Void;
+            public readOID::ReadOID (p_oid : OID -> Partida) : Object->Partida;
+            public readAll::ReadAll () : List<Object->Partida>;
+
+            public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
+
         }
     };
 
@@ -177,7 +216,15 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_vida : Integer, p_numJugador : Integer, p_partida_oid : OID -> Partida) : Object->JugadorPartida;
+            public destroy::Destroy (p_oid : OID -> JugadorPartida) : Void;
+            public modify::Modifier (p_oid : OID -> JugadorPartida, p_vida : Integer, p_numJugador : Integer, p_partida_oid : OID -> Partida) : Void;
+            public readOID::ReadOID (p_oid : OID -> JugadorPartida) : Object->JugadorPartida;
+            public readAll::ReadAll () : List<Object->JugadorPartida>;
+
+            public robarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
+            public pasarTurno::Custom (p_oid : OID -> JugadorPartida) : Void;
+            public lanzarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
         }
     };
 
@@ -191,7 +238,11 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_tipoZona : TipoZona, p_jugador_oid : OID -> JugadorPartida) : Object->ZonaPartida;
+            public destroy::Destroy (p_oid : OID -> ZonaPartida) : Void;
+            public modify::Modifier (p_oid : OID -> ZonaPartida, p_tipoZona : TipoZona, p_jugador_oid : OID -> JugadorPartida) : Void;
+            public readOID::ReadOID (p_oid : OID -> ZonaPartida) : Object->ZonaPartida;
+            public readAll::ReadAll () : List<Object->ZonaPartida>;
         }
     };
 
@@ -204,7 +255,11 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta, p_accionUsada_oids : List<OID -> Accion>, p_accionReciv_oid : OID -> Accion) : Object->CartaPartida;
+            public destroy::Destroy (p_oid : OID -> CartaPartida) : Void;
+            public modify::Modifier (p_oid : OID -> CartaPartida, p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta, p_accionUsada_oids : List<OID -> Accion>, p_accionReciv_oid : OID -> Accion) : Void;
+            public readOID::ReadOID (p_oid : OID -> CartaPartida) : Object->CartaPartida;
+            public readAll::ReadAll () : List<Object->CartaPartida>;
         }
     };
 
@@ -218,7 +273,11 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_mana : Integer, p_partida_oid : OID -> Partida, p_jugador_oid : OID -> JugadorPartida) : Object->Turno;
+            public destroy::Destroy (p_oid : OID -> Turno) : Void;
+            public modify::Modifier (p_oid : OID -> Turno, p_mana : Integer, p_partida_oid : OID -> Partida, p_jugador_oid : OID -> JugadorPartida) : Void;
+            public readOID::ReadOID (p_oid : OID -> Turno) : Object->Turno;
+            public readAll::ReadAll () : List<Object->Turno>;
         }
     };
 
@@ -232,7 +291,11 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            
+            public new::New (p_name : TipoAccion, p_turno_oid : OID -> Turno) : Object->Accion;
+            public destroy::Destroy (p_oid : OID -> Accion) : Void;
+            public modify::Modifier (p_oid : OID -> Accion, p_name : TipoAccion, p_turno_oid : OID -> Turno) : Void;
+            public readOID::ReadOID (p_oid : OID -> Accion) : Object->Accion;
+            public readAll::ReadAll () : List<Object->Accion>;
         }
     };
 
@@ -240,111 +303,110 @@ ConceptualModel CraftCaster {
 
     Association UsuarioCarta (Usuario - Carta)
     {
-        => navigable Cartas : Share (0, *);
-        <= navigable Usuario (1, 1);
+        => navigable cartas : Share (0, *);
+        <= navigable usuario (1, 1);
     };
 
     Association UsuarioMazo (Usuario - Mazo)
     {
-        => navigable Mazos : Share (0, *);
-        <= navigable Usuario (1, 1);
+        => navigable mazos : Share (0, *);
+        <= navigable usuario (1, 1);
     };
 
     Association MazoCarta (Mazo - Carta)
     {
-        => navigable Cartas : Share (0, *);
-        <= navigable Mazo (1, 1);
+        => navigable cartas : Share (0, *);
     };
 
     Association UsuarioPartida1 (Usuario - Partida)
     {
-        => navigable PartidasLocal (0, *);
-        <= navigable Usuario1 (1, 1);
+        => navigable partidasLocal (0, *);
+        <= navigable usuario1 (1, 1);
     };
 
     Association UsuarioPartida2 (Usuario - Partida)
     {
-        => navigable PartidasVisitante (0, *);
-        <= navigable Usuario2 (1, 1);
+        => navigable partidasVisitante (0, *);
+        <= navigable usuario2 (1, 1);
     };
 
     Association MazoPartida1 (Mazo - Partida)
     {
-        => navigable PartidasLocal (0, *);
-        <= navigable Mazo1 (1, 1);
+        => navigable partidasLocal (0, *);
+        <= navigable mazo1 (1, 1);
     };
 
     Association MazoPartida2 (Mazo - Partida)
     {
-        => navigable PartidasVisitante (0, *);
-        <= navigable Mazo2 (1, 1);
+        => navigable partidasVisitante (0, *);
+        <= navigable mazo2 (1, 1);
     };
 
     Association CartaEstado (Carta - Estado)
     {
-        => navigable Estados : Composite (0, *);
-        <= navigable Carta (1, 1);
+        => navigable estados : Composite (0, *);
+        <= navigable carta (1, 1);
     };
     
 
     Association EstadoHabilidad (Estado - Habilidad)
     {
-        => navigable Habilidades : Share (0, *);
-        <= navigable Estado (1, 1);
+        => navigable habilidades : Composite (0, *);
+        <= navigable estado (1, 1);
     };
     
 
     Association PartidaTurno (Partida - Turno)
     {
-        => navigable Turnos : Composite (0, *);
-        <= navigable Partida (1, 1);
+        => navigable turnos : Composite (0, *);
+        <= navigable partida (1, 1);
     };
     
     Association PartidaJugadorPartida (Partida - JugadorPartida)
     {
-        => navigable Jugadores (0, *);
-        <= navigable Partida (1, 1);
+        => navigable jugadores : Composite (0, *);
+        <= navigable partida (1, 1);
     };
 
     Association JugadorPartidaZonasPartida (JugadorPartida - ZonaPartida)
     {
-        => navigable Zonas : Composite (0, *);
-        <= navigable Jugador (1, 1);
+        => navigable zonas : Composite (0, *);
+        <= navigable jugador (1, 1);
     };
     
     Association ZonaPartidaCartaPartida (ZonaPartida - CartaPartida)
     {
-        => navigable Cartas : Composite (0, *);
-        <= navigable Zona (1, 1);
+        => navigable cartas : Share (0, *);
+        <= navigable zona (1, 1);
     };
     
     Association CartaCartaPartida (Carta - CartaPartida)
     {
-        => navigable Entidades : Composite (0, *);
-        <= navigable Original (1, 1);
+        => navigable entidades : Share (0, *);
+        <= navigable original (1, 1);
     };
 
     Association JugadorPartidaTurno (JugadorPartida - Turno)
     {
-        => navigable Turnos : Share (0, *);
-        <= navigable Jugador (1, 1);
+        => navigable turnos : Share (0, *);
+        <= navigable jugador (1, 1);
     };
 
     Association TurnoAccion (Turno - Accion)
     {
-        => navigable Acciones : Composite (0, *);
-        <= navigable Turno (1, 1);
+        => navigable acciones : Composite (0, *);
+        <= navigable turno (1, 1);
     };
 
     Association AccionCartaPartida_Origen (Accion - CartaPartida)
     {
-        => navigable Origen : Share (0, *);
-        <= navigable AccionUsada (1, *);
+        => navigable origen : Share (0, 1);
+        <= navigable accionUsada (0, *);
     };
     
     Association AccionCartaPartida_Objetivo (Accion - CartaPartida)
     {
-        => navigable Objetivo : Share (0, *);
-        <= navigable AccionReciv (1, 1);
+        => navigable objetivo : Share (0, *);
+        <= navigable accionReciv (0, *);
     };
 }
