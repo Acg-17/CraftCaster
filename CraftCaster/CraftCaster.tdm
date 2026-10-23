@@ -79,8 +79,6 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Usuario>;
 
             public login::Login (p_oid : OID -> Usuario, p_contrasenia : Password) : String;
-
-            public addCarta::Relationer -> UsuarioCarta.cartas (p_oid : OID -> Usuario, p_carta_oids : List<OID -> Carta>) : Void;
         }
     };
 
@@ -110,6 +108,9 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Mazo>;
 
             public compartir::Custom (p_oid : OID -> Mazo) : Void;
+
+            public addCarta::Relationer -> MazoCarta.cartas (p_oid : OID -> Mazo, p_carta_oids : List<OID -> Carta>) : Void;
+            public removeCarta::Unrelationer -> MazoCarta.cartas (p_oid : OID -> Mazo, p_carta_oids : List<OID -> Carta>) : Void;
         }
     };
 
@@ -132,13 +133,16 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            public new::New (p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario, p_mazo_oid : OID -> Mazo) : Object->Carta;
+            public new::New (p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario) : Object->Carta;
             public destroy::Destroy (p_oid : OID -> Carta) : Void;
-            public modify::Modifier (p_oid : OID -> Carta, p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario, p_mazo_oid : OID -> Mazo) : Void;
+            public modify::Modifier (p_oid : OID -> Carta, p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario) : Void;
             public readOID::ReadOID (p_oid : OID -> Carta) : Object->Carta;
             public readAll::ReadAll () : List<Object->Carta>;
 
             public compartir::Custom (p_oid : OID -> Carta) : Void;
+
+            public addEstado::Relationer -> CartaEstado.estados (p_oid : OID -> Carta, p_estado_oids : List<OID -> Estado>) : Void;
+            public removeEstado::Unrelationer -> CartaEstado.estados (p_oid : OID -> Carta, p_estado_oids : List<OID -> Estado>) : Void;
         }
     };
 
@@ -152,13 +156,16 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            public new::New (p_tipo : TipoEstado, p_carta_oid : OID -> Carta) : Object->Estado;
+            public new::New (p_tipo : TipoEstado) : Object->Estado;
             public destroy::Destroy (p_oid : OID -> Estado) : Void;
-            public modify::Modifier (p_oid : OID -> Estado, p_tipo : TipoEstado, p_carta_oid : OID -> Carta) : Void;
+            public modify::Modifier (p_oid : OID -> Estado, p_tipo : TipoEstado) : Void;
             public readOID::ReadOID (p_oid : OID -> Estado) : Object->Estado;
             public readAll::ReadAll () : List<Object->Estado>;
 
             public activar::Custom (p_oid : OID -> Estado) : Void;
+
+            public addHabilidade::Relationer -> EstadoHabilidad.habilidades (p_oid : OID -> Estado, p_habilidad_oids : List<OID -> Habilidad>) : Void;
+            public removeHabilidade::Unrelationer -> EstadoHabilidad.habilidades (p_oid : OID -> Estado, p_habilidad_oids : List<OID -> Habilidad>) : Void;
         }
     };
 
@@ -194,14 +201,13 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            public new::New (p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_usuario2_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo, p_mazo2_oid : OID -> Mazo) : Object->Partida;
+            public new::New (p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo) : Object->Partida;
             public destroy::Destroy (p_oid : OID -> Partida) : Void;
-            public modify::Modifier (p_oid : OID -> Partida, p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_usuario2_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo, p_mazo2_oid : OID -> Mazo) : Void;
+            public modify::Modifier (p_oid : OID -> Partida, p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo) : Void;
             public readOID::ReadOID (p_oid : OID -> Partida) : Object->Partida;
             public readAll::ReadAll () : List<Object->Partida>;
 
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
-
         }
     };
 
@@ -255,9 +261,9 @@ ConceptualModel CraftCaster {
         
         operations
         {
-            public new::New (p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta, p_accionUsada_oids : List<OID -> Accion>, p_accionReciv_oid : OID -> Accion) : Object->CartaPartida;
+            public new::New (p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta) : Object->CartaPartida;
             public destroy::Destroy (p_oid : OID -> CartaPartida) : Void;
-            public modify::Modifier (p_oid : OID -> CartaPartida, p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta, p_accionUsada_oids : List<OID -> Accion>, p_accionReciv_oid : OID -> Accion) : Void;
+            public modify::Modifier (p_oid : OID -> CartaPartida, p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta) : Void;
             public readOID::ReadOID (p_oid : OID -> CartaPartida) : Object->CartaPartida;
             public readAll::ReadAll () : List<Object->CartaPartida>;
         }
@@ -296,6 +302,11 @@ ConceptualModel CraftCaster {
             public modify::Modifier (p_oid : OID -> Accion, p_name : TipoAccion, p_turno_oid : OID -> Turno) : Void;
             public readOID::ReadOID (p_oid : OID -> Accion) : Object->Accion;
             public readAll::ReadAll () : List<Object->Accion>;
+
+            public addOrigen::Relationer -> AccionCartaPartida_Origen.origen (p_oid : OID -> Accion, p_cartaPartida_oid : OID -> CartaPartida) : Void;
+            public removeOrigen::Unrelationer -> AccionCartaPartida_Origen.origen (p_oid : OID -> Accion, p_cartaPartida_oid : OID -> CartaPartida) : Void;
+            public addObjetivo::Relationer -> AccionCartaPartida_Objetivo.objetivo (p_oid : OID -> Accion, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
+            public removeObjetivo::Unrelationer -> AccionCartaPartida_Objetivo.objetivo (p_oid : OID -> Accion, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
         }
     };
 
@@ -327,7 +338,7 @@ ConceptualModel CraftCaster {
     Association UsuarioPartida2 (Usuario - Partida)
     {
         => navigable partidasVisitante (0, *);
-        <= navigable usuario2 (1, 1);
+        <= navigable usuario2 (0, 1);
     };
 
     Association MazoPartida1 (Mazo - Partida)
@@ -339,7 +350,7 @@ ConceptualModel CraftCaster {
     Association MazoPartida2 (Mazo - Partida)
     {
         => navigable partidasVisitante (0, *);
-        <= navigable mazo2 (1, 1);
+        <= navigable mazo2 (0, 1);
     };
 
     Association CartaEstado (Carta - Estado)
@@ -351,6 +362,7 @@ ConceptualModel CraftCaster {
     Association EstadoHabilidad (Estado - Habilidad)
     {
         => navigable habilidades : Composite (0, *);
+        <= navigable estado (1,1);
     };
     
 
