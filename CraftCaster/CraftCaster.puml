@@ -10,10 +10,66 @@ package "CraftCaster" {
     Legendario
   }
 
+  enum EstadoCuenta {
+    Activa
+    Suspendida
+  }
+
   enum EstadoMazo {
     Incompleto
     Jugable
     Completo
+    Deshabilitado
+  }
+
+  enum EstadoPartida {
+    Espera
+    EnCurso
+    Finalizada
+  }
+
+  enum TipoZona {
+    Mano
+    Campo
+    Descarte
+    Mazo
+  }
+
+  enum TipoUsuario {
+    Cliente
+    Admin
+  }
+
+  enum TipoCarta {
+    Criatura
+    Hechizo
+  }
+
+  enum TipoEstado {
+    Entrar
+    Atacar
+    InicioTurno
+    FinTurno
+    Morir
+  }
+
+  enum TipoHabilidad {
+    Elem1
+    Elem2
+  }
+
+  enum TipoAccion {
+    Ataque
+    Lanzar
+    Disparada
+  }
+
+  enum Objetivo {
+    Jugador
+    Enemigo
+    Libre
+    TodosEnemigos
+    Self
   }
 
   class Usuario <<User>> {
@@ -32,6 +88,7 @@ package "CraftCaster" {
     -costeMedio: float
     -numCartas: int
     -estadoMazo: EstadoMazo
+    -esPublico: bool
     -valoracion: float
     -imagen: byte
     -creador: string
@@ -41,25 +98,55 @@ package "CraftCaster" {
     -id: long <<oid>>
     -nombre: string
     -rareza: Rareza
-    -mana: int
+    -costeMana: int
+    -tipo: TipoCarta
+    -vida: int?
+    -ataque: int?
     -descripcion: string
     -imagen: byte
+    -esPublica: bool
   }
 
   class Estado {
     -id: long <<oid>>
+    -tipo: TipoEstado
   }
 
   class Habilidad {
     -id: long <<oid>>
+    -tipo: TipoHabilidad
+    -cantidad: int
+    -objetivo: Objetivo
   }
 
   class Partida {
+    -id: long <<oid>>
+    -estado: EstadoPartida
+  }
+
+  class JugadorPartida {
+    -id: long <<oid>>
+    -vida: int
+    -numJugador: int
+  }
+
+  class ZonaPartida {
+    -id: long <<oid>>
+    -tipoZona: TipoZona
+  }
+
+  class CartaPartida {
     -id: long <<oid>>
   }
 
   class Turno {
     -id: long <<oid>>
+    -mana: int
+  }
+
+  class Accion {
+    -id: long <<oid>>
+    -name: TipoAccion
   }
 
   ' Relationships
@@ -73,5 +160,13 @@ package "CraftCaster" {
   Carta "Carta\n1" *-- "Estados\n0..*" Estado
   Estado "Estado\n1" o-- "Habilidades\n0..*" Habilidad
   Partida "Partida\n1" *-- "Turnos\n0..*" Turno
+  Partida "Partida\n1" -- "Jugadores\n0..*" JugadorPartida
+  JugadorPartida "Jugador\n1" *-- "Zonas\n0..*" ZonaPartida
+  ZonaPartida "Zona\n1" *-- "Cartas\n0..*" CartaPartida
+  Carta "Original\n1" *-- "Entidades\n0..*" CartaPartida
+  JugadorPartida "Jugador\n1" o-- "Turnos\n0..*" Turno
+  Turno "Turno\n1" *-- "Acciones\n0..*" Accion
+  Accion "AccionUsada\n1..*" o-- "Origen\n0..*" CartaPartida
+  Accion "AccionReciv\n1" o-- "Objetivo\n0..*" CartaPartida
 }
 @enduml
