@@ -79,6 +79,13 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Usuario>;
 
             public login::Login (p_oid : OID -> Usuario, p_contrasenia : Password) : String;
+            
+            public addCarta::Relationer -> UsuarioCarta.cartas (p_oid : OID -> Usuario, p_carta_oids : List<OID -> Carta>) : Void;
+            public removeCarta::Unrelationer -> UsuarioCarta.cartas (p_oid : OID -> Usuario, p_carta_oids : List<OID -> Carta>) : Void;
+            public addMazo::Relationer -> UsuarioMazo.mazos (p_oid : OID -> Usuario, p_mazo_oids : List<OID -> Mazo>) : Void;
+            public removeMazo::Unrelationer -> UsuarioMazo.mazos (p_oid : OID -> Usuario, p_mazo_oids : List<OID -> Mazo>) : Void;
+            public addPartidasLocal::Relationer -> UsuarioPartida1.partidasLocal (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
+            public removePartidasLocal::Unrelationer -> UsuarioPartida1.partidasLocal (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
         }
     };
 
@@ -140,9 +147,6 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Carta>;
 
             public compartir::Custom (p_oid : OID -> Carta) : Void;
-
-            public addEstado::Relationer -> CartaEstado.estados (p_oid : OID -> Carta, p_estado_oids : List<OID -> Estado>) : Void;
-            public removeEstado::Unrelationer -> CartaEstado.estados (p_oid : OID -> Carta, p_estado_oids : List<OID -> Estado>) : Void;
         }
     };
 
@@ -208,6 +212,11 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Partida>;
 
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
+
+            public addTurno::Relationer -> PartidaTurno.turnos (p_oid : OID -> Partida, p_turno_oids : List<OID -> Turno>) : Void;
+            public removeTurno::Unrelationer -> PartidaTurno.turnos (p_oid : OID -> Partida, p_turno_oids : List<OID -> Turno>) : Void;
+            public addJugadore::Relationer -> PartidaJugadorPartida.jugadores (p_oid : OID -> Partida, p_jugadorPartida_oids : List<OID -> JugadorPartida>) : Void;
+            public removeJugadore::Unrelationer -> PartidaJugadorPartida.jugadores (p_oid : OID -> Partida, p_jugadorPartida_oids : List<OID -> JugadorPartida>) : Void;
         }
     };
 
@@ -231,6 +240,9 @@ ConceptualModel CraftCaster {
             public robarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
             public pasarTurno::Custom (p_oid : OID -> JugadorPartida) : Void;
             public lanzarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
+
+            public addZona::Relationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
+            public removeZona::Unrelationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
         }
     };
 
@@ -249,6 +261,9 @@ ConceptualModel CraftCaster {
             public modify::Modifier (p_oid : OID -> ZonaPartida, p_tipoZona : TipoZona, p_jugador_oid : OID -> JugadorPartida) : Void;
             public readOID::ReadOID (p_oid : OID -> ZonaPartida) : Object->ZonaPartida;
             public readAll::ReadAll () : List<Object->ZonaPartida>;
+
+            public addCarta::Relationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
+            public removeCarta::Unrelationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
         }
     };
 
@@ -284,6 +299,9 @@ ConceptualModel CraftCaster {
             public modify::Modifier (p_oid : OID -> Turno, p_mana : Integer, p_partida_oid : OID -> Partida, p_jugador_oid : OID -> JugadorPartida) : Void;
             public readOID::ReadOID (p_oid : OID -> Turno) : Object->Turno;
             public readAll::ReadAll () : List<Object->Turno>;
+
+            public addAccione::Relationer -> TurnoAccion.acciones (p_oid : OID -> Turno, p_accion_oids : List<OID -> Accion>) : Void;
+            public removeAccione::Unrelationer -> TurnoAccion.acciones (p_oid : OID -> Turno, p_accion_oids : List<OID -> Accion>) : Void;
         }
     };
 
