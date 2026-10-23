@@ -345,14 +345,12 @@ ConceptualModel CraftCaster {
     Association CartaEstado (Carta - Estado)
     {
         => navigable estados : Composite (0, *);
-        <= navigable carta (1, 1);
     };
     
 
     Association EstadoHabilidad (Estado - Habilidad)
     {
         => navigable habilidades : Composite (0, *);
-        <= navigable estado (1, 1);
     };
     
 
@@ -380,17 +378,15 @@ ConceptualModel CraftCaster {
         <= navigable zona (1, 1);
     };
     
-    Association CartaCartaPartida (Carta - CartaPartida)
+    Association CartaCartaPartida (CartaPartida - Carta)
     {
-        => navigable entidades : Share (0, *);
-        <= navigable original (1, 1);
-    };
+        => navigable original (1,1);
+    }
 
-    Association JugadorPartidaTurno (JugadorPartida - Turno)
+    Association JugadorPartidaTurno (Turno - JugadorPartida)
     {
-        => navigable turnos : Share (0, *);
-        <= navigable jugador (1, 1);
-    };
+        => navigable jugador (1,1);
+    }
 
     Association TurnoAccion (Turno - Accion)
     {
@@ -401,12 +397,10 @@ ConceptualModel CraftCaster {
     Association AccionCartaPartida_Origen (Accion - CartaPartida)
     {
         => navigable origen : Share (0, 1);
-        <= navigable accionUsada (0, *);
     };
     
     Association AccionCartaPartida_Objetivo (Accion - CartaPartida)
     {
         => navigable objetivo : Share (0, *);
-        <= navigable accionReciv (0, *);
     };
 }
