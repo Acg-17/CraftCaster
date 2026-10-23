@@ -42,7 +42,7 @@ ConceptualModel CraftCaster {
 
     Enumeration TipoHabilidad
     {
-        (Elem1, 1), (Elem2, 2)
+        (Ataque, 1), (Danyo, 2), (Cura, 3), (Robar, 4), (Descartar, 5), (Destruir, 6), (Defensa, 7)
     };
 
     Enumeration TipoAccion
