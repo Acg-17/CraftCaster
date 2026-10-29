@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="Usuario" table="Usuario">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="NombreUsuario" type="String">
+      <column name="nombreUsuario" not-null="true"/>
+    </property>
+    <property name="Email" type="String">
+      <column name="email" not-null="true"/>
+    </property>
+    <property name="Contrasenia" type="String">
+      <column name="contrasenia" not-null="true"/>
+    </property>
+    <property name="FotoPerfil" type="Byte">
+      <column name="fotoPerfil" not-null="true"/>
+    </property>
+    <property name="Nivel" type="Int32">
+      <column name="nivel" not-null="true"/>
+    </property>
+    <property name="Exp" type="Int32">
+      <column name="exp" not-null="true"/>
+    </property>
+    <bag name="Cartas" inverse="true">
+      <key>
+        <column name="FK_Usuario_usuario"/>
+      </key>
+      <one-to-many class="Carta"/>
+    </bag>
+    <bag name="Mazos" inverse="true">
+      <key>
+        <column name="FK_Usuario_usuario"/>
+      </key>
+      <one-to-many class="Mazo"/>
+    </bag>
+    <bag name="PartidasLocal" inverse="true">
+      <key>
+        <column name="FK_Usuario_usuario1"/>
+      </key>
+      <one-to-many class="Partida"/>
+    </bag>
+    <bag name="PartidasVisitante" inverse="true">
+      <key>
+        <column name="FK_Usuario_usuario2"/>
+      </key>
+      <one-to-many class="Partida"/>
+    </bag>
+  </class>
+  <query name="UsuarioReadAllHQL">from Usuario</query>
+</hibernate-mapping>

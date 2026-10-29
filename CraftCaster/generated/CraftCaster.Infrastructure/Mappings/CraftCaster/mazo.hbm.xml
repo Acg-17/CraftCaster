@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="Mazo" table="Mazo">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="Nombre" type="String">
+      <column name="nombre" not-null="true"/>
+    </property>
+    <property name="CosteMedio" type="Single">
+      <column name="costeMedio" not-null="true"/>
+    </property>
+    <property name="NumCartas" type="Int32">
+      <column name="numCartas" not-null="true"/>
+    </property>
+    <property name="EstadoMazo" type="CraftCaster.Domain.Enums.EstadoMazo, CraftCaster.Domain">
+      <column name="estadoMazo" not-null="true"/>
+    </property>
+    <property name="EsPublico" type="Boolean">
+      <column name="esPublico" not-null="true"/>
+    </property>
+    <property name="Valoracion" type="Single">
+      <column name="valoracion" not-null="true"/>
+    </property>
+    <property name="Imagen" type="Byte">
+      <column name="imagen" not-null="true"/>
+    </property>
+    <property name="Creador" type="String">
+      <column name="creador" not-null="true"/>
+    </property>
+    <many-to-one name="Usuario" class="Usuario">
+      <column name="FK_Usuario_usuario" not-null="true"/>
+    </many-to-one>
+    <bag name="Cartas">
+      <key>
+        <column name="FK_Mazo_cartas"/>
+      </key>
+      <one-to-many class="Carta"/>
+    </bag>
+    <bag name="PartidasLocal" inverse="true">
+      <key>
+        <column name="FK_Mazo_mazo1"/>
+      </key>
+      <one-to-many class="Partida"/>
+    </bag>
+    <bag name="PartidasVisitante" inverse="true">
+      <key>
+        <column name="FK_Mazo_mazo2"/>
+      </key>
+      <one-to-many class="Partida"/>
+    </bag>
+  </class>
+  <query name="MazoReadAllHQL">from Mazo</query>
+</hibernate-mapping>

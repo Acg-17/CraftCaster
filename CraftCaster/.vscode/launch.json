@@ -1,0 +1,16 @@
+﻿{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "InitializeDB",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build InitializeDB",
+      "program": "${workspaceFolder}/generated/InitializeDB/bin/Debug/net9.0/InitializeDB.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/generated/InitializeDB",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="Partida" table="Partida">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="Estado" type="CraftCaster.Domain.Enums.EstadoPartida, CraftCaster.Domain">
+      <column name="estado" not-null="true"/>
+    </property>
+    <many-to-one name="Usuario1" class="Usuario">
+      <column name="FK_Usuario_usuario1" not-null="true"/>
+    </many-to-one>
+    <many-to-one name="Usuario2" class="Usuario">
+      <column name="FK_Usuario_usuario2"/>
+    </many-to-one>
+    <many-to-one name="Mazo1" class="Mazo">
+      <column name="FK_Mazo_mazo1" not-null="true"/>
+    </many-to-one>
+    <many-to-one name="Mazo2" class="Mazo">
+      <column name="FK_Mazo_mazo2"/>
+    </many-to-one>
+    <bag name="Turnos" cascade="all-delete-orphan" inverse="true">
+      <key>
+        <column name="FK_Partida_partida"/>
+      </key>
+      <one-to-many class="Turno"/>
+    </bag>
+    <bag name="Jugadores" cascade="all-delete-orphan" inverse="true">
+      <key>
+        <column name="FK_Partida_partida"/>
+      </key>
+      <one-to-many class="JugadorPartida"/>
+    </bag>
+  </class>
+  <query name="PartidaReadAllHQL">from Partida</query>
+</hibernate-mapping>

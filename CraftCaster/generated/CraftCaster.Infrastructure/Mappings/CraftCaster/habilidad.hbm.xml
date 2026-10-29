@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="Habilidad" table="Habilidad">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="Tipo" type="CraftCaster.Domain.Enums.TipoHabilidad, CraftCaster.Domain">
+      <column name="tipo" not-null="true"/>
+    </property>
+    <property name="Cantidad" type="Int32">
+      <column name="cantidad" not-null="true"/>
+    </property>
+    <property name="Objetivo" type="CraftCaster.Domain.Enums.Objetivo, CraftCaster.Domain">
+      <column name="objetivo" not-null="true"/>
+    </property>
+    <many-to-one name="Estado" class="Estado">
+      <column name="FK_Estado_estado" not-null="true"/>
+    </many-to-one>
+  </class>
+  <query name="HabilidadReadAllHQL">from Habilidad</query>
+</hibernate-mapping>

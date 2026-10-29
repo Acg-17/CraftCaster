@@ -72,20 +72,31 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            // CRUD
             public new::New (p_nombreUsuario : String, p_email : String, p_contrasenia : Password, p_fotoPerfil : Byte, p_nivel : Integer, p_exp : Integer) : Object->Usuario;
             public destroy::Destroy (p_oid : OID -> Usuario) : Void;
             public modify::Modifier (p_oid : OID -> Usuario, p_nombreUsuario : String, p_email : String, p_contrasenia : Password, p_fotoPerfil : Byte, p_nivel : Integer, p_exp : Integer) : Void;
             public readOID::ReadOID (p_oid : OID -> Usuario) : Object->Usuario;
             public readAll::ReadAll () : List<Object->Usuario>;
 
+            // Login
             public login::Login (p_oid : OID -> Usuario, p_contrasenia : Password) : String;
             
+            // Relationer
             public addCarta::Relationer -> UsuarioCarta.cartas (p_oid : OID -> Usuario, p_carta_oids : List<OID -> Carta>) : Void;
             public removeCarta::Unrelationer -> UsuarioCarta.cartas (p_oid : OID -> Usuario, p_carta_oids : List<OID -> Carta>) : Void;
+            
             public addMazo::Relationer -> UsuarioMazo.mazos (p_oid : OID -> Usuario, p_mazo_oids : List<OID -> Mazo>) : Void;
             public removeMazo::Unrelationer -> UsuarioMazo.mazos (p_oid : OID -> Usuario, p_mazo_oids : List<OID -> Mazo>) : Void;
+            
             public addPartidasLocal::Relationer -> UsuarioPartida1.partidasLocal (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
             public removePartidasLocal::Unrelationer -> UsuarioPartida1.partidasLocal (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
+        
+            // En partida
+            public obtenerUsuarioLocal::ReadFilter (p_oid : OID -> Partida) : List<Object->Usuario>
+            {
+                filterLinQ = "entity => entity.PartidasLocal.Any(p => p.Id == p_oid)"
+            };
         }
     };
 
@@ -108,16 +119,51 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            // CRUD
             public new::New (p_nombre : String, p_costeMedio : Float, p_numCartas : Integer, p_estadoMazo : EstadoMazo, p_esPublico : Boolean, p_valoracion : Float, p_imagen : Byte, p_creador : String, p_usuario_oid : OID -> Usuario) : Object->Mazo;
             public destroy::Destroy (p_oid : OID -> Mazo) : Void;
             public modify::Modifier (p_oid : OID -> Mazo, p_nombre : String, p_costeMedio : Float, p_numCartas : Integer, p_estadoMazo : EstadoMazo, p_esPublico : Boolean, p_valoracion : Float, p_imagen : Byte, p_creador : String, p_usuario_oid : OID -> Usuario) : Void;
             public readOID::ReadOID (p_oid : OID -> Mazo) : Object->Mazo;
             public readAll::ReadAll () : List<Object->Mazo>;
 
-            public compartir::Custom (p_oid : OID -> Mazo) : Void;
-
+            // Relationer
             public addCarta::Relationer -> MazoCarta.cartas (p_oid : OID -> Mazo, p_carta_oids : List<OID -> Carta>) : Void;
             public removeCarta::Unrelationer -> MazoCarta.cartas (p_oid : OID -> Mazo, p_carta_oids : List<OID -> Carta>) : Void;
+        
+            // Customs
+            public compartir::Custom (p_oid : OID -> Mazo) : Void;
+
+            // Buscar Mazos
+            public obtenerMazosUsuario::ReadFilter (p_oid : OID -> Usuario) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.Usuario.Id == p_oid"
+            };
+            public obtenerMazosPorNombre::ReadFilter (p_nombre : String) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.Nombre == p_nombre && entity.EsPublico == true"
+            };
+            public obtenerMazoPorCosteMedio::ReadFilter (p_min_mana : Integer, p_max_mana : Integer) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.CosteMedio >= p_min_mana && entity.CosteMedio <= p_max_mana && entity.EsPublico == true"
+            };
+            public obtenerMazoPorValoracion::ReadFilter (p_min_val : Integer, p_max_val : Integer) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.Valoracion >= p_min_val && entity.Valoracion <= p_max_val && entity.EsPublico == true"
+            };
+            public obtenerMazoPorCreador::ReadFilter (p_creador : String) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.Creador == p_creador && entity.EsPublico == true"
+            };
+
+            // En partida
+            public obtenerMazoJugador1::ReadFilter (p_oid : OID -> Partida) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.PartidasLocal.Any(p => p.Id == p_oid)"
+            };
+            public obtenerMazoJugador2::ReadFilter (p_oid : OID -> Partida) : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.PartidasVisitante.Any(p => p.Id == p_oid)"
+            };
         }
     };
 
@@ -139,14 +185,38 @@ ConceptualModel CraftCaster {
         }
         
         operations
-        {
+        {   
+            // CRUD
             public new::New (p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario) : Object->Carta;
             public destroy::Destroy (p_oid : OID -> Carta) : Void;
             public modify::Modifier (p_oid : OID -> Carta, p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario) : Void;
             public readOID::ReadOID (p_oid : OID -> Carta) : Object->Carta;
             public readAll::ReadAll () : List<Object->Carta>;
 
+            // Customs
             public compartir::Custom (p_oid : OID -> Carta) : Void;
+
+            // LinQ
+            public obtenerCartasUsuario::ReadFilter (p_oid : OID -> Usuario) : List<Object->Carta>
+            {
+                filterLinQ = "entity => entity.Usuario.Id == p_oid"
+            };
+            public obtenerCartaPorNombre::ReadFilter (p_nombre : String) : List<Object->Carta>
+            {
+                filterLinQ = "entity => entity.Nombre == p_nombre && entity.EsPublica == true"
+            };
+            public obtenerCartaPorCosteMana::ReadFilter (p_mana : Integer) : List<Object->Carta>
+            {
+                filterLinQ = "entity => entity.CosteMana == p_mana && entity.EsPublica == true"
+            };
+            public obtenerCartaPorRareza::ReadFilter (p_rareza : Rareza) : List<Object->Carta>
+            {
+                filterLinQ = "entity => entity.Rareza == p_rareza && entity.EsPublica == true"
+            };
+            public obtenerCartaPorTipo::ReadFilter (p_tipo : TipoCarta) : List<Object->Carta>
+            {
+                filterLinQ = "entity => entity.Tipo == p_tipo && entity.EsPublica == true"
+            };
         }
     };
 
@@ -159,17 +229,20 @@ ConceptualModel CraftCaster {
         }
         
         operations
-        {
+        {   
+            // CRUD
             public new::New (p_tipo : TipoEstado) : Object->Estado;
             public destroy::Destroy (p_oid : OID -> Estado) : Void;
             public modify::Modifier (p_oid : OID -> Estado, p_tipo : TipoEstado) : Void;
             public readOID::ReadOID (p_oid : OID -> Estado) : Object->Estado;
             public readAll::ReadAll () : List<Object->Estado>;
 
-            public activar::Custom (p_oid : OID -> Estado) : Void;
-
+            // Relationer
             public addHabilidade::Relationer -> EstadoHabilidad.habilidades (p_oid : OID -> Estado, p_habilidad_oids : List<OID -> Habilidad>) : Void;
             public removeHabilidade::Unrelationer -> EstadoHabilidad.habilidades (p_oid : OID -> Estado, p_habilidad_oids : List<OID -> Habilidad>) : Void;
+            
+            // Customs
+            public activar::Custom (p_oid : OID -> Estado) : Void;
         }
     };
 
@@ -185,12 +258,14 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            // CRUD
             public new::New (p_tipo : TipoHabilidad, p_cantidad : Integer, p_objetivo : Objetivo, p_estado_oid : OID -> Estado) : Object->Habilidad;
             public destroy::Destroy (p_oid : OID -> Habilidad) : Void;
             public modify::Modifier (p_oid : OID -> Habilidad, p_tipo : TipoHabilidad, p_cantidad : Integer, p_objetivo : Objetivo, p_estado_oid : OID -> Estado) : Void;
             public readOID::ReadOID (p_oid : OID -> Habilidad) : Object->Habilidad;
             public readAll::ReadAll () : List<Object->Habilidad>;
 
+            // Customs
             public activar::Custom (p_oid : OID -> Habilidad) : Void;
         }
     };
@@ -204,19 +279,28 @@ ConceptualModel CraftCaster {
         }
         
         operations
-        {
+        {   
+            // CRUD
             public new::New (p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo) : Object->Partida;
             public destroy::Destroy (p_oid : OID -> Partida) : Void;
             public modify::Modifier (p_oid : OID -> Partida, p_estado : EstadoPartida, p_usuario1_oid : OID -> Usuario, p_mazo1_oid : OID -> Mazo) : Void;
             public readOID::ReadOID (p_oid : OID -> Partida) : Object->Partida;
             public readAll::ReadAll () : List<Object->Partida>;
 
+            // Customs
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
 
+            // Relationer
             public addTurno::Relationer -> PartidaTurno.turnos (p_oid : OID -> Partida, p_turno_oids : List<OID -> Turno>) : Void;
             public removeTurno::Unrelationer -> PartidaTurno.turnos (p_oid : OID -> Partida, p_turno_oids : List<OID -> Turno>) : Void;
             public addJugadore::Relationer -> PartidaJugadorPartida.jugadores (p_oid : OID -> Partida, p_jugadorPartida_oids : List<OID -> JugadorPartida>) : Void;
             public removeJugadore::Unrelationer -> PartidaJugadorPartida.jugadores (p_oid : OID -> Partida, p_jugadorPartida_oids : List<OID -> JugadorPartida>) : Void;
+
+            // LinQ
+            public obtenerPartidasUsuario::ReadFilter (p_oid : OID -> Usuario) : List<Object->Partida>
+            {
+                filterLinQ = "entity => entity.Usuario1.Id == p_oid || entity.Usuario2.Id == p_oid"
+            };
         }
     };
 
@@ -231,16 +315,19 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            // CRUD
             public new::New (p_vida : Integer, p_numJugador : Integer, p_partida_oid : OID -> Partida) : Object->JugadorPartida;
             public destroy::Destroy (p_oid : OID -> JugadorPartida) : Void;
             public modify::Modifier (p_oid : OID -> JugadorPartida, p_vida : Integer, p_numJugador : Integer, p_partida_oid : OID -> Partida) : Void;
             public readOID::ReadOID (p_oid : OID -> JugadorPartida) : Object->JugadorPartida;
             public readAll::ReadAll () : List<Object->JugadorPartida>;
 
+            // Customs
             public robarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
             public pasarTurno::Custom (p_oid : OID -> JugadorPartida) : Void;
             public lanzarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
 
+            // Relationer
             public addZona::Relationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
             public removeZona::Unrelationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
         }
@@ -255,13 +342,15 @@ ConceptualModel CraftCaster {
         }
         
         operations
-        {
+        {   
+            // CRUD
             public new::New (p_tipoZona : TipoZona, p_jugador_oid : OID -> JugadorPartida) : Object->ZonaPartida;
             public destroy::Destroy (p_oid : OID -> ZonaPartida) : Void;
             public modify::Modifier (p_oid : OID -> ZonaPartida, p_tipoZona : TipoZona, p_jugador_oid : OID -> JugadorPartida) : Void;
             public readOID::ReadOID (p_oid : OID -> ZonaPartida) : Object->ZonaPartida;
             public readAll::ReadAll () : List<Object->ZonaPartida>;
 
+            // Relationer
             public addCarta::Relationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
             public removeCarta::Unrelationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
         }
@@ -276,6 +365,7 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            // Crud
             public new::New (p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta) : Object->CartaPartida;
             public destroy::Destroy (p_oid : OID -> CartaPartida) : Void;
             public modify::Modifier (p_oid : OID -> CartaPartida, p_zona_oid : OID -> ZonaPartida, p_original_oid : OID -> Carta) : Void;
@@ -293,13 +383,15 @@ ConceptualModel CraftCaster {
         }
         
         operations
-        {
+        {   
+            // CRUD
             public new::New (p_mana : Integer, p_partida_oid : OID -> Partida, p_jugador_oid : OID -> JugadorPartida) : Object->Turno;
             public destroy::Destroy (p_oid : OID -> Turno) : Void;
             public modify::Modifier (p_oid : OID -> Turno, p_mana : Integer, p_partida_oid : OID -> Partida, p_jugador_oid : OID -> JugadorPartida) : Void;
             public readOID::ReadOID (p_oid : OID -> Turno) : Object->Turno;
             public readAll::ReadAll () : List<Object->Turno>;
-
+            
+            // Relationer
             public addAccione::Relationer -> TurnoAccion.acciones (p_oid : OID -> Turno, p_accion_oids : List<OID -> Accion>) : Void;
             public removeAccione::Unrelationer -> TurnoAccion.acciones (p_oid : OID -> Turno, p_accion_oids : List<OID -> Accion>) : Void;
         }
@@ -315,12 +407,14 @@ ConceptualModel CraftCaster {
         
         operations
         {
+            // CRUD
             public new::New (p_name : TipoAccion, p_turno_oid : OID -> Turno) : Object->Accion;
             public destroy::Destroy (p_oid : OID -> Accion) : Void;
             public modify::Modifier (p_oid : OID -> Accion, p_name : TipoAccion, p_turno_oid : OID -> Turno) : Void;
             public readOID::ReadOID (p_oid : OID -> Accion) : Object->Accion;
             public readAll::ReadAll () : List<Object->Accion>;
-
+            
+            // Relationer
             public addOrigen::Relationer -> AccionCartaPartida_Origen.origen (p_oid : OID -> Accion, p_cartaPartida_oid : OID -> CartaPartida) : Void;
             public removeOrigen::Unrelationer -> AccionCartaPartida_Origen.origen (p_oid : OID -> Accion, p_cartaPartida_oid : OID -> CartaPartida) : Void;
             public addObjetivo::Relationer -> AccionCartaPartida_Objetivo.objetivo (p_oid : OID -> Accion, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;

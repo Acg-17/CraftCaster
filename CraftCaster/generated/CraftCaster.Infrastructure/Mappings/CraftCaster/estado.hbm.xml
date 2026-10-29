@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="Estado" table="Estado">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="Tipo" type="CraftCaster.Domain.Enums.TipoEstado, CraftCaster.Domain">
+      <column name="tipo" not-null="true"/>
+    </property>
+    <bag name="Habilidades" cascade="all-delete-orphan" inverse="true">
+      <key>
+        <column name="FK_Estado_estado"/>
+      </key>
+      <one-to-many class="Habilidad"/>
+    </bag>
+  </class>
+  <query name="EstadoReadAllHQL">from Estado</query>
+</hibernate-mapping>

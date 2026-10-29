@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="Carta" table="Carta">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="Nombre" type="String">
+      <column name="nombre" not-null="true"/>
+    </property>
+    <property name="Rareza" type="CraftCaster.Domain.Enums.Rareza, CraftCaster.Domain">
+      <column name="rareza" not-null="true"/>
+    </property>
+    <property name="CosteMana" type="Int32">
+      <column name="costeMana" not-null="true"/>
+    </property>
+    <property name="Tipo" type="CraftCaster.Domain.Enums.TipoCarta, CraftCaster.Domain">
+      <column name="tipo" not-null="true"/>
+    </property>
+    <property name="Vida" type="Int32">
+      <column name="vida"/>
+    </property>
+    <property name="Ataque" type="Int32">
+      <column name="ataque"/>
+    </property>
+    <property name="Descripcion" type="String">
+      <column name="descripcion" not-null="true"/>
+    </property>
+    <property name="Imagen" type="Byte">
+      <column name="imagen" not-null="true"/>
+    </property>
+    <property name="EsPublica" type="Boolean">
+      <column name="esPublica" not-null="true"/>
+    </property>
+    <many-to-one name="Usuario" class="Usuario">
+      <column name="FK_Usuario_usuario" not-null="true"/>
+    </many-to-one>
+    <bag name="Estados" cascade="all-delete-orphan">
+      <key>
+        <column name="FK_Carta_estados"/>
+      </key>
+      <one-to-many class="Estado"/>
+    </bag>
+  </class>
+  <query name="CartaReadAllHQL">from Carta</query>
+</hibernate-mapping>

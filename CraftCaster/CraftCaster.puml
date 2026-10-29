@@ -54,8 +54,13 @@ package "CraftCaster" {
   }
 
   enum TipoHabilidad {
-    Elem1
-    Elem2
+    Ataque
+    Danyo
+    Cura
+    Robar
+    Descartar
+    Destruir
+    Defensa
   }
 
   enum TipoAccion {
@@ -80,6 +85,19 @@ package "CraftCaster" {
     -fotoPerfil: byte
     -nivel: int
     -exp: int
+    --
+    +new(p_nombreUsuario: string, p_email: string, p_contrasenia: string <<password>>, p_fotoPerfil: byte, p_nivel: int, p_exp: int): Usuario <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_nombreUsuario: string, p_email: string, p_contrasenia: string <<password>>, p_fotoPerfil: byte, p_nivel: int, p_exp: int): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Usuario <<ReadOID>>
+    +readAll(): Usuario[*] <<ReadAll>>
+    +login(p_oid: long <<oid>>, p_contrasenia: string <<password>>): string <<Login>>
+    +addCarta(p_oid: long <<oid>>, p_carta_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeCarta(p_oid: long <<oid>>, p_carta_oids: long[*] <<oid>>): void <<Unrelationer>>
+    +addMazo(p_oid: long <<oid>>, p_mazo_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeMazo(p_oid: long <<oid>>, p_mazo_oids: long[*] <<oid>>): void <<Unrelationer>>
+    +addPartidasLocal(p_oid: long <<oid>>, p_partida_oids: long[*] <<oid>>): void <<Relationer>>
+    +removePartidasLocal(p_oid: long <<oid>>, p_partida_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class Mazo {
@@ -92,6 +110,15 @@ package "CraftCaster" {
     -valoracion: float
     -imagen: byte
     -creador: string
+    --
+    +new(p_nombre: string, p_costeMedio: float, p_numCartas: int, p_estadoMazo: EstadoMazo, p_esPublico: bool, p_valoracion: float, p_imagen: byte, p_creador: string, p_usuario_oid: long <<oid>>): Mazo <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_nombre: string, p_costeMedio: float, p_numCartas: int, p_estadoMazo: EstadoMazo, p_esPublico: bool, p_valoracion: float, p_imagen: byte, p_creador: string, p_usuario_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Mazo <<ReadOID>>
+    +readAll(): Mazo[*] <<ReadAll>>
+    +compartir(p_oid: long <<oid>>): void <<Custom>>
+    +addCarta(p_oid: long <<oid>>, p_carta_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeCarta(p_oid: long <<oid>>, p_carta_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class Carta {
@@ -105,11 +132,27 @@ package "CraftCaster" {
     -descripcion: string
     -imagen: byte
     -esPublica: bool
+    --
+    +new(p_nombre: string, p_rareza: Rareza, p_costeMana: int, p_tipo: TipoCarta, p_descripcion: string, p_imagen: byte, p_esPublica: bool, p_usuario_oid: long <<oid>>): Carta <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_nombre: string, p_rareza: Rareza, p_costeMana: int, p_tipo: TipoCarta, p_descripcion: string, p_imagen: byte, p_esPublica: bool, p_usuario_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Carta <<ReadOID>>
+    +readAll(): Carta[*] <<ReadAll>>
+    +compartir(p_oid: long <<oid>>): void <<Custom>>
   }
 
   class Estado {
     -id: long <<oid>>
     -tipo: TipoEstado
+    --
+    +new(p_tipo: TipoEstado): Estado <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_tipo: TipoEstado): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Estado <<ReadOID>>
+    +readAll(): Estado[*] <<ReadAll>>
+    +activar(p_oid: long <<oid>>): void <<Custom>>
+    +addHabilidade(p_oid: long <<oid>>, p_habilidad_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeHabilidade(p_oid: long <<oid>>, p_habilidad_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class Habilidad {
@@ -117,56 +160,117 @@ package "CraftCaster" {
     -tipo: TipoHabilidad
     -cantidad: int
     -objetivo: Objetivo
+    --
+    +new(p_tipo: TipoHabilidad, p_cantidad: int, p_objetivo: Objetivo, p_estado_oid: long <<oid>>): Habilidad <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_tipo: TipoHabilidad, p_cantidad: int, p_objetivo: Objetivo, p_estado_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Habilidad <<ReadOID>>
+    +readAll(): Habilidad[*] <<ReadAll>>
+    +activar(p_oid: long <<oid>>): void <<Custom>>
   }
 
   class Partida {
     -id: long <<oid>>
     -estado: EstadoPartida
+    --
+    +new(p_estado: EstadoPartida, p_usuario1_oid: long <<oid>>, p_mazo1_oid: long <<oid>>): Partida <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_estado: EstadoPartida, p_usuario1_oid: long <<oid>>, p_mazo1_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Partida <<ReadOID>>
+    +readAll(): Partida[*] <<ReadAll>>
+    +cambiarEstado(p_oid: long <<oid>>, p_estado: EstadoPartida): void <<Custom>>
+    +addTurno(p_oid: long <<oid>>, p_turno_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeTurno(p_oid: long <<oid>>, p_turno_oids: long[*] <<oid>>): void <<Unrelationer>>
+    +addJugadore(p_oid: long <<oid>>, p_jugadorPartida_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeJugadore(p_oid: long <<oid>>, p_jugadorPartida_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class JugadorPartida {
     -id: long <<oid>>
     -vida: int
     -numJugador: int
+    --
+    +new(p_vida: int, p_numJugador: int, p_partida_oid: long <<oid>>): JugadorPartida <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_vida: int, p_numJugador: int, p_partida_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): JugadorPartida <<ReadOID>>
+    +readAll(): JugadorPartida[*] <<ReadAll>>
+    +robarCarta(p_oid: long <<oid>>): void <<Custom>>
+    +pasarTurno(p_oid: long <<oid>>): void <<Custom>>
+    +lanzarCarta(p_oid: long <<oid>>): void <<Custom>>
+    +addZona(p_oid: long <<oid>>, p_zonaPartida_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeZona(p_oid: long <<oid>>, p_zonaPartida_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class ZonaPartida {
     -id: long <<oid>>
     -tipoZona: TipoZona
+    --
+    +new(p_tipoZona: TipoZona, p_jugador_oid: long <<oid>>): ZonaPartida <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_tipoZona: TipoZona, p_jugador_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): ZonaPartida <<ReadOID>>
+    +readAll(): ZonaPartida[*] <<ReadAll>>
+    +addCarta(p_oid: long <<oid>>, p_cartaPartida_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeCarta(p_oid: long <<oid>>, p_cartaPartida_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class CartaPartida {
     -id: long <<oid>>
+    --
+    +new(p_zona_oid: long <<oid>>, p_original_oid: long <<oid>>): CartaPartida <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_zona_oid: long <<oid>>, p_original_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): CartaPartida <<ReadOID>>
+    +readAll(): CartaPartida[*] <<ReadAll>>
   }
 
   class Turno {
     -id: long <<oid>>
     -mana: int
+    --
+    +new(p_mana: int, p_partida_oid: long <<oid>>, p_jugador_oid: long <<oid>>): Turno <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_mana: int, p_partida_oid: long <<oid>>, p_jugador_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Turno <<ReadOID>>
+    +readAll(): Turno[*] <<ReadAll>>
+    +addAccione(p_oid: long <<oid>>, p_accion_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeAccione(p_oid: long <<oid>>, p_accion_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   class Accion {
     -id: long <<oid>>
     -name: TipoAccion
+    --
+    +new(p_name: TipoAccion, p_turno_oid: long <<oid>>): Accion <<New>>
+    +destroy(p_oid: long <<oid>>): void <<Destroy>>
+    +modify(p_oid: long <<oid>>, p_name: TipoAccion, p_turno_oid: long <<oid>>): void <<Modifier>>
+    +readOID(p_oid: long <<oid>>): Accion <<ReadOID>>
+    +readAll(): Accion[*] <<ReadAll>>
+    +addOrigen(p_oid: long <<oid>>, p_cartaPartida_oid: long <<oid>>): void <<Relationer>>
+    +removeOrigen(p_oid: long <<oid>>, p_cartaPartida_oid: long <<oid>>): void <<Unrelationer>>
+    +addObjetivo(p_oid: long <<oid>>, p_cartaPartida_oids: long[*] <<oid>>): void <<Relationer>>
+    +removeObjetivo(p_oid: long <<oid>>, p_cartaPartida_oids: long[*] <<oid>>): void <<Unrelationer>>
   }
 
   ' Relationships
-  Usuario "Usuario\n1" o-- "Cartas\n0..*" Carta
-  Usuario "Usuario\n1" o-- "Mazos\n0..*" Mazo
-  Mazo "Mazo\n1" o-- "Cartas\n0..*" Carta
-  Usuario "Usuario1\n1" -- "PartidasLocal\n0..*" Partida
-  Usuario "Usuario2\n1" -- "PartidasVisitante\n0..*" Partida
-  Mazo "Mazo1\n1" -- "PartidasLocal\n0..*" Partida
-  Mazo "Mazo2\n1" -- "PartidasVisitante\n0..*" Partida
-  Carta "Carta\n1" *-- "Estados\n0..*" Estado
-  Estado "Estado\n1" o-- "Habilidades\n0..*" Habilidad
-  Partida "Partida\n1" *-- "Turnos\n0..*" Turno
-  Partida "Partida\n1" -- "Jugadores\n0..*" JugadorPartida
-  JugadorPartida "Jugador\n1" *-- "Zonas\n0..*" ZonaPartida
-  ZonaPartida "Zona\n1" *-- "Cartas\n0..*" CartaPartida
-  Carta "Original\n1" *-- "Entidades\n0..*" CartaPartida
-  JugadorPartida "Jugador\n1" o-- "Turnos\n0..*" Turno
-  Turno "Turno\n1" *-- "Acciones\n0..*" Accion
-  Accion "AccionUsada\n1..*" o-- "Origen\n0..*" CartaPartida
-  Accion "AccionReciv\n1" o-- "Objetivo\n0..*" CartaPartida
+  Usuario "usuario\n1" o-- "cartas\n0..*" Carta
+  Usuario "usuario\n1" o-- "mazos\n0..*" Mazo
+  Mazo o--> "cartas\n0..*" Carta
+  Usuario "usuario1\n1" -- "partidasLocal\n0..*" Partida
+  Usuario "usuario2\n0..1" -- "partidasVisitante\n0..*" Partida
+  Mazo "mazo1\n1" -- "partidasLocal\n0..*" Partida
+  Mazo "mazo2\n0..1" -- "partidasVisitante\n0..*" Partida
+  Carta *--> "estados\n0..*" Estado
+  Estado "estado\n1" *-- "habilidades\n0..*" Habilidad
+  Partida "partida\n1" *-- "turnos\n0..*" Turno
+  Partida "partida\n1" *-- "jugadores\n0..*" JugadorPartida
+  JugadorPartida "jugador\n1" *-- "zonas\n0..*" ZonaPartida
+  ZonaPartida "zona\n1" o-- "cartas\n0..*" CartaPartida
+  CartaPartida --> "original\n1" Carta
+  Turno --> "jugador\n1" JugadorPartida
+  Turno "turno\n1" *-- "acciones\n0..*" Accion
+  Accion o--> "origen\n0..1" CartaPartida
+  Accion o--> "objetivo\n0..*" CartaPartida
 }
 @enduml

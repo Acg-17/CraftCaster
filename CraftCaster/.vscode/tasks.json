@@ -1,0 +1,15 @@
+﻿{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build InitializeDB",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/generated/InitializeDB/InitializeDB.csproj"
+      ],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

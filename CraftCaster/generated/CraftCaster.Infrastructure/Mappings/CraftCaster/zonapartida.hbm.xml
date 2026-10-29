@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly="CraftCaster.Domain"
+                   namespace="CraftCaster.Domain.Entities">
+  <class name="ZonaPartida" table="ZonaPartida">
+    <id name="Id" column="id" type="Int32">
+      <generator class="hilo"/>
+    </id>
+    <property name="TipoZona" type="CraftCaster.Domain.Enums.TipoZona, CraftCaster.Domain">
+      <column name="tipoZona" not-null="true"/>
+    </property>
+    <many-to-one name="Jugador" class="JugadorPartida">
+      <column name="FK_JugadorPartida_jugador" not-null="true"/>
+    </many-to-one>
+    <bag name="Cartas" inverse="true">
+      <key>
+        <column name="FK_ZonaPartida_zona"/>
+      </key>
+      <one-to-many class="CartaPartida"/>
+    </bag>
+  </class>
+  <query name="ZonaPartidaReadAllHQL">from ZonaPartida</query>
+</hibernate-mapping>
