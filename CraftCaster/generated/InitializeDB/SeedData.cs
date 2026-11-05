@@ -1,5 +1,9 @@
 ﻿using CraftCaster.Application.Services;
+using CraftCaster.Application.UseCases.Habilidad;
+using CraftCaster.Application.UseCases.JugadorPartida;
+using CraftCaster.Application.UseCases.Partida;
 using CraftCaster.Application.UseCases.Usuario;
+using CraftCaster.Application.UseCases.ZonaPartida;
 using CraftCaster.Domain.Entities;
 
 using CraftCaster.Domain.Enums;

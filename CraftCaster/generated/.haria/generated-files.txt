@@ -34,8 +34,12 @@ CraftCaster.Application\Services\Generated\ServiceEntity.cs
 CraftCaster.Application\Services\Generated\TurnoService.cs
 CraftCaster.Application\Services\Generated\UsuarioService.cs
 CraftCaster.Application\Services\Generated\ZonaPartidaService.cs
+CraftCaster.Application\UseCases\Generated\Habilidad\HabilidadUseCase.cs
+CraftCaster.Application\UseCases\Generated\JugadorPartida\JugadorPartidaUseCase.cs
+CraftCaster.Application\UseCases\Generated\Partida\PartidaUseCase.cs
 CraftCaster.Application\UseCases\Generated\UseCaseDeclarations.cs
 CraftCaster.Application\UseCases\Generated\Usuario\UsuarioUseCase.cs
+CraftCaster.Application\UseCases\Generated\ZonaPartida\ZonaPartidaUseCase.cs
 CraftCaster.Domain\CraftCaster.Domain.csproj
 CraftCaster.Domain\Entities\Accion.cs
 CraftCaster.Domain\Entities\Carta.cs

@@ -95,7 +95,10 @@ ConceptualModel CraftCaster {
             
             public addPartidasLocal::Relationer -> UsuarioPartida1.partidasLocal (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
             public removePartidasLocal::Unrelationer -> UsuarioPartida1.partidasLocal (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
-        
+
+            public addPartidasVisitante::Relationer -> UsuarioPartida2.partidasVisitante (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
+            public removePartidasVisitante::Unrelationer -> UsuarioPartida2.partidasVisitante (p_oid : OID -> Usuario, p_partida_oids : List<OID -> Partida>) : Void;
+
             // En partida
             public obtenerUsuarioLocal::ReadFilter (p_oid : OID -> Partida) : List<Object->Usuario>
             {
@@ -104,6 +107,9 @@ ConceptualModel CraftCaster {
 
             //Transacciones
             public registrarUsuario::CustomTransaction (p_nombreUsuario : String, p_email : String, p_contrasenia : Password, p_fotoPerfil : Byte) : Object->Usuario;
+            public iniciarPartida::CustomTransaction (p_oid : OID -> Usuario) : Void; //Crea una partida con sigo mismo como local y asigna esa partida a su lista de partidas locales
+            public unirsePartida::CustomTransaction (p_oid : OID -> Usuario, p_partida_oid : OID -> Partida) : Void;  //Recibe una partida, se une a esta como visitante y la agrega a su lista de partidas visitantes
+            public abandonarPartida::CustomTransaction (p_oid : OID -> Usuario) : Void; //Si es local, echa al visitante si existe, elimina la partida de su lista y borra la partida. Si es visitante solo borra la partida de su lista y la variable usuario2 de partida
         }
     };
 
@@ -207,7 +213,7 @@ ConceptualModel CraftCaster {
         }
         
         operations
-        {   
+        {
             // CRUD
             public new::New customized (p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_ataque : Integer, p_vida : Integer, p_usuario_oid : OID -> Usuario) : Object->Carta;
             public destroy::Destroy (p_oid : OID -> Carta) : Void;
@@ -287,8 +293,8 @@ ConceptualModel CraftCaster {
             public readOID::ReadOID (p_oid : OID -> Habilidad) : Object->Habilidad;
             public readAll::ReadAll () : List<Object->Habilidad>;
 
-            // Customs
-            public activar::Custom (p_oid : OID -> Habilidad) : Void;
+            // Transacciones
+            public activar::CustomTransaction (p_oid : OID -> Habilidad) : Void; //Comprueba el tipo de habilidad y la ejectuta
         }
     };
 
@@ -314,7 +320,10 @@ ConceptualModel CraftCaster {
 
             // Customs
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
-            public finalizar::Custom (p_oid : OID -> Partida) : Void;
+
+            //Trannsacciones
+            public finalizar::CustomTransaction (p_oid : OID -> Partida) : Void; //Establece la partida como finalizada y define al ganador
+            public pasarTurno::CustomTransaction (p_oid : OID -> Partida) : Void; //Llama a final turno del jugador activo e inicio del otro y crea un turno nuevo en su lista de turnos.
 
             // Relationer
             public addTurno::Relationer -> PartidaTurno.turnos (p_oid : OID -> Partida, p_turno_oids : List<OID -> Turno>) : Void;
@@ -358,16 +367,18 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->JugadorPartida>;
 
             // Customs
-            public robarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
-            public pasarTurno::Custom (p_oid : OID -> JugadorPartida) : Void;
-            public lanzarCarta::Custom (p_oid : OID -> JugadorPartida) : Void;
             public actualizarVida::Custom (p_oid : OID -> JugadorPartida, p_vida : Integer) : Void;
             public actualizarMana::Custom (p_oid : OID -> JugadorPartida, p_mana : Integer) : Void;
-            public toggleActivo::Custom (p_oid : OID -> JugadorPartida) : Void;
 
             // Relationer
             public addZona::Relationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
             public removeZona::Unrelationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
+            
+            //Transacciones
+            public lanzarCarta::CustomTransaction (p_oid : OID -> JugadorPartida, p_carta_oid : OID -> CartaPartida) : Void; //Comprueba y consume el mana, cambia la carta de zona y activa sus habilidades de entrada
+            public robarCarta::CustomTransaction (p_oid : OID -> JugadorPartida) : Void; //Igual que lanzar pero de mazo a mano (toma la primera del mazo)
+            public inicioTurno::CustomTransaction (p_oid : OID -> JugadorPartida) : Void; //Establece activo true, regenera el mana, establece puedeAtacar en true para las criaturas y activa habilidades de inicio de turno
+            public finalTurno::CustomTransaction (p_oid : OID -> JugadorPartida) : Void; //Establece activo falso y activa habilidades de fin de turno
         }
     };
 
@@ -391,6 +402,9 @@ ConceptualModel CraftCaster {
             // Relationer
             public addCarta::Relationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
             public removeCarta::Unrelationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
+
+            //Transaction
+            public operationTransaction::CustomTransaction (p_oid : OID -> ZonaPartida, p_destino_oid : OID -> ZonaPartida) : Void;//Agrega la carta a la nueva zona y la quita de esta, cambia tambien el valor zona de la nueva carta
         }
     };
 

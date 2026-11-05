@@ -240,6 +240,47 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         await _repository.SaveAsync(entity);
     }
 
+    public async Task AddPartidasVisitanteAsync(int p_oid, IReadOnlyList<int> p_partida_oids)
+    {
+        Usuario entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Usuario not found.");
+        entity.PartidasVisitante ??= new List<Partida>();
+        foreach (var relatedId in p_partida_oids)
+        {
+            Partida relatedEntity = await _unitOfWork.PartidaRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("Partida not found for Usuario.PartidasVisitante.");
+            if (!entity.PartidasVisitante.Contains(relatedEntity))
+            {
+                entity.PartidasVisitante.Add(relatedEntity);
+            }
+            relatedEntity.Usuario2 = entity;
+            await _unitOfWork.PartidaRepository.SaveAsync(relatedEntity);
+        }
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task RemovePartidasVisitanteAsync(int p_oid, IReadOnlyList<int> p_partida_oids)
+    {
+        Usuario entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Usuario not found.");
+        entity.PartidasVisitante ??= new List<Partida>();
+        foreach (var relatedId in p_partida_oids)
+        {
+            Partida relatedEntity = await _unitOfWork.PartidaRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("Partida not found for Usuario.PartidasVisitante.");
+            if (!entity.PartidasVisitante.Remove(relatedEntity))
+            {
+                throw new ModelException("Partida is not related to Usuario.PartidasVisitante.");
+            }
+            if (relatedEntity.Usuario2 is not null && relatedEntity.Usuario2.Equals(entity))
+            {
+                relatedEntity.Usuario2 = null!;
+            }
+            await _unitOfWork.PartidaRepository.SaveAsync(relatedEntity);
+        }
+        await _repository.SaveAsync(entity);
+    }
+
     public async Task<IReadOnlyList<Usuario>> ObtenerUsuarioLocalAsync(int p_oid)
     {
         return await _repository.ObtenerUsuarioLocalAsync(p_oid);
