@@ -14,9 +14,14 @@ public sealed partial class UsuarioService
     public async Task CambiarEstadoCuentaAsync(int p_oid, EstadoCuenta p_estadoCuenta)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Usuario_cambiarEstadoCuenta) ENABLED START*/
-        // Write here your custom code...
+        Usuario? usuario = await _repository.ReadAsync(p_oid);
+        if (usuario == null)
+        {
+            throw new ModelException("No existe el usuario indicado.");
+        }
 
-        throw new ModelException("Application service generation for Usuario.cambiarEstadoCuenta is pending.", new NotImplementedException("Method CambiarEstadoCuentaAsync() not yet implemented."));
+        usuario.EstadoCuenta = p_estadoCuenta;
+        await _repository.SaveAsync(usuario);
         /*PROTECTED REGION END*/
     }
 }

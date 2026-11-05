@@ -14,9 +14,19 @@ public sealed partial class JugadorPartidaService
     public async Task ActualizarManaAsync(int p_oid, int p_mana)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_JugadorPartida_actualizarMana) ENABLED START*/
-        // Write here your custom code...
+        if (p_mana < 0)
+        {
+            throw new ModelException("El mana no puede ser negativo.");
+        }
 
-        throw new ModelException("Application service generation for JugadorPartida.actualizarMana is pending.", new NotImplementedException("Method ActualizarManaAsync() not yet implemented."));
+        JugadorPartida? jugador = await _repository.ReadAsync(p_oid);
+        if (jugador == null)
+        {
+            throw new ModelException("No existe el jugador indicado.");
+        }
+
+        jugador.Mana = p_mana;
+        await _repository.SaveAsync(jugador);
         /*PROTECTED REGION END*/
     }
 }

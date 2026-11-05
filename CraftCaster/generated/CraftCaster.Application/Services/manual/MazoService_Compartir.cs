@@ -14,9 +14,16 @@ public sealed partial class MazoService
     public async Task CompartirAsync(int p_oid)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Mazo_compartir) ENABLED START*/
-        // Write here your custom code...
+        Mazo? mazo = await _repository.ReadAsync(p_oid);
+        if (mazo == null)
+        {
+            throw new ModelException("No existe el mazo indicado.");
+        }
 
-        throw new ModelException("Application service generation for Mazo.compartir is pending.", new NotImplementedException("Method CompartirAsync() not yet implemented."));
+        // publicar el mazo para que sea visible en la comunidad
+        mazo.EsPublico = true;
+        await _repository.SaveAsync(mazo);
         /*PROTECTED REGION END*/
+
     }
 }

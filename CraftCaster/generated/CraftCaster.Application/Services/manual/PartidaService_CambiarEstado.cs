@@ -14,9 +14,29 @@ public sealed partial class PartidaService
     public async Task CambiarEstadoAsync(int p_oid, EstadoPartida p_estado)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Partida_cambiarEstado) ENABLED START*/
-        // Write here your custom code...
+       Partida? partida = await _repository.ReadAsync(p_oid);
+        if (partida == null)
+        {
+            throw new ModelException("No existe la partida indicada.");
+        }
 
-        throw new ModelException("Application service generation for Partida.cambiarEstado is pending.", new NotImplementedException("Method CambiarEstadoAsync() not yet implemented."));
+        if (partida.Estado == EstadoPartida.Finalizada)
+        {
+            throw new ModelException("La partida ya ha finalizado y no puede cambiar de estado.");
+        }
+        if (p_estado == partida.Estado)
+        {
+            throw new ModelException("La partida ya se encuentra en el estado indicado.");
+        }
+        
+        // El ciclo de vida solo avanza: Espera -> EnCurso -> Finalizada
+        if ((int)p_estado < (int)partida.Estado)
+        {
+            throw new ModelException("No se puede volver a un estado anterior de la partida.");
+        }
+
+        partida.Estado = p_estado;
+        await _repository.SaveAsync(partida);
         /*PROTECTED REGION END*/
     }
 }

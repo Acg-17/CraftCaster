@@ -14,9 +14,17 @@ public sealed partial class CartaService
     public async Task CompartirAsync(int p_oid)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Carta_compartir) ENABLED START*/
-        // Write here your custom code...
 
-        throw new ModelException("Application service generation for Carta.compartir is pending.", new NotImplementedException("Method CompartirAsync() not yet implemented."));
+        // el ? para que pueda ser null 
+       Carta? carta = await _repository.ReadAsync(p_oid);
+        if (carta == null)
+        {
+            throw new ModelException("No existe la carta indicada.");
+        }
+
+        // para que sea visible en la comunidad
+        carta.EsPublica = true;
+        await _repository.SaveAsync(carta);
         /*PROTECTED REGION END*/
     }
 }

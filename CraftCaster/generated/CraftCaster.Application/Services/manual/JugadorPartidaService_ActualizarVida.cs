@@ -14,9 +14,16 @@ public sealed partial class JugadorPartidaService
     public async Task ActualizarVidaAsync(int p_oid, int p_vida)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_JugadorPartida_actualizarVida) ENABLED START*/
-        // Write here your custom code...
+        JugadorPartida? jugador = await _repository.ReadAsync(p_oid);
+        if (jugador == null)
+        {
+            throw new ModelException("No existe el jugador indicado.");
+        }
 
-        throw new ModelException("Application service generation for JugadorPartida.actualizarVida is pending.", new NotImplementedException("Method ActualizarVidaAsync() not yet implemented."));
+
+        jugador.Vida = p_vida;
+        await _repository.SaveAsync(jugador);
         /*PROTECTED REGION END*/
+
     }
 }

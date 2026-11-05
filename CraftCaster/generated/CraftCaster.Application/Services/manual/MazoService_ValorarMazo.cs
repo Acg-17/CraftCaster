@@ -14,9 +14,20 @@ public sealed partial class MazoService
     public async Task ValorarMazoAsync(int p_oid, float p_valoracion)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Mazo_valorarMazo) ENABLED START*/
-        // Write here your custom code...
+        if (p_valoracion < 0f)
+        {
+            throw new ModelException("La valoracion no puede ser negativa.");
+        }
 
-        throw new ModelException("Application service generation for Mazo.valorarMazo is pending.", new NotImplementedException("Method ValorarMazoAsync() not yet implemented."));
+       Mazo? mazo = await _repository.ReadAsync(p_oid);
+        if (mazo == null)
+        {
+            throw new ModelException("No existe el mazo indicado.");
+        }
+
+        mazo.Valoracion = p_valoracion;
+        await _repository.SaveAsync(mazo);
         /*PROTECTED REGION END*/
+
     }
 }
