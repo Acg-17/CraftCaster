@@ -8,6 +8,8 @@ public partial class JugadorPartida
     public virtual int Id { get; set; }
     public virtual int Vida { get; set; }
     public virtual int NumJugador { get; set; }
+    public virtual int Mana { get; set; }
+    public virtual bool Activo { get; set; }
     public virtual Partida Partida { get; set; } = null!;
     public virtual IList<ZonaPartida> Zonas { get; set; } = new List<ZonaPartida>();
 

@@ -126,7 +126,7 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task AddJugadoreAsync(int p_oid, IReadOnlyList<int> p_jugadorPartida_oids)
+    public async Task AddJugadoresAsync(int p_oid, IReadOnlyList<int> p_jugadorPartida_oids)
     {
         Partida entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Partida not found.");
@@ -145,7 +145,7 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveJugadoreAsync(int p_oid, IReadOnlyList<int> p_jugadorPartida_oids)
+    public async Task RemoveJugadoresAsync(int p_oid, IReadOnlyList<int> p_jugadorPartida_oids)
     {
         Partida entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Partida not found.");
@@ -164,6 +164,72 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
             }
             await _unitOfWork.JugadorPartidaRepository.SaveAsync(relatedEntity);
         }
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task AddUsuario2Async(int p_oid, int p_usuario_oid)
+    {
+        Partida entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Partida not found.");
+        Usuario relatedEntity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario_oid)
+            ?? throw new ModelException("Usuario not found for Partida.Usuario2.");
+        entity.Usuario2 = relatedEntity;
+        relatedEntity.PartidasVisitante ??= new List<Partida>();
+        if (!relatedEntity.PartidasVisitante.Contains(entity))
+        {
+            relatedEntity.PartidasVisitante.Add(entity);
+        }
+        await _unitOfWork.UsuarioRepository.SaveAsync(relatedEntity);
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task RemoveUsuario2Async(int p_oid, int p_usuario_oid)
+    {
+        Partida entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Partida not found.");
+        Usuario relatedEntity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario_oid)
+            ?? throw new ModelException("Usuario not found for Partida.Usuario2.");
+        if (entity.Usuario2 is null || !entity.Usuario2.Equals(relatedEntity))
+        {
+            throw new ModelException("Usuario is not related to Partida.Usuario2.");
+        }
+        relatedEntity.PartidasVisitante ??= new List<Partida>();
+        relatedEntity.PartidasVisitante.Remove(entity);
+        entity.Usuario2 = null!;
+        await _unitOfWork.UsuarioRepository.SaveAsync(relatedEntity);
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task AddMazo2Async(int p_oid, int p_mazo_oid)
+    {
+        Partida entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Partida not found.");
+        Mazo relatedEntity = await _unitOfWork.MazoRepository.ReadAsync(p_mazo_oid)
+            ?? throw new ModelException("Mazo not found for Partida.Mazo2.");
+        entity.Mazo2 = relatedEntity;
+        relatedEntity.PartidasVisitante ??= new List<Partida>();
+        if (!relatedEntity.PartidasVisitante.Contains(entity))
+        {
+            relatedEntity.PartidasVisitante.Add(entity);
+        }
+        await _unitOfWork.MazoRepository.SaveAsync(relatedEntity);
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task RemoveMazo2Async(int p_oid, int p_mazo_oid)
+    {
+        Partida entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Partida not found.");
+        Mazo relatedEntity = await _unitOfWork.MazoRepository.ReadAsync(p_mazo_oid)
+            ?? throw new ModelException("Mazo not found for Partida.Mazo2.");
+        if (entity.Mazo2 is null || !entity.Mazo2.Equals(relatedEntity))
+        {
+            throw new ModelException("Mazo is not related to Partida.Mazo2.");
+        }
+        relatedEntity.PartidasVisitante ??= new List<Partida>();
+        relatedEntity.PartidasVisitante.Remove(entity);
+        entity.Mazo2 = null!;
+        await _unitOfWork.MazoRepository.SaveAsync(relatedEntity);
         await _repository.SaveAsync(entity);
     }
 

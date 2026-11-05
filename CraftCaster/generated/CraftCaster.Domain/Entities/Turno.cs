@@ -6,7 +6,8 @@ namespace CraftCaster.Domain.Entities;
 public partial class Turno
 {
     public virtual int Id { get; set; }
-    public virtual int Mana { get; set; }
+    public virtual int NumTurno { get; set; }
+    public virtual int ManaTurno { get; set; }
     public virtual Partida Partida { get; set; } = null!;
     public virtual JugadorPartida Jugador { get; set; } = null!;
     public virtual IList<Accion> Acciones { get; set; } = new List<Accion>();

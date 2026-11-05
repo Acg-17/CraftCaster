@@ -27,17 +27,14 @@
     <property name="Imagen" type="Byte">
       <column name="imagen" not-null="true"/>
     </property>
-    <property name="Creador" type="String">
-      <column name="creador" not-null="true"/>
-    </property>
     <many-to-one name="Usuario" class="Usuario">
       <column name="FK_Usuario_usuario" not-null="true"/>
     </many-to-one>
-    <bag name="Cartas">
+    <bag name="Lineas" cascade="all-delete-orphan">
       <key>
-        <column name="FK_Mazo_cartas"/>
+        <column name="FK_Mazo_lineas"/>
       </key>
-      <one-to-many class="Carta"/>
+      <one-to-many class="LineaMazo"/>
     </bag>
     <bag name="PartidasLocal" inverse="true">
       <key>

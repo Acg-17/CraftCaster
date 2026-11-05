@@ -59,22 +59,6 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         }
     }
 
-    public async Task<Usuario> NewAsync(string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, int p_nivel, int p_exp)
-    {
-        Usuario entity = new Usuario
-        {
-            NombreUsuario = p_nombreUsuario,
-            Email = p_email,
-            Contrasenia = _passwordHasher.HashPasswordIfNeeded(p_contrasenia),
-            FotoPerfil = p_fotoPerfil,
-            Nivel = p_nivel,
-            Exp = p_exp,
-        };
-
-        await _repository.SaveAsync(entity);
-        return entity;
-    }
-
     public async Task DestroyAsync(int p_oid)
     {
         Usuario entity = await _repository.ReadAsync(p_oid)
@@ -82,7 +66,7 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, int p_nivel, int p_exp)
+    public async Task ModifyAsync(int p_oid, string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, EstadoCuenta p_estadoCuenta)
     {
         Usuario entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Usuario not found.");
@@ -90,8 +74,7 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         entity.Email = p_email;
         entity.Contrasenia = _passwordHasher.HashPasswordIfNeeded(p_contrasenia);
         entity.FotoPerfil = p_fotoPerfil;
-        entity.Nivel = p_nivel;
-        entity.Exp = p_exp;
+        entity.EstadoCuenta = p_estadoCuenta;
         await _repository.SaveAsync(entity);
     }
 

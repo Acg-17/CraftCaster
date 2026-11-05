@@ -9,6 +9,7 @@ CraftCaster.Application\Abstractions\IHabilidadRepository.cs
 CraftCaster.Application\Abstractions\IHariaPasswordHasher.cs
 CraftCaster.Application\Abstractions\IHariaTokenGenerator.cs
 CraftCaster.Application\Abstractions\IJugadorPartidaRepository.cs
+CraftCaster.Application\Abstractions\ILineaMazoRepository.cs
 CraftCaster.Application\Abstractions\IMazoRepository.cs
 CraftCaster.Application\Abstractions\IPartidaRepository.cs
 CraftCaster.Application\Abstractions\IRepository.cs
@@ -26,12 +27,15 @@ CraftCaster.Application\Services\Generated\CartaService.cs
 CraftCaster.Application\Services\Generated\EstadoService.cs
 CraftCaster.Application\Services\Generated\HabilidadService.cs
 CraftCaster.Application\Services\Generated\JugadorPartidaService.cs
+CraftCaster.Application\Services\Generated\LineaMazoService.cs
 CraftCaster.Application\Services\Generated\MazoService.cs
 CraftCaster.Application\Services\Generated\PartidaService.cs
 CraftCaster.Application\Services\Generated\ServiceEntity.cs
 CraftCaster.Application\Services\Generated\TurnoService.cs
 CraftCaster.Application\Services\Generated\UsuarioService.cs
 CraftCaster.Application\Services\Generated\ZonaPartidaService.cs
+CraftCaster.Application\UseCases\Generated\UseCaseDeclarations.cs
+CraftCaster.Application\UseCases\Generated\Usuario\UsuarioUseCase.cs
 CraftCaster.Domain\CraftCaster.Domain.csproj
 CraftCaster.Domain\Entities\Accion.cs
 CraftCaster.Domain\Entities\Carta.cs
@@ -39,6 +43,7 @@ CraftCaster.Domain\Entities\CartaPartida.cs
 CraftCaster.Domain\Entities\Estado.cs
 CraftCaster.Domain\Entities\Habilidad.cs
 CraftCaster.Domain\Entities\JugadorPartida.cs
+CraftCaster.Domain\Entities\LineaMazo.cs
 CraftCaster.Domain\Entities\Mazo.cs
 CraftCaster.Domain\Entities\Partida.cs
 CraftCaster.Domain\Entities\Turno.cs
@@ -69,6 +74,7 @@ CraftCaster.Infrastructure\Mappings\CraftCaster\cartapartida.hbm.xml
 CraftCaster.Infrastructure\Mappings\CraftCaster\estado.hbm.xml
 CraftCaster.Infrastructure\Mappings\CraftCaster\habilidad.hbm.xml
 CraftCaster.Infrastructure\Mappings\CraftCaster\jugadorpartida.hbm.xml
+CraftCaster.Infrastructure\Mappings\CraftCaster\lineamazo.hbm.xml
 CraftCaster.Infrastructure\Mappings\CraftCaster\mazo.hbm.xml
 CraftCaster.Infrastructure\Mappings\CraftCaster\partida.hbm.xml
 CraftCaster.Infrastructure\Mappings\CraftCaster\turno.hbm.xml
@@ -80,6 +86,7 @@ CraftCaster.Infrastructure\Repositories\CartaRepository.cs
 CraftCaster.Infrastructure\Repositories\EstadoRepository.cs
 CraftCaster.Infrastructure\Repositories\HabilidadRepository.cs
 CraftCaster.Infrastructure\Repositories\JugadorPartidaRepository.cs
+CraftCaster.Infrastructure\Repositories\LineaMazoRepository.cs
 CraftCaster.Infrastructure\Repositories\MazoRepository.cs
 CraftCaster.Infrastructure\Repositories\PartidaRepository.cs
 CraftCaster.Infrastructure\Repositories\RepositoryBase.cs

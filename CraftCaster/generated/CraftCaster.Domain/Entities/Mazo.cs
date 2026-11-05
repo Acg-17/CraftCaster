@@ -14,9 +14,8 @@ public partial class Mazo
     public virtual bool EsPublico { get; set; }
     public virtual float Valoracion { get; set; }
     public virtual byte Imagen { get; set; }
-    public virtual string Creador { get; set; } = string.Empty;
     public virtual Usuario Usuario { get; set; } = null!;
-    public virtual IList<Carta> Cartas { get; set; } = new List<Carta>();
+    public virtual IList<LineaMazo> Lineas { get; set; } = new List<LineaMazo>();
     public virtual IList<Partida> PartidasLocal { get; set; } = new List<Partida>();
     public virtual IList<Partida> PartidasVisitante { get; set; } = new List<Partida>();
 

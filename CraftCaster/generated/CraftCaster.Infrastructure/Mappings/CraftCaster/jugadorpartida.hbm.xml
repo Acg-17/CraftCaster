@@ -12,6 +12,12 @@
     <property name="NumJugador" type="Int32">
       <column name="numJugador" not-null="true"/>
     </property>
+    <property name="Mana" type="Int32">
+      <column name="mana" not-null="true"/>
+    </property>
+    <property name="Activo" type="Boolean">
+      <column name="activo" not-null="true"/>
+    </property>
     <many-to-one name="Partida" class="Partida">
       <column name="FK_Partida_partida" not-null="true"/>
     </many-to-one>

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using CraftCaster.Domain.Enums;
 
 namespace CraftCaster.Domain.Entities;
 
@@ -10,8 +11,7 @@ public partial class Usuario
     public virtual string Email { get; set; } = string.Empty;
     public virtual string Contrasenia { get; set; } = string.Empty;
     public virtual byte FotoPerfil { get; set; }
-    public virtual int Nivel { get; set; }
-    public virtual int Exp { get; set; }
+    public virtual EstadoCuenta EstadoCuenta { get; set; }
     public virtual IList<Carta> Cartas { get; set; } = new List<Carta>();
     public virtual IList<Mazo> Mazos { get; set; } = new List<Mazo>();
     public virtual IList<Partida> PartidasLocal { get; set; } = new List<Partida>();

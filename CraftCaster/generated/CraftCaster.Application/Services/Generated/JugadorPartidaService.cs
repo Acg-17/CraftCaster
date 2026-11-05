@@ -41,7 +41,7 @@ public sealed partial class JugadorPartidaService : ServiceEntity<JugadorPartida
     public Task<JugadorPartida> ModifierJugadorPartidaDefaultAsync(JugadorPartida entity) =>
         ModifierDefaultAsync(entity);
 
-    public async Task<JugadorPartida> NewAsync(int p_vida, int p_numJugador, int p_partida_oid)
+    public async Task<JugadorPartida> NewAsync(int p_vida, int p_numJugador, int p_mana, bool p_activo, int p_partida_oid)
     {
         Partida partidaEntity = await _unitOfWork.PartidaRepository.ReadAsync(p_partida_oid)
             ?? throw new ModelException("Partida not found for JugadorPartida.Partida.");
@@ -50,6 +50,8 @@ public sealed partial class JugadorPartidaService : ServiceEntity<JugadorPartida
         {
             Vida = p_vida,
             NumJugador = p_numJugador,
+            Mana = p_mana,
+            Activo = p_activo,
             Partida = partidaEntity,
         };
 
@@ -64,12 +66,14 @@ public sealed partial class JugadorPartidaService : ServiceEntity<JugadorPartida
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, int p_vida, int p_numJugador, int p_partida_oid)
+    public async Task ModifyAsync(int p_oid, int p_vida, int p_numJugador, int p_mana, bool p_activo, int p_partida_oid)
     {
         JugadorPartida entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("JugadorPartida not found.");
         entity.Vida = p_vida;
         entity.NumJugador = p_numJugador;
+        entity.Mana = p_mana;
+        entity.Activo = p_activo;
         await _repository.SaveAsync(entity);
     }
 

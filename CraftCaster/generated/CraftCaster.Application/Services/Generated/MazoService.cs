@@ -41,28 +41,6 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
     public Task<Mazo> ModifierMazoDefaultAsync(Mazo entity) =>
         ModifierDefaultAsync(entity);
 
-    public async Task<Mazo> NewAsync(string p_nombre, float p_costeMedio, int p_numCartas, EstadoMazo p_estadoMazo, bool p_esPublico, float p_valoracion, byte p_imagen, string p_creador, int p_usuario_oid)
-    {
-        Usuario usuarioEntity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario_oid)
-            ?? throw new ModelException("Usuario not found for Mazo.Usuario.");
-
-        Mazo entity = new Mazo
-        {
-            Nombre = p_nombre,
-            CosteMedio = p_costeMedio,
-            NumCartas = p_numCartas,
-            EstadoMazo = p_estadoMazo,
-            EsPublico = p_esPublico,
-            Valoracion = p_valoracion,
-            Imagen = p_imagen,
-            Creador = p_creador,
-            Usuario = usuarioEntity,
-        };
-
-        await _repository.SaveAsync(entity);
-        return entity;
-    }
-
     public async Task DestroyAsync(int p_oid)
     {
         Mazo entity = await _repository.ReadAsync(p_oid)
@@ -70,7 +48,7 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, string p_nombre, float p_costeMedio, int p_numCartas, EstadoMazo p_estadoMazo, bool p_esPublico, float p_valoracion, byte p_imagen, string p_creador, int p_usuario_oid)
+    public async Task ModifyAsync(int p_oid, string p_nombre, float p_costeMedio, int p_numCartas, EstadoMazo p_estadoMazo, bool p_esPublico, float p_valoracion, byte p_imagen, int p_usuario_oid)
     {
         Mazo entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Mazo not found.");
@@ -81,7 +59,6 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
         entity.EsPublico = p_esPublico;
         entity.Valoracion = p_valoracion;
         entity.Imagen = p_imagen;
-        entity.Creador = p_creador;
         await _repository.SaveAsync(entity);
     }
 
@@ -95,35 +72,35 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
         return await _repository.ReadAllAsync();
     }
 
-    public async Task AddCartaAsync(int p_oid, IReadOnlyList<int> p_carta_oids)
+    public async Task AddLineaAsync(int p_oid, IReadOnlyList<int> p_lineaMazo_oids)
     {
         Mazo entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Mazo not found.");
-        entity.Cartas ??= new List<Carta>();
-        foreach (var relatedId in p_carta_oids)
+        entity.Lineas ??= new List<LineaMazo>();
+        foreach (var relatedId in p_lineaMazo_oids)
         {
-            Carta relatedEntity = await _unitOfWork.CartaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Carta not found for Mazo.Cartas.");
-            if (!entity.Cartas.Contains(relatedEntity))
+            LineaMazo relatedEntity = await _unitOfWork.LineaMazoRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("LineaMazo not found for Mazo.Lineas.");
+            if (!entity.Lineas.Contains(relatedEntity))
             {
-                entity.Cartas.Add(relatedEntity);
+                entity.Lineas.Add(relatedEntity);
             }
         }
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveCartaAsync(int p_oid, IReadOnlyList<int> p_carta_oids)
+    public async Task RemoveLineaAsync(int p_oid, IReadOnlyList<int> p_lineaMazo_oids)
     {
         Mazo entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Mazo not found.");
-        entity.Cartas ??= new List<Carta>();
-        foreach (var relatedId in p_carta_oids)
+        entity.Lineas ??= new List<LineaMazo>();
+        foreach (var relatedId in p_lineaMazo_oids)
         {
-            Carta relatedEntity = await _unitOfWork.CartaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Carta not found for Mazo.Cartas.");
-            if (!entity.Cartas.Remove(relatedEntity))
+            LineaMazo relatedEntity = await _unitOfWork.LineaMazoRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("LineaMazo not found for Mazo.Lineas.");
+            if (!entity.Lineas.Remove(relatedEntity))
             {
-                throw new ModelException("Carta is not related to Mazo.Cartas.");
+                throw new ModelException("LineaMazo is not related to Mazo.Lineas.");
             }
         }
         await _repository.SaveAsync(entity);

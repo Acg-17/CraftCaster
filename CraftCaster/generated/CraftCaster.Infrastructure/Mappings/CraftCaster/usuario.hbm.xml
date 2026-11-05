@@ -18,11 +18,8 @@
     <property name="FotoPerfil" type="Byte">
       <column name="fotoPerfil" not-null="true"/>
     </property>
-    <property name="Nivel" type="Int32">
-      <column name="nivel" not-null="true"/>
-    </property>
-    <property name="Exp" type="Int32">
-      <column name="exp" not-null="true"/>
+    <property name="EstadoCuenta" type="CraftCaster.Domain.Enums.EstadoCuenta, CraftCaster.Domain">
+      <column name="estadoCuenta" not-null="true"/>
     </property>
     <bag name="Cartas" inverse="true">
       <key>
