@@ -9,12 +9,12 @@
     <property name="Cantidad" type="Int32">
       <column name="cantidad" not-null="true"/>
     </property>
-    <bag name="Cartas">
-      <key>
-        <column name="FK_LineaMazo_cartas"/>
-      </key>
-      <one-to-many class="Carta"/>
-    </bag>
+    <many-to-one name="Mazo" class="Mazo">
+      <column name="FK_Mazo_mazo" not-null="true"/>
+    </many-to-one>
+    <many-to-one name="Carta" class="Carta">
+      <column name="FK_Carta_carta" not-null="true"/>
+    </many-to-one>
   </class>
   <query name="LineaMazoReadAllHQL">from LineaMazo</query>
 </hibernate-mapping>

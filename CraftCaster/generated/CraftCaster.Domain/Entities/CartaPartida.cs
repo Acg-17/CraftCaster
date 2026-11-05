@@ -6,6 +6,9 @@ namespace CraftCaster.Domain.Entities;
 public partial class CartaPartida
 {
     public virtual int Id { get; set; }
+    public virtual int VidaActual { get; set; }
+    public virtual int AtaqueActual { get; set; }
+    public virtual bool PuedeAtacar { get; set; }
     public virtual ZonaPartida Zona { get; set; } = null!;
     public virtual Carta Original { get; set; } = null!;
 

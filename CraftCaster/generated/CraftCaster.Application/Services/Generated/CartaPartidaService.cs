@@ -41,7 +41,7 @@ public sealed partial class CartaPartidaService : ServiceEntity<CartaPartida>
     public Task<CartaPartida> ModifierCartaPartidaDefaultAsync(CartaPartida entity) =>
         ModifierDefaultAsync(entity);
 
-    public async Task<CartaPartida> NewAsync(int p_zona_oid, int p_original_oid)
+    public async Task<CartaPartida> NewAsync(int p_vidaActual, int p_ataqueActual, bool p_puedeAtacar, int p_zona_oid, int p_original_oid)
     {
         ZonaPartida zonaEntity = await _unitOfWork.ZonaPartidaRepository.ReadAsync(p_zona_oid)
             ?? throw new ModelException("ZonaPartida not found for CartaPartida.Zona.");
@@ -51,6 +51,9 @@ public sealed partial class CartaPartidaService : ServiceEntity<CartaPartida>
 
         CartaPartida entity = new CartaPartida
         {
+            VidaActual = p_vidaActual,
+            AtaqueActual = p_ataqueActual,
+            PuedeAtacar = p_puedeAtacar,
             Zona = zonaEntity,
             Original = originalEntity,
         };
@@ -66,10 +69,13 @@ public sealed partial class CartaPartidaService : ServiceEntity<CartaPartida>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, int p_zona_oid, int p_original_oid)
+    public async Task ModifyAsync(int p_oid, int p_vidaActual, int p_ataqueActual, bool p_puedeAtacar, int p_zona_oid, int p_original_oid)
     {
         CartaPartida entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("CartaPartida not found.");
+        entity.VidaActual = p_vidaActual;
+        entity.AtaqueActual = p_ataqueActual;
+        entity.PuedeAtacar = p_puedeAtacar;
         await _repository.SaveAsync(entity);
     }
 

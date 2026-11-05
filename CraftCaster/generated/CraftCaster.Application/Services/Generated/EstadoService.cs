@@ -41,11 +41,15 @@ public sealed partial class EstadoService : ServiceEntity<Estado>
     public Task<Estado> ModifierEstadoDefaultAsync(Estado entity) =>
         ModifierDefaultAsync(entity);
 
-    public async Task<Estado> NewAsync(TipoEstado p_tipo)
+    public async Task<Estado> NewAsync(TipoEstado p_tipo, int p_carta_oid)
     {
+        Carta cartaEntity = await _unitOfWork.CartaRepository.ReadAsync(p_carta_oid)
+            ?? throw new ModelException("Carta not found for Estado.Carta.");
+
         Estado entity = new Estado
         {
             Tipo = p_tipo,
+            Carta = cartaEntity,
         };
 
         await _repository.SaveAsync(entity);
@@ -59,7 +63,7 @@ public sealed partial class EstadoService : ServiceEntity<Estado>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, TipoEstado p_tipo)
+    public async Task ModifyAsync(int p_oid, TipoEstado p_tipo, int p_carta_oid)
     {
         Estado entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Estado not found.");

@@ -9,6 +9,12 @@
     <property name="Estado" type="CraftCaster.Domain.Enums.EstadoPartida, CraftCaster.Domain">
       <column name="estado" not-null="true"/>
     </property>
+    <property name="Ganador" type="Int32">
+      <column name="ganador"/>
+    </property>
+    <property name="FechaInicio" type="Date">
+      <column name="fechaInicio" sql-type="date" not-null="true"/>
+    </property>
     <many-to-one name="Usuario1" class="Usuario">
       <column name="FK_Usuario_usuario1" not-null="true"/>
     </many-to-one>

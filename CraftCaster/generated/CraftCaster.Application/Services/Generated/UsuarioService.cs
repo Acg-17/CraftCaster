@@ -66,7 +66,7 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, EstadoCuenta p_estadoCuenta)
+    public async Task ModifyAsync(int p_oid, string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, EstadoCuenta p_estadoCuenta, TipoUsuario p_tipoUsuario)
     {
         Usuario entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Usuario not found.");
@@ -75,6 +75,7 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         entity.Contrasenia = _passwordHasher.HashPasswordIfNeeded(p_contrasenia);
         entity.FotoPerfil = p_fotoPerfil;
         entity.EstadoCuenta = p_estadoCuenta;
+        entity.TipoUsuario = p_tipoUsuario;
         await _repository.SaveAsync(entity);
     }
 

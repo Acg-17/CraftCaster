@@ -11,7 +11,7 @@ namespace CraftCaster.Application.Services;
 
 public sealed partial class UsuarioService
 {
-    public async Task<Usuario> NewAsync(string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil)
+    public async Task<Usuario> NewAsync(string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, TipoUsuario p_tipoUsuario)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Usuario_new) ENABLED START*/
         Usuario entity = new Usuario
@@ -21,6 +21,7 @@ public sealed partial class UsuarioService
             Contrasenia = _passwordHasher.HashPasswordIfNeeded(p_contrasenia),
             FotoPerfil = p_fotoPerfil,
             EstadoCuenta = EstadoCuenta.Activa,
+            TipoUsuario = p_tipoUsuario,
         };
 
         await _repository.SaveAsync(entity);

@@ -41,7 +41,7 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
     public Task<Partida> ModifierPartidaDefaultAsync(Partida entity) =>
         ModifierDefaultAsync(entity);
 
-    public async Task<Partida> NewAsync(EstadoPartida p_estado, int p_usuario1_oid, int p_mazo1_oid)
+    public async Task<Partida> NewAsync(EstadoPartida p_estado, DateTime p_fechaInicio, int p_usuario1_oid, int p_mazo1_oid)
     {
         Usuario usuario1Entity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario1_oid)
             ?? throw new ModelException("Usuario not found for Partida.Usuario1.");
@@ -52,6 +52,7 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
         Partida entity = new Partida
         {
             Estado = p_estado,
+            FechaInicio = p_fechaInicio,
             Usuario1 = usuario1Entity,
             Mazo1 = mazo1Entity,
         };
@@ -67,11 +68,12 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, EstadoPartida p_estado, int p_usuario1_oid, int p_mazo1_oid)
+    public async Task ModifyAsync(int p_oid, EstadoPartida p_estado, DateTime p_fechaInicio, int p_usuario1_oid, int p_mazo1_oid)
     {
         Partida entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Partida not found.");
         entity.Estado = p_estado;
+        entity.FechaInicio = p_fechaInicio;
         await _repository.SaveAsync(entity);
     }
 

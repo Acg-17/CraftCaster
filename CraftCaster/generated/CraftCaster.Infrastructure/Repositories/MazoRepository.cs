@@ -134,22 +134,6 @@ public sealed class MazoRepository : RepositoryBase<Mazo>, IMazoRepository
         }
     }
 
-    public async Task<IReadOnlyList<Mazo>> ObtenerMazoPorCreadorAsync(string p_creador)
-    {
-        try
-        {
-            using var context = OpenSession();
-            return await context.Session.Query<Mazo>()
-                .Where(entity => entity.Creador == p_creador && entity.EsPublico == true)
-                .ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger?.LogError(ex, "Error executing ReadFilter Mazo.obtenerMazoPorCreador.");
-            throw new DataException("Error executing ReadFilter Mazo.obtenerMazoPorCreador.", ex);
-        }
-    }
-
     public async Task<IReadOnlyList<Mazo>> ObtenerMazoJugador1Async(int p_oid)
     {
         try

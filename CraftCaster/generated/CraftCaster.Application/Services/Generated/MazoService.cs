@@ -85,6 +85,8 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
             {
                 entity.Lineas.Add(relatedEntity);
             }
+            relatedEntity.Mazo = entity;
+            await _unitOfWork.LineaMazoRepository.SaveAsync(relatedEntity);
         }
         await _repository.SaveAsync(entity);
     }
@@ -102,6 +104,11 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
             {
                 throw new ModelException("LineaMazo is not related to Mazo.Lineas.");
             }
+            if (relatedEntity.Mazo is not null && relatedEntity.Mazo.Equals(entity))
+            {
+                relatedEntity.Mazo = null!;
+            }
+            await _unitOfWork.LineaMazoRepository.SaveAsync(relatedEntity);
         }
         await _repository.SaveAsync(entity);
     }
@@ -124,11 +131,6 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
     public async Task<IReadOnlyList<Mazo>> ObtenerMazoPorValoracionAsync(int p_min_val, int p_max_val)
     {
         return await _repository.ObtenerMazoPorValoracionAsync(p_min_val, p_max_val);
-    }
-
-    public async Task<IReadOnlyList<Mazo>> ObtenerMazoPorCreadorAsync(string p_creador)
-    {
-        return await _repository.ObtenerMazoPorCreadorAsync(p_creador);
     }
 
     public async Task<IReadOnlyList<Mazo>> ObtenerMazoJugador1Async(int p_oid)

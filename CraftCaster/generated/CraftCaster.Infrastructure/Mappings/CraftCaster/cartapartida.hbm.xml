@@ -6,6 +6,15 @@
     <id name="Id" column="id" type="Int32">
       <generator class="hilo"/>
     </id>
+    <property name="VidaActual" type="Int32">
+      <column name="vidaActual" not-null="true"/>
+    </property>
+    <property name="AtaqueActual" type="Int32">
+      <column name="ataqueActual" not-null="true"/>
+    </property>
+    <property name="PuedeAtacar" type="Boolean">
+      <column name="puedeAtacar" not-null="true"/>
+    </property>
     <many-to-one name="Zona" class="ZonaPartida">
       <column name="FK_ZonaPartida_zona" not-null="true"/>
     </many-to-one>

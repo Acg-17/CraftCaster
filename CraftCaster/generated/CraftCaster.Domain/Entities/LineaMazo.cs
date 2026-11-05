@@ -7,7 +7,8 @@ public partial class LineaMazo
 {
     public virtual int Id { get; set; }
     public virtual int Cantidad { get; set; }
-    public virtual IList<Carta> Cartas { get; set; } = new List<Carta>();
+    public virtual Mazo Mazo { get; set; } = null!;
+    public virtual Carta Carta { get; set; } = null!;
 
     private bool HasDefaultIdentity() => EqualityComparer<int>.Default.Equals(Id, default);
 

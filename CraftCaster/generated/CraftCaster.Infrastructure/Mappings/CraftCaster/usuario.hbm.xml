@@ -21,6 +21,9 @@
     <property name="EstadoCuenta" type="CraftCaster.Domain.Enums.EstadoCuenta, CraftCaster.Domain">
       <column name="estadoCuenta" not-null="true"/>
     </property>
+    <property name="TipoUsuario" type="CraftCaster.Domain.Enums.TipoUsuario, CraftCaster.Domain">
+      <column name="tipoUsuario" not-null="true"/>
+    </property>
     <bag name="Cartas" inverse="true">
       <key>
         <column name="FK_Usuario_usuario"/>

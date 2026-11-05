@@ -36,9 +36,9 @@
     <many-to-one name="Usuario" class="Usuario">
       <column name="FK_Usuario_usuario" not-null="true"/>
     </many-to-one>
-    <bag name="Estados" cascade="all-delete-orphan">
+    <bag name="Estados" cascade="all-delete-orphan" inverse="true">
       <key>
-        <column name="FK_Carta_estados"/>
+        <column name="FK_Carta_carta"/>
       </key>
       <one-to-many class="Estado"/>
     </bag>

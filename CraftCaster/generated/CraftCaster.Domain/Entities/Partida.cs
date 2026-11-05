@@ -8,6 +8,8 @@ public partial class Partida
 {
     public virtual int Id { get; set; }
     public virtual EstadoPartida Estado { get; set; }
+    public virtual int? Ganador { get; set; }
+    public virtual DateTime FechaInicio { get; set; }
     public virtual Usuario Usuario1 { get; set; } = null!;
     public virtual Usuario? Usuario2 { get; set; }
     public virtual Mazo Mazo1 { get; set; } = null!;

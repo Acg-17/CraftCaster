@@ -9,6 +9,9 @@
     <property name="Tipo" type="CraftCaster.Domain.Enums.TipoEstado, CraftCaster.Domain">
       <column name="tipo" not-null="true"/>
     </property>
+    <many-to-one name="Carta" class="Carta">
+      <column name="FK_Carta_carta" not-null="true"/>
+    </many-to-one>
     <bag name="Habilidades" cascade="all-delete-orphan" inverse="true">
       <key>
         <column name="FK_Estado_estado"/>

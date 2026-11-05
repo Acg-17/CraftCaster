@@ -8,6 +8,7 @@ public partial class Estado
 {
     public virtual int Id { get; set; }
     public virtual TipoEstado Tipo { get; set; }
+    public virtual Carta Carta { get; set; } = null!;
     public virtual IList<Habilidad> Habilidades { get; set; } = new List<Habilidad>();
 
     private bool HasDefaultIdentity() => EqualityComparer<int>.Default.Equals(Id, default);
