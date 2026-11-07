@@ -17,8 +17,6 @@ public sealed partial class PartidaService
         // Write here your custom code...
         Partida partida = await _repository.ReadAsync(p_oid) ?? throw new ModelException("No existe la partida indicada.");
         return partida.Jugadores[jugador].Zonas[zona].Cartas[carta].Id;
-
-        throw new ModelException("Application service generation for Partida.getCarta is pending.", new NotImplementedException("Method GetCartaAsync() not yet implemented."));
         /*PROTECTED REGION END*/
     }
 }

@@ -323,6 +323,7 @@ ConceptualModel CraftCaster {
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
             public getActivo::Custom (p_oid : OID -> Partida) : Integer;
             public getCarta::Custom (p_oid : OID -> Partida, jugador : Integer, zona : Integer, carta : Integer) : Integer;
+            public getPlayer::Custom (p_oid : OID -> Partida, index : Integer) : Integer;
 
             //Trannsacciones
             public finalizar::CustomTransaction (p_oid : OID -> Partida) : Void; //Establece la partida como finalizada y define al ganador
@@ -405,6 +406,9 @@ ConceptualModel CraftCaster {
             // Relationer
             public addCarta::Relationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
             public removeCarta::Unrelationer -> ZonaPartidaCartaPartida.cartas (p_oid : OID -> ZonaPartida, p_cartaPartida_oids : List<OID -> CartaPartida>) : Void;
+
+            //Custom
+            public getAllCartas::Custom (p_oid : OID -> ZonaPartida) : List<Integer>;
 
             //Transaction
             public operationTransaction::CustomTransaction (p_oid : OID -> ZonaPartida, p_destino_oid : OID -> ZonaPartida) : Void;//Agrega la carta a la nueva zona y la quita de esta, cambia tambien el valor zona de la nueva carta
