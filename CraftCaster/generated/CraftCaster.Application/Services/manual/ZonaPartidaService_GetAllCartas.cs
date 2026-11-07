@@ -23,7 +23,6 @@ public sealed partial class ZonaPartidaService
         }
         return result;
 
-        throw new ModelException("Application service generation for ZonaPartida.getAllCartas is pending.", new NotImplementedException("Method GetAllCartasAsync() not yet implemented."));
         /*PROTECTED REGION END*/
     }
 }
