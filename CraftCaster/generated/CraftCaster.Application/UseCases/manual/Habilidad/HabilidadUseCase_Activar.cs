@@ -104,17 +104,17 @@ public sealed partial class HabilidadUseCase
                     }
                     break;
                 case TipoHabilidad.Descartar:
-                    ZonaPartida mano = partida.Jugadores[enemigo].Zonas[0] ?? throw new ModelException("No existe la zona de destino");
-                    ZonaPartida descarte = partida.Jugadores[enemigo].Zonas[2] ?? throw new ModelException("No existe la zona de destino");
-                    CartaPartida carta = mano.Cartas.Count() < habilidad.Objetivo ?  mano.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
+                    ZonaPartida mano = partida.Jugadores[enemigo].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Mano) ?? throw new ModelException("No existe la zona de destino");
+                    ZonaPartida descarte = partida.Jugadores[enemigo].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Descarte) ?? throw new ModelException("No existe la zona de destino");
+                    CartaPartida carta = mano.Cartas.Count() > habilidad.Objetivo ?  mano.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
                     carta.Zona = await _unitOfWork.ZonaPartidaRepository.ReadAsync(descarte.Id) ?? throw new ModelException("No existe la zona de destino");
                     mano.Cartas.Remove(carta);
                     descarte.Cartas.Add(carta);
                     break;
                 case TipoHabilidad.Destruir:
-                    ZonaPartida campo = partida.Jugadores[enemigo].Zonas[1] ?? throw new ModelException("No existe la zona de destino");;
-                    ZonaPartida pilaDescarte = partida.Jugadores[enemigo].Zonas[2] ?? throw new ModelException("No existe la zona de destino");;
-                    CartaPartida criatura = campo.Cartas.Count() < habilidad.Objetivo ?  campo.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
+                    ZonaPartida campo = partida.Jugadores[enemigo].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Campo) ?? throw new ModelException("No existe la zona de destino");;
+                    ZonaPartida pilaDescarte = partida.Jugadores[enemigo].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Descarte) ?? throw new ModelException("No existe la zona de destino");;
+                    CartaPartida criatura = campo.Cartas.Count() > habilidad.Objetivo ?  campo.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
                     Estado? estado = criatura.Original.Estados.FirstOrDefault(x=> x.Tipo == TipoEstado.Morir);
                     if (estado != null)
                         await estadoService.ActivarAsync(estado.Id);
