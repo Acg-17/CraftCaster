@@ -49,6 +49,8 @@ public sealed partial class HabilidadUseCase
 
             int enemigo = Math.Abs(await partidaService.GetActivoAsync(p_partida_oid)-1);
             int self = await partidaService.GetActivoAsync(p_partida_oid);
+            int idEnemigo = await partidaService.GetPlayerAsync(p_partida_oid, enemigo);
+            int idSelf = await partidaService.GetPlayerAsync(p_partida_oid, self);
 
             // Si estas leyendo esto, si, utilizar herencia era una mejor solucion,
             // pero se quedaba el tdm hasta arriba de clases y podria complicarse la cosa.
@@ -57,17 +59,18 @@ public sealed partial class HabilidadUseCase
             {
                 case TipoHabilidad.Ataque: //Ataque tiene tipoObjetivo = libre
                     //Si objetivo es 0 se ataca al jugador rival, si es cualquier otro numero a una de sus criaturas
+                    
                     if(habilidad.Objetivo == 0)
                     {
-                        await jugadorService.ActualizarVidaAsync(await partidaService.GetPlayerAsync(p_partida_oid, enemigo), habilidad.Cantidad);
+                        await jugadorService.ActualizarVidaAsync(idEnemigo, habilidad.Cantidad);
                     } else
                     {
-                        int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
+                        int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, idEnemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
                         await cartaPartidaService.RecibirDanyoAsync(cartaObj, habilidad.Cantidad);
                     }
                     break;
                 case TipoHabilidad.Cura: //Ataque tiene tipoObjetivo = self
-                    await jugadorService.ActualizarVidaAsync(self, -habilidad.Cantidad);
+                    await jugadorService.ActualizarVidaAsync(idSelf, -habilidad.Cantidad);
                     break;
                 case TipoHabilidad.Danyo: //Ataque tiene tipoObjetivo = enemigo/jugador/libre/todosEnemigos
                     switch(habilidad.TipoObjetivo)
@@ -77,12 +80,12 @@ public sealed partial class HabilidadUseCase
                             await cartaPartidaService.RecibirDanyoAsync(cartaOb, habilidad.Cantidad);
                             break;
                         case TipoObjetivo.Jugador:
-                            await jugadorService.ActualizarVidaAsync(await partidaService.GetPlayerAsync(p_partida_oid, enemigo), habilidad.Cantidad);
+                            await jugadorService.ActualizarVidaAsync(idEnemigo, habilidad.Cantidad);
                             break;
                         case TipoObjetivo.Libre:
                             if(habilidad.Objetivo == 0)
                             {
-                                await jugadorService.ActualizarVidaAsync(await partidaService.GetPlayerAsync(p_partida_oid, enemigo), habilidad.Cantidad);
+                                await jugadorService.ActualizarVidaAsync(idEnemigo, habilidad.Cantidad);
                             } else
                             {
                                 int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
@@ -90,11 +93,10 @@ public sealed partial class HabilidadUseCase
                             }
                             break;
                         case TipoObjetivo.TodosEnemigos:
-                            int id = partida.Jugadores[enemigo].Zonas[1].Id;
+                            int id = partida.Jugadores[enemigo].Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo)?.Id ?? throw new ModelException("No existe la zona de campo");
                             foreach(int cartaId in await zonaPartidaService.GetAllCartasAsync(id))
                             {
-                                int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, cartaId);//Zona 1 es el campo
-                                await cartaPartidaService.RecibirDanyoAsync(cartaObj, habilidad.Cantidad);
+                                await cartaPartidaService.RecibirDanyoAsync(cartaId, habilidad.Cantidad);
                             }
                             break;
                         default:
@@ -102,8 +104,8 @@ public sealed partial class HabilidadUseCase
                     }
                     break;
                 case TipoHabilidad.Descartar:
-                    ZonaPartida mano = partida.Jugadores[enemigo].Zonas[0] ?? throw new ModelException("No existe la zona de destino");;
-                    ZonaPartida descarte = partida.Jugadores[enemigo].Zonas[2] ?? throw new ModelException("No existe la zona de destino");;
+                    ZonaPartida mano = partida.Jugadores[enemigo].Zonas[0] ?? throw new ModelException("No existe la zona de destino");
+                    ZonaPartida descarte = partida.Jugadores[enemigo].Zonas[2] ?? throw new ModelException("No existe la zona de destino");
                     CartaPartida carta = mano.Cartas.Count() < habilidad.Objetivo ?  mano.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
                     carta.Zona = await _unitOfWork.ZonaPartidaRepository.ReadAsync(descarte.Id) ?? throw new ModelException("No existe la zona de destino");
                     mano.Cartas.Remove(carta);
