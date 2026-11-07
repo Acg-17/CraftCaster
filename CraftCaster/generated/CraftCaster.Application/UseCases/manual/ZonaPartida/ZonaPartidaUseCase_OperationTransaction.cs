@@ -1,4 +1,4 @@
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
@@ -24,7 +24,7 @@ using Accion = CraftCaster.Domain.Entities.Accion;
 
 public sealed partial class ZonaPartidaUseCase
 {
-    public async Task OperationTransactionAsync(int p_oid, int p_destino_oid)
+    public async Task OperationTransactionAsync(int p_oid, int p_destino_oid, int index)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.UseCases_ZonaPartida_operationTransaction) ENABLED START*/
         // Resolve external infrastructure services with _utils!.GetRequiredService<TService>() when this use case receives IUnitOfWorkUtils.
@@ -45,7 +45,7 @@ public sealed partial class ZonaPartidaUseCase
             }
 
             // Tomamos la primera carta
-            CartaPartida carta = zonaOrigen.Cartas[0];
+            CartaPartida carta = zonaOrigen.Cartas[index];
 
             // Borramos carta de la zona
             zonaOrigen.Cartas.Remove(carta);

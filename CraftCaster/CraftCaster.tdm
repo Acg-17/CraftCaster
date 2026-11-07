@@ -411,7 +411,7 @@ ConceptualModel CraftCaster {
             public getAllCartas::Custom (p_oid : OID -> ZonaPartida) : List<Integer>;
 
             //Transaction
-            public operationTransaction::CustomTransaction (p_oid : OID -> ZonaPartida, p_destino_oid : OID -> ZonaPartida) : Void;//Agrega la carta a la nueva zona y la quita de esta, cambia tambien el valor zona de la nueva carta
+            public operationTransaction::CustomTransaction (p_oid : OID -> ZonaPartida, p_destino_oid : OID -> ZonaPartida, index : Integer) : Void;//Agrega la carta a la nueva zona y la quita de esta, cambia tambien el valor zona de la nueva carta
         }
     };
 

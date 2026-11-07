@@ -45,6 +45,7 @@ public sealed partial class HabilidadUseCase
             JugadorPartidaService jugadorService = new JugadorPartidaService(_unitOfWork);
             CartaPartidaService cartaPartidaService = new CartaPartidaService(_unitOfWork);
             ZonaPartidaService zonaPartidaService = new ZonaPartidaService(_unitOfWork);
+            EstadoService estadoService = new EstadoService(_unitOfWork);
 
             int enemigo = Math.Abs(await partidaService.GetActivoAsync(p_partida_oid)-1);
             int self = await partidaService.GetActivoAsync(p_partida_oid);
@@ -61,8 +62,8 @@ public sealed partial class HabilidadUseCase
                         await jugadorService.ActualizarVidaAsync(await partidaService.GetPlayerAsync(p_partida_oid, enemigo), habilidad.Cantidad);
                     } else
                     {
-                        int carta = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
-                        await cartaPartidaService.RecibirDanyoAsync(carta, habilidad.Cantidad);
+                        int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
+                        await cartaPartidaService.RecibirDanyoAsync(cartaObj, habilidad.Cantidad);
                     }
                     break;
                 case TipoHabilidad.Cura: //Ataque tiene tipoObjetivo = self
@@ -72,8 +73,8 @@ public sealed partial class HabilidadUseCase
                     switch(habilidad.TipoObjetivo)
                     {
                         case TipoObjetivo.Enemigo:
-                            int carta = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo);//Zona 1 es el campo
-                            await cartaPartidaService.RecibirDanyoAsync(carta, habilidad.Cantidad);
+                            int cartaOb = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo);//Zona 1 es el campo
+                            await cartaPartidaService.RecibirDanyoAsync(cartaOb, habilidad.Cantidad);
                             break;
                         case TipoObjetivo.Jugador:
                             await jugadorService.ActualizarVidaAsync(await partidaService.GetPlayerAsync(p_partida_oid, enemigo), habilidad.Cantidad);
@@ -100,11 +101,24 @@ public sealed partial class HabilidadUseCase
                             throw new ModelException($"El tipo de objetivo de la habilidad con id {p_oid} no es valido o no ha sido implementado");
                     }
                     break;
-                case TipoHabilidad.Defensa:
-                    break;
                 case TipoHabilidad.Descartar:
+                    ZonaPartida mano = partida.Jugadores[enemigo].Zonas[0] ?? throw new ModelException("No existe la zona de destino");;
+                    ZonaPartida descarte = partida.Jugadores[enemigo].Zonas[2] ?? throw new ModelException("No existe la zona de destino");;
+                    CartaPartida carta = mano.Cartas.Count() < habilidad.Objetivo ?  mano.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
+                    carta.Zona = await _unitOfWork.ZonaPartidaRepository.ReadAsync(descarte.Id) ?? throw new ModelException("No existe la zona de destino");
+                    mano.Cartas.Remove(carta);
+                    descarte.Cartas.Add(carta);
                     break;
                 case TipoHabilidad.Destruir:
+                    ZonaPartida campo = partida.Jugadores[enemigo].Zonas[1] ?? throw new ModelException("No existe la zona de destino");;
+                    ZonaPartida pilaDescarte = partida.Jugadores[enemigo].Zonas[2] ?? throw new ModelException("No existe la zona de destino");;
+                    CartaPartida criatura = campo.Cartas.Count() < habilidad.Objetivo ?  campo.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
+                    Estado? estado = criatura.Original.Estados.FirstOrDefault(x=> x.Tipo == TipoEstado.Morir);
+                    if (estado != null)
+                        await estadoService.ActivarAsync(estado.Id);
+                    criatura.Zona = await _unitOfWork.ZonaPartidaRepository.ReadAsync(pilaDescarte.Id) ?? throw new ModelException("No existe la zona de destino");
+                    campo.Cartas.Remove(criatura);
+                    pilaDescarte.Cartas.Add(criatura);
                     break;
                 case TipoHabilidad.Robar:
                     for(int i = 0; i < habilidad.Cantidad; i++)
