@@ -1,4 +1,4 @@
-﻿using CraftCaster.Application.Abstractions;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
@@ -14,9 +14,11 @@ public sealed partial class UsuarioService
     public async Task ReportarUsuarioAsync(int p_oid)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Usuario_reportarUsuario) ENABLED START*/
-        // Write here your custom code...
+        Usuario usuario = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("No existe el usuario indicado.");
 
-        throw new ModelException("Application service generation for Usuario.reportarUsuario is pending.", new NotImplementedException("Method ReportarUsuarioAsync() not yet implemented."));
+        usuario.EstadoCuenta = EstadoCuenta.Suspendida;
+        await _repository.SaveAsync(usuario);
         /*PROTECTED REGION END*/
     }
 }

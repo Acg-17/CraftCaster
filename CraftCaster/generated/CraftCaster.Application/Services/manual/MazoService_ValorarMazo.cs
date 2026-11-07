@@ -1,4 +1,4 @@
-﻿using CraftCaster.Application.Abstractions;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
@@ -14,12 +14,12 @@ public sealed partial class MazoService
     public async Task ValorarMazoAsync(int p_oid, float p_valoracion)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Mazo_valorarMazo) ENABLED START*/
-        if (p_valoracion < 0f)
+        if (p_valoracion < 0.5f || p_valoracion > 5.0f)
         {
-            throw new ModelException("La valoracion no puede ser negativa.");
+            throw new ModelException("La valoracion del mazo debe estar entre 0.5 y 5 estrellas.");
         }
 
-       Mazo? mazo = await _repository.ReadAsync(p_oid);
+        Mazo? mazo = await _repository.ReadAsync(p_oid);
         if (mazo == null)
         {
             throw new ModelException("No existe el mazo indicado.");
@@ -28,6 +28,5 @@ public sealed partial class MazoService
         mazo.Valoracion = p_valoracion;
         await _repository.SaveAsync(mazo);
         /*PROTECTED REGION END*/
-
     }
 }

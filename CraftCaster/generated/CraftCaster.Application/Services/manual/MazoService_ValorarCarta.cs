@@ -1,4 +1,4 @@
-﻿using CraftCaster.Application.Abstractions;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
@@ -14,9 +14,16 @@ public sealed partial class MazoService
     public async Task ValorarCartaAsync(int p_oid, float p_valoracion)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Mazo_valorarCarta) ENABLED START*/
-        // Write here your custom code...
+        if (p_valoracion < 0.5f || p_valoracion > 5.0f)
+        {
+            throw new ModelException("La valoracion de la carta debe estar entre 0.5 y 5 estrellas.");
+        }
 
-        throw new ModelException("Application service generation for Mazo.valorarCarta is pending.", new NotImplementedException("Method ValorarCartaAsync() not yet implemented."));
+        Mazo mazo = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("No existe el mazo indicado.");
+
+        mazo.Valoracion = p_valoracion;
+        await _repository.SaveAsync(mazo);
         /*PROTECTED REGION END*/
     }
 }

@@ -1,4 +1,4 @@
-﻿using CraftCaster.Application.Abstractions;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
@@ -25,6 +25,7 @@ public sealed partial class MazoService
             Usuario = usuarioEntity,
             NumCartas = 0,
             CosteMedio = 0,
+            EstadoMazo = EstadoMazo.Incompleto,
         };
 
         await _repository.SaveAsync(entity);
