@@ -23,8 +23,31 @@ public sealed partial class ZonaPartidaUseCase
             await _unitOfWork.BeginTransactionAsync("ZonaPartidaUseCase.OperationTransactionAsync");
             zonaPartidaService = new ZonaPartidaService(_unitOfWork);
 
-            // Write here your custom transaction code...
-            // Use zonaPartidaService, _unitOfWork.ZonaPartidaRepository or _utils!.GetRequiredService<TService>() as the generated CP equivalent.
+            // Custom Code:
+            ZonaPartida zonaOrigen = await _unitOfWork.ZonaPartidaRepository.ReadAsync(p_oid) ?? throw new ModelException("No existe la zona de origen");
+            ZonaPartida zonaDestino = await _unitOfWork.ZonaPartidaRepository.ReadAsync(p_destino_oid) ?? throw new ModelException("No existe la zona de destino");
+        
+            if(zonaOrigen.Cartas == null || zonaOrigen.Cartas.Count == 0)
+            {
+                throw new ModelException("No hay cartas en el origen para mover.");
+            }
+
+            // Tomamos la primera carta
+            CartaPartida carta = zonaOrigen.Cartas[0];
+
+            // Borramos carta de la zona
+            zonaOrigen.Cartas.Remove(carta);
+
+            // Le decimos cual es la nueva zona
+            carta.Zona = zonaDestino;
+
+            // La metemos en la zona destino
+            zonaDestino.Cartas.Add(carta);
+
+            // Guardamos base de datos
+            await _unitOfWork.CartaPartidaRepository.SaveAsync(carta);
+            await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaOrigen);
+            await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaDestino);
 
             await _unitOfWork.CommitAsync();
         }

@@ -295,7 +295,7 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Habilidad>;
 
             // Transacciones
-            public activar::CustomTransaction (p_oid : OID -> Habilidad, p_partida_oid : OID -> Partida) : Void; //Comprueba el tipo de habilidad y la ejectuta
+            public activar::CustomTransaction (p_oid : OID -> Habilidad, p_partida_oid : OID -> Partida) : Void; //Comprueba el tipo de habilidad y la ejecuta
         }
     };
 
