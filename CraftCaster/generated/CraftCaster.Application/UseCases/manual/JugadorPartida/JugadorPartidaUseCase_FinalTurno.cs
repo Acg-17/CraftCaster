@@ -1,4 +1,5 @@
-﻿using CraftCaster.Application.Abstractions;
+using System.Linq;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
@@ -23,14 +24,34 @@ public sealed partial class JugadorPartidaUseCase
             await _unitOfWork.BeginTransactionAsync("JugadorPartidaUseCase.FinalTurnoAsync");
             jugadorPartidaService = new JugadorPartidaService(_unitOfWork);
 
-            // Write here your custom transaction code...
-            // Use jugadorPartidaService, _unitOfWork.JugadorPartidaRepository or _utils!.GetRequiredService<TService>() as the generated CP equivalent.
+            JugadorPartida jugador = await _unitOfWork.JugadorPartidaRepository.ReadAsync(p_oid)
+                ?? throw new ModelException("No existe el jugador indicado.");
+
+            // 1. Establece activo en false
+            jugador.Activo = false;
+
+            // 2. Desactiva la posibilidad de atacar para sus cartas en campo hasta el siguiente turno
+            ZonaPartida? zonaCampo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo);
+            if (zonaCampo?.Cartas != null)
+            {
+                foreach (var carta in zonaCampo.Cartas)
+                {
+                    carta.PuedeAtacar = false;
+                    await _unitOfWork.CartaPartidaRepository.SaveAsync(carta);
+                }
+            }
+
+            await _unitOfWork.JugadorPartidaRepository.SaveAsync(jugador);
 
             await _unitOfWork.CommitAsync();
         }
         catch (Exception ex)
         {
             await _unitOfWork.RollbackAsync();
+            if (ex is ModelException)
+            {
+                throw;
+            }
             throw new ModelException("Application error while executing use case JugadorPartida.finalTurno.", ex);
         }
         /*PROTECTED REGION END*/
