@@ -1,4 +1,6 @@
-﻿using CraftCaster.Application.Abstractions;
+using System.Collections.Generic;
+using System.Linq;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
@@ -14,16 +16,19 @@ public sealed partial class ZonaPartidaService
     public async Task<IReadOnlyList<int>> GetAllCartasAsync(int p_oid)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_ZonaPartida_getAllCartas) ENABLED START*/
-        // Write here your custom code...
-        ZonaPartida zonaPartida = await _repository.ReadAsync(p_oid) ?? throw new ModelException("No existe la zona indicada.");
-        List<int> result = new();
-        foreach(CartaPartida carta in zonaPartida.Cartas)
-        {
-            result.Add(carta.Id);
-        }
-        return result;
+        ZonaPartida zonaPartida = await _repository.ReadAsync(p_oid) 
+            ?? throw new ModelException("No existe la zona indicada.");
 
-        throw new ModelException("Application service generation for ZonaPartida.getAllCartas is pending.", new NotImplementedException("Method GetAllCartasAsync() not yet implemented."));
+        List<int> result = new();
+        if (zonaPartida.Cartas != null)
+        {
+            foreach (CartaPartida carta in zonaPartida.Cartas)
+            {
+                result.Add(carta.Id);
+            }
+        }
+
+        return result;
         /*PROTECTED REGION END*/
     }
 }

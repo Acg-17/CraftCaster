@@ -58,3 +58,6 @@ nunit-*.xml
 
 # Visual Studio Code
 .vscode/
+
+# Archives
+*.zip

@@ -1,4 +1,6 @@
-﻿using CraftCaster.Application.Abstractions;
+using System;
+using System.Linq;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
@@ -53,10 +55,12 @@ public sealed partial class PartidaUseCase
                     .FirstOrDefault();
 
                 // Determinar el siguiente jugador
-                var siguiente = (ultimoTurno == null ? partida.Jugadores.FirstOrDefault(j => j.NumJugador == 1) : partida.Jugadores.FirstOrDefault(j => j.Id != ultimoTurno.Jugador.Id))
+                var siguiente = (ultimoTurno?.Jugador == null 
+                    ? partida.Jugadores.FirstOrDefault(j => j.NumJugador == 1) 
+                    : partida.Jugadores.FirstOrDefault(j => j.Id != ultimoTurno.Jugador.Id))
                     ?? throw new ModelException("No se pudo determinar el siguiente jugador.");
 
-                int turnosPrevios = partida.Turnos.Count(t => t.Jugador.Id == siguiente.Id);
+                int turnosPrevios = partida.Turnos.Count(t => t.Jugador != null && t.Jugador.Id == siguiente.Id);
                 int manaTurno = Math.Min(10, 1 + turnosPrevios);
 
                 // Crear un nuevo turno para el siguiente jugador
