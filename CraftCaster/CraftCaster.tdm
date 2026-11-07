@@ -295,7 +295,7 @@ ConceptualModel CraftCaster {
             public readAll::ReadAll () : List<Object->Habilidad>;
 
             // Transacciones
-            public activar::CustomTransaction (p_oid : OID -> Habilidad) : Void; //Comprueba el tipo de habilidad y la ejectuta
+            public activar::CustomTransaction (p_oid : OID -> Habilidad, p_partida_oid : OID -> Partida) : Void; //Comprueba el tipo de habilidad y la ejectuta
         }
     };
 
@@ -321,6 +321,7 @@ ConceptualModel CraftCaster {
 
             // Customs
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
+            public getActivo::Custom (p_oid : OID -> Partida) : Integer;
 
             //Trannsacciones
             public finalizar::CustomTransaction (p_oid : OID -> Partida) : Void; //Establece la partida como finalizada y define al ganador
