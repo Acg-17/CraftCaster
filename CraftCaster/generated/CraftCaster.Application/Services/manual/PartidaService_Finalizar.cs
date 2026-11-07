@@ -1,4 +1,4 @@
-﻿using CraftCaster.Application.Abstractions;
+using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
@@ -14,9 +14,11 @@ public sealed partial class PartidaService
     public async Task FinalizarAsync(int p_oid)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Partida_finalizar) ENABLED START*/
-        // Write here your custom code...
+        Partida partida = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("No existe la partida indicada.");
 
-        throw new ModelException("Application service generation for Partida.finalizar is pending.", new NotImplementedException("Method FinalizarAsync() not yet implemented."));
+        partida.Estado = EstadoPartida.Finalizada;
+        await _repository.SaveAsync(partida);
         /*PROTECTED REGION END*/
     }
 }
