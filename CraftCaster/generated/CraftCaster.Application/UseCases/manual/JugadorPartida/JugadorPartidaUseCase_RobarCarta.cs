@@ -35,43 +35,7 @@ public sealed partial class JugadorPartidaUseCase
             await _unitOfWork.BeginTransactionAsync("JugadorPartidaUseCase.RobarCartaAsync");
             jugadorPartidaService = new JugadorPartidaService(_unitOfWork);
 
-            JugadorPartida jugador = await _unitOfWork.JugadorPartidaRepository.ReadAsync(p_oid)
-                ?? throw new ModelException("No existe el jugador indicado.");
-
-            ZonaPartida zonaMazo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo)
-                ?? throw new ModelException("El jugador no dispone de zona de mazo.");
-
-            ZonaPartida zonaMano = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mano)
-                ?? throw new ModelException("El jugador no dispone de zona de mano.");
-
-            if (zonaMazo.Cartas == null || zonaMazo.Cartas.Count == 0)
-            {
-                throw new ModelException("El mazo esta vacio, no quedan cartas para robar.");
-            }
-
-            CartaPartida carta = zonaMazo.Cartas[0];
-            zonaMazo.Cartas.Remove(carta);
-
-            // Si la mano tiene menos de 10 cartas, se añade a la mano; si no, se quema al descarte
-            if (zonaMano.Cartas != null && zonaMano.Cartas.Count >= 10)
-            {
-                ZonaPartida? zonaDescarte = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Descarte);
-                if (zonaDescarte != null)
-                {
-                    carta.Zona = zonaDescarte;
-                    zonaDescarte.Cartas.Add(carta);
-                    await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaDescarte);
-                }
-            }
-            else
-            {
-                carta.Zona = zonaMano;
-                zonaMano.Cartas?.Add(carta);
-                await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMano);
-            }
-
-            await _unitOfWork.CartaPartidaRepository.SaveAsync(carta);
-            await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMazo);
+            await jugadorPartidaService.RobarCartaAsync(p_oid);
 
             await _unitOfWork.CommitAsync();
         }

@@ -42,9 +42,9 @@ public sealed partial class JugadorPartidaUseCase
             // 1. Establece activo en true
             jugador.Activo = true;
 
-            // 2. Regenera y aumenta el mana (maximo 10)
-            int manaActualizado = Math.Min(10, Math.Max(1, jugador.Mana + 1));
-            jugador.Mana = manaActualizado;
+            // 2. Regenera y aumenta el mana (maximo 10) segun los turnos jugados
+            int turnosPrevios = jugador.Partida?.Turnos?.Count(t => t.Jugador != null && t.Jugador.Id == jugador.Id) ?? 0;
+            jugador.Mana = Math.Min(10, 1 + turnosPrevios);
 
             // 3. Reactiva el ataque para todas las criaturas en su zona de Campo
             ZonaPartida? zonaCampo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo);
@@ -57,35 +57,8 @@ public sealed partial class JugadorPartidaUseCase
                 }
             }
 
-            // 4. Roba una carta del mazo a la mano al iniciar el turno
-            ZonaPartida? zonaMazo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
-            ZonaPartida? zonaMano = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mano);
-
-            if (zonaMazo?.Cartas != null && zonaMazo.Cartas.Count > 0 && zonaMano != null)
-            {
-                CartaPartida cartaRobada = zonaMazo.Cartas[0];
-                zonaMazo.Cartas.Remove(cartaRobada);
-
-                if (zonaMano.Cartas != null && zonaMano.Cartas.Count < 10)
-                {
-                    cartaRobada.Zona = zonaMano;
-                    zonaMano.Cartas.Add(cartaRobada);
-                    await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMano);
-                }
-                else
-                {
-                    ZonaPartida? zonaDescarte = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Descarte);
-                    if (zonaDescarte != null)
-                    {
-                        cartaRobada.Zona = zonaDescarte;
-                        zonaDescarte.Cartas.Add(cartaRobada);
-                        await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaDescarte);
-                    }
-                }
-
-                await _unitOfWork.CartaPartidaRepository.SaveAsync(cartaRobada);
-                await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMazo);
-            }
+            // 4. Roba una carta del mazo al iniciar el turno
+            await jugadorPartidaService.RobarCartaAsync(jugador.Id);
 
             await _unitOfWork.JugadorPartidaRepository.SaveAsync(jugador);
 
