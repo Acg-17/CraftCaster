@@ -41,7 +41,7 @@ public sealed partial class HabilidadService : ServiceEntity<Habilidad>
     public Task<Habilidad> ModifierHabilidadDefaultAsync(Habilidad entity) =>
         ModifierDefaultAsync(entity);
 
-    public async Task<Habilidad> NewAsync(TipoHabilidad p_tipo, int p_cantidad, Objetivo p_objetivo, int p_estado_oid)
+    public async Task<Habilidad> NewAsync(TipoHabilidad p_tipo, int p_cantidad, TipoObjetivo p_tipoObjetivo, int p_objetivo, int p_estado_oid)
     {
         Estado estadoEntity = await _unitOfWork.EstadoRepository.ReadAsync(p_estado_oid)
             ?? throw new ModelException("Estado not found for Habilidad.Estado.");
@@ -50,6 +50,7 @@ public sealed partial class HabilidadService : ServiceEntity<Habilidad>
         {
             Tipo = p_tipo,
             Cantidad = p_cantidad,
+            TipoObjetivo = p_tipoObjetivo,
             Objetivo = p_objetivo,
             Estado = estadoEntity,
         };
@@ -65,12 +66,13 @@ public sealed partial class HabilidadService : ServiceEntity<Habilidad>
         await _repository.DeleteAsync(entity);
     }
 
-    public async Task ModifyAsync(int p_oid, TipoHabilidad p_tipo, int p_cantidad, Objetivo p_objetivo, int p_estado_oid)
+    public async Task ModifyAsync(int p_oid, TipoHabilidad p_tipo, int p_cantidad, TipoObjetivo p_tipoObjetivo, int p_objetivo, int p_estado_oid)
     {
         Habilidad entity = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("Habilidad not found.");
         entity.Tipo = p_tipo;
         entity.Cantidad = p_cantidad;
+        entity.TipoObjetivo = p_tipoObjetivo;
         entity.Objetivo = p_objetivo;
         await _repository.SaveAsync(entity);
     }

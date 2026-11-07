@@ -57,12 +57,12 @@ CraftCaster.Domain\Enums\EstadoCuenta.cs
 CraftCaster.Domain\Enums\EstadoMazo.cs
 CraftCaster.Domain\Enums\EstadoPartida.cs
 CraftCaster.Domain\Enums\HariaGeneratedNamespaceMarker.cs
-CraftCaster.Domain\Enums\Objetivo.cs
 CraftCaster.Domain\Enums\Rareza.cs
 CraftCaster.Domain\Enums\TipoAccion.cs
 CraftCaster.Domain\Enums\TipoCarta.cs
 CraftCaster.Domain\Enums\TipoEstado.cs
 CraftCaster.Domain\Enums\TipoHabilidad.cs
+CraftCaster.Domain\Enums\TipoObjetivo.cs
 CraftCaster.Domain\Enums\TipoUsuario.cs
 CraftCaster.Domain\Enums\TipoZona.cs
 CraftCaster.Domain\ValueObjects\HariaGeneratedNamespaceMarker.cs

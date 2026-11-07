@@ -1,6 +1,6 @@
 ﻿namespace CraftCaster.Domain.Enums;
 
-public enum Objetivo
+public enum TipoObjetivo
 {
     Jugador = 1,
     Enemigo = 2,

@@ -107,13 +107,13 @@ public sealed class ModelGeneratedTests
     }
 
     [Fact]
-    public void Objetivo_Should_Define_Model_Literals()
+    public void TipoObjetivo_Should_Define_Model_Literals()
     {
-        Assert.Equal(1, (int)Objetivo.Jugador);
-        Assert.Equal(2, (int)Objetivo.Enemigo);
-        Assert.Equal(3, (int)Objetivo.Libre);
-        Assert.Equal(4, (int)Objetivo.TodosEnemigos);
-        Assert.Equal(5, (int)Objetivo.Self);
+        Assert.Equal(1, (int)TipoObjetivo.Jugador);
+        Assert.Equal(2, (int)TipoObjetivo.Enemigo);
+        Assert.Equal(3, (int)TipoObjetivo.Libre);
+        Assert.Equal(4, (int)TipoObjetivo.TodosEnemigos);
+        Assert.Equal(5, (int)TipoObjetivo.Self);
     }
 
     [Fact]

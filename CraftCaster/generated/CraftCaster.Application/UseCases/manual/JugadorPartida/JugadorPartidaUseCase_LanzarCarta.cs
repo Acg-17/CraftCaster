@@ -23,8 +23,78 @@ public sealed partial class JugadorPartidaUseCase
             await _unitOfWork.BeginTransactionAsync("JugadorPartidaUseCase.LanzarCartaAsync");
             jugadorPartidaService = new JugadorPartidaService(_unitOfWork);
 
-            // Write here your custom transaction code...
-            // Use jugadorPartidaService, _unitOfWork.JugadorPartidaRepository or _utils!.GetRequiredService<TService>() as the generated CP equivalent.
+            // Comprobar existencia de jugador
+            var jugador = await _unitOfWork.JugadorPartidaRepository.ReadAsync(p_oid) ??
+                throw new ModelException($"No existe el jugador con id {p_oid}.");
+
+            // Comprobar existencia de carta
+            CartaPartida carta = await _unitOfWork.CartaPartidaRepository.ReadAsync(p_carta_oid) ??
+                throw new ModelException($"No existe la carta con id {p_carta_oid}.");
+
+            // Comprobar partida en curso
+            var partida = jugador.Partida ??
+                throw new ModelException($"El jugador no tiene partida asociada.");
+            if (partida.Estado != EstadoPartida.EnCurso)
+                throw new ModelException($"Solo se pueden lanzar cartas en una partida en curso.");
+
+            // Comprobar turno activo
+            if (!jugador.Activo)
+                throw new ModelException($"El jugador no tiene el turno activo.");
+
+            // Comprobar que la carta está en la zona de mano del jugador
+            var zonaMano = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mano) ??
+                throw new ModelException($"El jugador no tiene zona de mano.");
+            if (carta.Zona == null || carta.Zona.Id != zonaMano.Id)
+                throw new ModelException($"La carta no está en la zona de mano del jugador.");
+            
+            // Comprobar que el jugador tiene suficiente mana para lanzar la carta
+            int coste = carta.Original.CosteMana;
+            if (coste > jugador.Mana)
+                throw new ModelException($"Mana insuficiente: coste: {coste} y mana disponible: {jugador.Mana}.");
+
+            // Restar el mana del jugador
+            jugador.Mana -= coste;
+
+            // 
+            var zonaDestino = carta.Original.Tipo == TipoCarta.Criatura
+                ? jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo)
+                    ?? throw new ModelException($"El jugador no tiene zona de campo.")
+                : jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Descarte)
+                    ?? throw new ModelException($"El jugador no tiene zona de descarte.");
+            
+            // Actualizar la carta
+            if (carta.Original.Tipo == TipoCarta.Criatura)
+            {
+                carta.VidaActual = carta.Original.Vida ?? 0;
+                carta.AtaqueActual = carta.Original.Ataque ?? 0;
+            }
+            carta.PuedeAtacar = false;
+
+            // Mover la cartade mano a la zona
+            zonaMano.Cartas.Remove(carta);
+            carta.Zona = zonaDestino;
+            zonaDestino.Cartas.Add(carta);
+
+            Turno? turnoActual = partida.Turnos.OrderByDescending(t => t.NumTurno).FirstOrDefault();
+
+            // Registrar la acción de lanzar carta en el turno actual
+            if (turnoActual != null && turnoActual.Jugador != null && turnoActual.Jugador.Id == jugador.Id)
+            {
+                Accion accion = new Accion
+                {
+                    Name = TipoAccion.Lanzar,
+                    Turno = turnoActual,
+                    Origen = carta,
+                };
+                await _unitOfWork.AccionRepository.SaveAsync(accion);
+                turnoActual.Acciones.Add(accion);
+            }
+
+            // Guardar cambios
+            await _unitOfWork.CartaPartidaRepository.SaveAsync(carta);
+            await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMano);
+            await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaDestino);
+            await _unitOfWork.JugadorPartidaRepository.SaveAsync(jugador);
 
             await _unitOfWork.CommitAsync();
         }

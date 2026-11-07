@@ -12,7 +12,10 @@
     <property name="Cantidad" type="Int32">
       <column name="cantidad" not-null="true"/>
     </property>
-    <property name="Objetivo" type="CraftCaster.Domain.Enums.Objetivo, CraftCaster.Domain">
+    <property name="TipoObjetivo" type="CraftCaster.Domain.Enums.TipoObjetivo, CraftCaster.Domain">
+      <column name="tipoObjetivo" not-null="true"/>
+    </property>
+    <property name="Objetivo" type="Int32">
       <column name="objetivo" not-null="true"/>
     </property>
     <many-to-one name="Estado" class="Estado">

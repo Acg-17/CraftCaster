@@ -24,6 +24,5 @@ public sealed partial class MazoService
         mazo.EsPublico = true;
         await _repository.SaveAsync(mazo);
         /*PROTECTED REGION END*/
-
     }
 }

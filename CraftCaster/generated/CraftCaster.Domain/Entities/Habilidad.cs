@@ -9,7 +9,8 @@ public partial class Habilidad
     public virtual int Id { get; set; }
     public virtual TipoHabilidad Tipo { get; set; }
     public virtual int Cantidad { get; set; }
-    public virtual Objetivo Objetivo { get; set; }
+    public virtual TipoObjetivo TipoObjetivo { get; set; }
+    public virtual int Objetivo { get; set; }
     public virtual Estado Estado { get; set; } = null!;
 
     private bool HasDefaultIdentity() => EqualityComparer<int>.Default.Equals(Id, default);

@@ -24,6 +24,5 @@ public sealed partial class JugadorPartidaService
         jugador.Vida = p_vida;
         await _repository.SaveAsync(jugador);
         /*PROTECTED REGION END*/
-
     }
 }

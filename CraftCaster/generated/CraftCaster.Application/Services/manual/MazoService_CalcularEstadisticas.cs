@@ -1,5 +1,4 @@
-using System.Linq;
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;

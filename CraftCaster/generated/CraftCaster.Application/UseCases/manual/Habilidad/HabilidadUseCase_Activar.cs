@@ -12,7 +12,7 @@ namespace CraftCaster.Application.UseCases.Habilidad;
 
 public sealed partial class HabilidadUseCase
 {
-    public async Task ActivarAsync(int p_oid)
+    public async Task ActivarAsync(int p_oid, int p_partida_oid)
     {
         /*PROTECTED REGION ID(CraftCaster.Application.UseCases_Habilidad_activar) ENABLED START*/
         // Resolve external infrastructure services with _utils!.GetRequiredService<TService>() when this use case receives IUnitOfWorkUtils.

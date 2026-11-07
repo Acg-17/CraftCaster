@@ -1,6 +1,4 @@
-using System;
-using System.Linq;
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
