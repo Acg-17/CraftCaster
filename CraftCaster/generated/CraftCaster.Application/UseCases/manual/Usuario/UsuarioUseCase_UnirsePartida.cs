@@ -10,6 +10,19 @@ using CraftCaster.Domain.Enums;
 
 namespace CraftCaster.Application.UseCases.Usuario;
 
+using Usuario = CraftCaster.Domain.Entities.Usuario;
+using Partida = CraftCaster.Domain.Entities.Partida;
+using JugadorPartida = CraftCaster.Domain.Entities.JugadorPartida;
+using ZonaPartida = CraftCaster.Domain.Entities.ZonaPartida;
+using CartaPartida = CraftCaster.Domain.Entities.CartaPartida;
+using Carta = CraftCaster.Domain.Entities.Carta;
+using Mazo = CraftCaster.Domain.Entities.Mazo;
+using Estado = CraftCaster.Domain.Entities.Estado;
+using Habilidad = CraftCaster.Domain.Entities.Habilidad;
+using Turno = CraftCaster.Domain.Entities.Turno;
+using Accion = CraftCaster.Domain.Entities.Accion;
+
+
 public sealed partial class UsuarioUseCase
 {
     public async Task UnirsePartidaAsync(int p_oid, int p_partida_oid)
