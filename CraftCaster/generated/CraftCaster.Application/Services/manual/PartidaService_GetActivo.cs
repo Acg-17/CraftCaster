@@ -15,6 +15,8 @@ public sealed partial class PartidaService
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_Partida_getActivo) ENABLED START*/
         // Write here your custom code...
+        Partida partida = await _repository.ReadAsync(p_oid) ?? throw new ModelException("No existe la partida indicada.");
+        return partida.Jugadores[0].Activo ? 0 : 1;
 
         throw new ModelException("Application service generation for Partida.getActivo is pending.", new NotImplementedException("Method GetActivoAsync() not yet implemented."));
         /*PROTECTED REGION END*/

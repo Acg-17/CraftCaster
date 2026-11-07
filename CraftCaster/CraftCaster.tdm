@@ -322,6 +322,7 @@ ConceptualModel CraftCaster {
             // Customs
             public cambiarEstado::Custom (p_oid : OID -> Partida, p_estado : EstadoPartida) : Void;
             public getActivo::Custom (p_oid : OID -> Partida) : Integer;
+            public getCarta::Custom (p_oid : OID -> Partida, jugador : Integer, zona : Integer, carta : Integer) : Integer;
 
             //Trannsacciones
             public finalizar::CustomTransaction (p_oid : OID -> Partida) : Void; //Establece la partida como finalizada y define al ganador
