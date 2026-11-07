@@ -1,11 +1,11 @@
-using System.Linq;
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
 
         /*PROTECTED REGION ID(usingCraftCaster.Application.Services_Partida_getCarta) ENABLED START*/
         // references to other libraries
+        using System.Linq;
         /*PROTECTED REGION END*/
 
 namespace CraftCaster.Application.Services;
