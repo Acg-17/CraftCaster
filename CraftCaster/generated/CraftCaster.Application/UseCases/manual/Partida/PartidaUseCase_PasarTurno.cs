@@ -1,13 +1,13 @@
-using System;
-using System.Linq;
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
 
         /*PROTECTED REGION ID(usingCraftCaster.Application.UseCases_Partida_pasarTurno) ENABLED START*/
-// references to other libraries
+        // references to other libraries
+        using System;
+        using System.Linq;
         /*PROTECTED REGION END*/
 
 namespace CraftCaster.Application.UseCases.Partida;
