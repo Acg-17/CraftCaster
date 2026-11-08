@@ -65,7 +65,8 @@ public sealed partial class HabilidadUseCase
                         await jugadorService.ActualizarVidaAsync(idEnemigo, habilidad.Cantidad);
                     } else
                     {
-                        int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, idEnemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
+                        // GetCarta espera el indice del jugador (0/1), no su Id, y la zona como TipoZona (Campo = 2)
+                        int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, (int)TipoZona.Campo, habilidad.Objetivo-1);
                         await cartaPartidaService.RecibirDanyoAsync(cartaObj, habilidad.Cantidad);
                     }
                     break;
@@ -76,7 +77,7 @@ public sealed partial class HabilidadUseCase
                     switch(habilidad.TipoObjetivo)
                     {
                         case TipoObjetivo.Enemigo:
-                            int cartaOb = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo);//Zona 1 es el campo
+                            int cartaOb = await partidaService.GetCartaAsync(p_partida_oid, enemigo, (int)TipoZona.Campo, habilidad.Objetivo);
                             await cartaPartidaService.RecibirDanyoAsync(cartaOb, habilidad.Cantidad);
                             break;
                         case TipoObjetivo.Jugador:
@@ -88,7 +89,7 @@ public sealed partial class HabilidadUseCase
                                 await jugadorService.ActualizarVidaAsync(idEnemigo, habilidad.Cantidad);
                             } else
                             {
-                                int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, 1, habilidad.Objetivo-1);//Zona 1 es el campo
+                                int cartaObj = await partidaService.GetCartaAsync(p_partida_oid, enemigo, (int)TipoZona.Campo, habilidad.Objetivo-1);
                                 await cartaPartidaService.RecibirDanyoAsync(cartaObj, habilidad.Cantidad);
                             }
                             break;
@@ -124,7 +125,7 @@ public sealed partial class HabilidadUseCase
                     break;
                 case TipoHabilidad.Robar:
                     for(int i = 0; i < habilidad.Cantidad; i++)
-                        await jugadorService.RobarCartaAsync(self);
+                        await jugadorService.RobarCartaAsync(idSelf); // Id del jugador, no su indice
                     break;
                 default:
                     throw new ModelException($"El tipo de la habilidad con id {p_oid} no es valido o no ha sido implementado");

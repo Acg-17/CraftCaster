@@ -56,6 +56,20 @@ public sealed partial class UsuarioUseCase
                 // Si la partida estaba en espera, se borra; si estaba en curso se finaliza dando victoria al visitante
                 if (partidaLocal.Estado == EstadoPartida.Espera)
                 {
+                    // Las CartaPartida no se borran en cascada (relacion Share con ZonaPartida),
+                    // asi que hay que borrarlas antes que sus zonas o falla la clave ajena.
+                    foreach (var jugadorPartida in partidaLocal.Jugadores)
+                    {
+                        foreach (var zona in jugadorPartida.Zonas)
+                        {
+                            foreach (var cartaPartida in zona.Cartas.ToList())
+                            {
+                                await _unitOfWork.CartaPartidaRepository.DeleteAsync(cartaPartida);
+                            }
+                            zona.Cartas.Clear();
+                        }
+                    }
+
                     await _unitOfWork.PartidaRepository.DeleteAsync(partidaLocal);
                 }
                 else
