@@ -12,6 +12,7 @@ using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Application.UseCases.ZonaPartida;
+using CraftCaster.Application.UseCases.Usuario;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
 using CraftCaster.Infrastructure;
@@ -343,7 +344,7 @@ public sealed class PruebasFuncionalesBackendTests
 
         // Act: Ejecutar la transaccion personalizada para mover carta de Mano a Campo
         var useCase = new ZonaPartidaUseCase(uow);
-        await useCase.OperationTransactionAsync(zonaMano.Id, zonaCampo.Id);
+        await useCase.OperationTransactionAsync(zonaMano.Id, zonaCampo.Id, 0);
 
         // Assert
         var cartaMovida = await uow.CartaPartidaRepository.ReadAsync(cartaPartida.Id);
@@ -413,5 +414,208 @@ public sealed class PruebasFuncionalesBackendTests
         Assert.DoesNotContain(cartasEpicas, c => c.Id == cartaComun.Id);
 
         _output.WriteLine("[OK] ReadFilter Carta.obtenerCartaPorRareza probado con exito.");
+    }
+
+    [Fact]
+    [Trait("Category", "Functional")]
+    public async Task CustomTransaction_Usuario_RegistrarUsuario_Debe_Crear_Usuario_Con_Exito()
+    {
+        var (_, factory) = CreateTestFactory();
+        await using var uow = factory.Create();
+
+        // Arrange
+        var useCase = new UsuarioUseCase(uow);
+        var nombreUsuario = $"NuevoUser_{Guid.NewGuid():N}";
+        var email = $"{nombreUsuario}@test.com";
+
+        // Act
+        var usuarioCreado = await useCase.RegistrarUsuarioAsync(nombreUsuario, email, "PassSegura123!", 1);
+
+        // Assert
+        Assert.NotNull(usuarioCreado);
+        Assert.True(usuarioCreado.Id > 0);
+        Assert.Equal(nombreUsuario, usuarioCreado.NombreUsuario);
+        Assert.Equal(email, usuarioCreado.Email);
+        Assert.Equal(TipoUsuario.Cliente, usuarioCreado.TipoUsuario);
+        Assert.Equal(EstadoCuenta.Activa, usuarioCreado.EstadoCuenta);
+
+        // Validar persistencia
+        var usuarioLeido = await uow.UsuarioRepository.ReadAsync(usuarioCreado.Id);
+        Assert.NotNull(usuarioLeido);
+        Assert.Equal(nombreUsuario, usuarioLeido.NombreUsuario);
+
+        _output.WriteLine("[OK] Usuario.RegistrarUsuario (CustomTransaction) probado con exito.");
+    }
+
+    [Fact]
+    [Trait("Category", "Functional")]
+    public async Task Login_Usuario_Debe_Generar_Token_Con_Credenciales_Validas_Y_Fallar_Con_Invalidas()
+    {
+        var (_, factory) = CreateTestFactory();
+        await using var uow = factory.Create();
+
+        // Arrange: Crear usuario con password hasheado via UsuarioService.NewAsync
+        var usuarioService = new UsuarioService(uow);
+        var passwordPlano = "PasswordSecreto123!";
+        var usuario = await usuarioService.NewAsync(
+            $"UserLogin_{Guid.NewGuid():N}",
+            $"login_{Guid.NewGuid():N}@test.com",
+            passwordPlano,
+            1,
+            TipoUsuario.Cliente);
+
+        // Act 1: Login con contrasenia correcta
+        var token = await usuarioService.LoginAsync(usuario.Id, passwordPlano);
+
+        // Assert 1: Debe retornar un token no vacio
+        Assert.NotNull(token);
+        Assert.NotEmpty(token);
+
+        // Act 2: Login con contrasenia incorrecta
+        var tokenInvalido = await usuarioService.LoginAsync(usuario.Id, "PasswordErroneo!");
+
+        // Assert 2: Debe ser null
+        Assert.Null(tokenInvalido);
+
+        _output.WriteLine("[OK] Usuario.Login probado con exito (token valido e invalidacion con password incorrecto).");
+    }
+
+    [Fact]
+    [Trait("Category", "Functional")]
+    public async Task ReadFilter_Carta_ObtenerCartaPorCosteMana_Debe_Filtrar_Correctamente()
+    {
+        var (_, factory) = CreateTestFactory();
+        await using var uow = factory.Create();
+
+        // Arrange
+        var usuario = new Usuario
+        {
+            NombreUsuario = $"UserMana_{Guid.NewGuid():N}",
+            Email = $"mana_{Guid.NewGuid():N}@test.com",
+            Contrasenia = "hash_mana",
+            FotoPerfil = 1,
+            EstadoCuenta = EstadoCuenta.Activa,
+            TipoUsuario = TipoUsuario.Cliente
+        };
+        await uow.UsuarioRepository.SaveAsync(usuario);
+
+        var cartaCoste7 = new Carta
+        {
+            Nombre = "Titan Arcano",
+            Rareza = Rareza.Legendario,
+            CosteMana = 7,
+            Tipo = TipoCarta.Criatura,
+            Vida = 7,
+            Ataque = 7,
+            Descripcion = "Coste alto",
+            Imagen = 1,
+            EsPublica = true,
+            Usuario = usuario
+        };
+        await uow.CartaRepository.SaveAsync(cartaCoste7);
+
+        // Act
+        var cartasCoste7 = await uow.CartaRepository.ObtenerCartaPorCosteManaAsync(7);
+
+        // Assert
+        Assert.NotNull(cartasCoste7);
+        Assert.Contains(cartasCoste7, c => c.Id == cartaCoste7.Id);
+        Assert.All(cartasCoste7, c => Assert.Equal(7, c.CosteMana));
+
+        _output.WriteLine("[OK] ReadFilter Carta.obtenerCartaPorCosteMana probado con exito.");
+    }
+
+    [Fact]
+    [Trait("Category", "Functional")]
+    public async Task ReadFilter_Mazo_ObtenerMazosPorNombre_Debe_Filtrar_Correctamente()
+    {
+        var (_, factory) = CreateTestFactory();
+        await using var uow = factory.Create();
+
+        // Arrange
+        var usuario = new Usuario
+        {
+            NombreUsuario = $"UserMazo_{Guid.NewGuid():N}",
+            Email = $"mazo_{Guid.NewGuid():N}@test.com",
+            Contrasenia = "hash_mazo",
+            FotoPerfil = 1,
+            EstadoCuenta = EstadoCuenta.Activa,
+            TipoUsuario = TipoUsuario.Cliente
+        };
+        await uow.UsuarioRepository.SaveAsync(usuario);
+
+        var mazoNombreUnico = $"MazoFuego_{Guid.NewGuid():N}";
+        var mazoPublico = new Mazo
+        {
+            Nombre = mazoNombreUnico,
+            EsPublico = true,
+            Imagen = 1,
+            EstadoMazo = EstadoMazo.Completo,
+            CosteMedio = 3.5f,
+            NumCartas = 30,
+            Valoracion = 4.0f,
+            Usuario = usuario
+        };
+        await uow.MazoRepository.SaveAsync(mazoPublico);
+
+        // Act
+        var mazos = await uow.MazoRepository.ObtenerMazosPorNombreAsync(mazoNombreUnico);
+
+        // Assert
+        Assert.NotNull(mazos);
+        Assert.Contains(mazos, m => m.Id == mazoPublico.Id && m.Nombre == mazoNombreUnico);
+
+        _output.WriteLine("[OK] ReadFilter Mazo.obtenerMazosPorNombre probado con exito.");
+    }
+
+    [Fact]
+    [Trait("Category", "Functional")]
+    public async Task ReadFilter_Partida_ObtenerPartidasUsuario_Debe_Filtrar_Correctamente()
+    {
+        var (_, factory) = CreateTestFactory();
+        await using var uow = factory.Create();
+
+        // Arrange
+        var usuario1 = new Usuario
+        {
+            NombreUsuario = $"UserP1_{Guid.NewGuid():N}",
+            Email = $"p1_{Guid.NewGuid():N}@test.com",
+            Contrasenia = "hash_p1",
+            FotoPerfil = 1,
+            EstadoCuenta = EstadoCuenta.Activa,
+            TipoUsuario = TipoUsuario.Cliente
+        };
+        await uow.UsuarioRepository.SaveAsync(usuario1);
+
+        var mazo1 = new Mazo
+        {
+            Nombre = "MazoP1",
+            EsPublico = true,
+            Imagen = 1,
+            EstadoMazo = EstadoMazo.Completo,
+            CosteMedio = 2.0f,
+            NumCartas = 20,
+            Valoracion = 3.0f,
+            Usuario = usuario1
+        };
+        await uow.MazoRepository.SaveAsync(mazo1);
+
+        var partida = new Partida
+        {
+            Estado = EstadoPartida.EnCurso,
+            FechaInicio = DateTime.UtcNow,
+            Usuario1 = usuario1,
+            Mazo1 = mazo1
+        };
+        await uow.PartidaRepository.SaveAsync(partida);
+
+        // Act
+        var partidasDelUsuario = await uow.PartidaRepository.ObtenerPartidasUsuarioAsync(usuario1.Id);
+
+        // Assert
+        Assert.NotNull(partidasDelUsuario);
+        Assert.Contains(partidasDelUsuario, p => p.Id == partida.Id);
+
+        _output.WriteLine("[OK] ReadFilter Partida.obtenerPartidasUsuario probado con exito.");
     }
 }
