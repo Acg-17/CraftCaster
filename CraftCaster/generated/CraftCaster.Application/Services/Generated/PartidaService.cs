@@ -106,28 +106,6 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveTurnoAsync(int p_oid, IReadOnlyList<int> p_turno_oids)
-    {
-        Partida entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Partida not found.");
-        entity.Turnos ??= new List<Turno>();
-        foreach (var relatedId in p_turno_oids)
-        {
-            Turno relatedEntity = await _unitOfWork.TurnoRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Turno not found for Partida.Turnos.");
-            if (!entity.Turnos.Remove(relatedEntity))
-            {
-                throw new ModelException("Turno is not related to Partida.Turnos.");
-            }
-            if (relatedEntity.Partida is not null && relatedEntity.Partida.Equals(entity))
-            {
-                relatedEntity.Partida = null!;
-            }
-            await _unitOfWork.TurnoRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
     public async Task AddJugadoresAsync(int p_oid, IReadOnlyList<int> p_jugadorPartida_oids)
     {
         Partida entity = await _repository.ReadAsync(p_oid)
@@ -142,28 +120,6 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
                 entity.Jugadores.Add(relatedEntity);
             }
             relatedEntity.Partida = entity;
-            await _unitOfWork.JugadorPartidaRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
-    public async Task RemoveJugadoresAsync(int p_oid, IReadOnlyList<int> p_jugadorPartida_oids)
-    {
-        Partida entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Partida not found.");
-        entity.Jugadores ??= new List<JugadorPartida>();
-        foreach (var relatedId in p_jugadorPartida_oids)
-        {
-            JugadorPartida relatedEntity = await _unitOfWork.JugadorPartidaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("JugadorPartida not found for Partida.Jugadores.");
-            if (!entity.Jugadores.Remove(relatedEntity))
-            {
-                throw new ModelException("JugadorPartida is not related to Partida.Jugadores.");
-            }
-            if (relatedEntity.Partida is not null && relatedEntity.Partida.Equals(entity))
-            {
-                relatedEntity.Partida = null!;
-            }
             await _unitOfWork.JugadorPartidaRepository.SaveAsync(relatedEntity);
         }
         await _repository.SaveAsync(entity);

@@ -21,8 +21,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Mappings\CraftCaster\usuario.hbm.xml" />
     <EmbeddedResource Include="Mappings\CraftCaster\mazo.hbm.xml" />
-    <EmbeddedResource Include="Mappings\CraftCaster\lineamazo.hbm.xml" />
     <EmbeddedResource Include="Mappings\CraftCaster\carta.hbm.xml" />
+    <EmbeddedResource Include="Mappings\CraftCaster\lineamazo.hbm.xml" />
     <EmbeddedResource Include="Mappings\CraftCaster\estado.hbm.xml" />
     <EmbeddedResource Include="Mappings\CraftCaster\habilidad.hbm.xml" />
     <EmbeddedResource Include="Mappings\CraftCaster\partida.hbm.xml" />

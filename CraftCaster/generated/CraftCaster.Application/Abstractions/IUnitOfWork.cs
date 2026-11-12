@@ -4,8 +4,8 @@ public interface IUnitOfWork : IAsyncDisposable
 {
     IUsuarioRepository UsuarioRepository { get; }
     IMazoRepository MazoRepository { get; }
-    ILineaMazoRepository LineaMazoRepository { get; }
     ICartaRepository CartaRepository { get; }
+    ILineaMazoRepository LineaMazoRepository { get; }
     IEstadoRepository EstadoRepository { get; }
     IHabilidadRepository HabilidadRepository { get; }
     IPartidaRepository PartidaRepository { get; }

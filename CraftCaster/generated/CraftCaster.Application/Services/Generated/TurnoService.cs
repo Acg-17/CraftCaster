@@ -106,26 +106,4 @@ public sealed partial class TurnoService : ServiceEntity<Turno>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveAccioneAsync(int p_oid, IReadOnlyList<int> p_accion_oids)
-    {
-        Turno entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Turno not found.");
-        entity.Acciones ??= new List<Accion>();
-        foreach (var relatedId in p_accion_oids)
-        {
-            Accion relatedEntity = await _unitOfWork.AccionRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Accion not found for Turno.Acciones.");
-            if (!entity.Acciones.Remove(relatedEntity))
-            {
-                throw new ModelException("Accion is not related to Turno.Acciones.");
-            }
-            if (relatedEntity.Turno is not null && relatedEntity.Turno.Equals(entity))
-            {
-                relatedEntity.Turno = null!;
-            }
-            await _unitOfWork.AccionRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
 }

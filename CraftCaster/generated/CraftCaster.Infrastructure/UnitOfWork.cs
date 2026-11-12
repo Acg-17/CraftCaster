@@ -35,8 +35,8 @@ public sealed class UnitOfWork : IUnitOfWork, IAsyncDisposable
         TokenGenerator = tokenGenerator ?? new HariaTokenGenerator();
         UsuarioRepository = new UsuarioRepository(session, _loggerFactory?.CreateLogger<UsuarioRepository>());
         MazoRepository = new MazoRepository(session, _loggerFactory?.CreateLogger<MazoRepository>());
-        LineaMazoRepository = new LineaMazoRepository(session, _loggerFactory?.CreateLogger<LineaMazoRepository>());
         CartaRepository = new CartaRepository(session, _loggerFactory?.CreateLogger<CartaRepository>());
+        LineaMazoRepository = new LineaMazoRepository(session, _loggerFactory?.CreateLogger<LineaMazoRepository>());
         EstadoRepository = new EstadoRepository(session, _loggerFactory?.CreateLogger<EstadoRepository>());
         HabilidadRepository = new HabilidadRepository(session, _loggerFactory?.CreateLogger<HabilidadRepository>());
         PartidaRepository = new PartidaRepository(session, _loggerFactory?.CreateLogger<PartidaRepository>());
@@ -49,8 +49,8 @@ public sealed class UnitOfWork : IUnitOfWork, IAsyncDisposable
 
     public IUsuarioRepository UsuarioRepository { get; }
     public IMazoRepository MazoRepository { get; }
-    public ILineaMazoRepository LineaMazoRepository { get; }
     public ICartaRepository CartaRepository { get; }
+    public ILineaMazoRepository LineaMazoRepository { get; }
     public IEstadoRepository EstadoRepository { get; }
     public IHabilidadRepository HabilidadRepository { get; }
     public IPartidaRepository PartidaRepository { get; }

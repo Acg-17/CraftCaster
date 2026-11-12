@@ -41,6 +41,27 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
     public Task<Mazo> ModifierMazoDefaultAsync(Mazo entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task<Mazo> NewAsync(string p_nombre, float p_costeMedio, int p_numCartas, EstadoMazo p_estadoMazo, bool p_esPublico, float p_valoracion, byte p_imagen, int p_usuario_oid)
+    {
+        Usuario usuarioEntity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario_oid)
+            ?? throw new ModelException("Usuario not found for Mazo.Usuario.");
+
+        Mazo entity = new Mazo
+        {
+            Nombre = p_nombre,
+            CosteMedio = p_costeMedio,
+            NumCartas = p_numCartas,
+            EstadoMazo = p_estadoMazo,
+            EsPublico = p_esPublico,
+            Valoracion = p_valoracion,
+            Imagen = p_imagen,
+            Usuario = usuarioEntity,
+        };
+
+        await _repository.SaveAsync(entity);
+        return entity;
+    }
+
     public async Task DestroyAsync(int p_oid)
     {
         Mazo entity = await _repository.ReadAsync(p_oid)
@@ -86,28 +107,6 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
                 entity.Lineas.Add(relatedEntity);
             }
             relatedEntity.Mazo = entity;
-            await _unitOfWork.LineaMazoRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
-    public async Task RemoveLineaAsync(int p_oid, IReadOnlyList<int> p_lineaMazo_oids)
-    {
-        Mazo entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Mazo not found.");
-        entity.Lineas ??= new List<LineaMazo>();
-        foreach (var relatedId in p_lineaMazo_oids)
-        {
-            LineaMazo relatedEntity = await _unitOfWork.LineaMazoRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("LineaMazo not found for Mazo.Lineas.");
-            if (!entity.Lineas.Remove(relatedEntity))
-            {
-                throw new ModelException("LineaMazo is not related to Mazo.Lineas.");
-            }
-            if (relatedEntity.Mazo is not null && relatedEntity.Mazo.Equals(entity))
-            {
-                relatedEntity.Mazo = null!;
-            }
             await _unitOfWork.LineaMazoRepository.SaveAsync(relatedEntity);
         }
         await _repository.SaveAsync(entity);

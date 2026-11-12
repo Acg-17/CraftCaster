@@ -12,7 +12,7 @@
     <many-to-one name="Jugador" class="JugadorPartida">
       <column name="FK_JugadorPartida_jugador" not-null="true"/>
     </many-to-one>
-    <bag name="Cartas" inverse="true">
+    <bag name="Cartas" cascade="all-delete-orphan" inverse="true">
       <key>
         <column name="FK_ZonaPartida_zona"/>
       </key>

@@ -100,26 +100,4 @@ public sealed partial class ZonaPartidaService : ServiceEntity<ZonaPartida>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveCartaAsync(int p_oid, IReadOnlyList<int> p_cartaPartida_oids)
-    {
-        ZonaPartida entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("ZonaPartida not found.");
-        entity.Cartas ??= new List<CartaPartida>();
-        foreach (var relatedId in p_cartaPartida_oids)
-        {
-            CartaPartida relatedEntity = await _unitOfWork.CartaPartidaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("CartaPartida not found for ZonaPartida.Cartas.");
-            if (!entity.Cartas.Remove(relatedEntity))
-            {
-                throw new ModelException("CartaPartida is not related to ZonaPartida.Cartas.");
-            }
-            if (relatedEntity.Zona is not null && relatedEntity.Zona.Equals(entity))
-            {
-                relatedEntity.Zona = null!;
-            }
-            await _unitOfWork.CartaPartidaRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
 }

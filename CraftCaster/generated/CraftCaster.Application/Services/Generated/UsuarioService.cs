@@ -59,6 +59,22 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         }
     }
 
+    public async Task<Usuario> NewAsync(string p_nombreUsuario, string p_email, string p_contrasenia, byte p_fotoPerfil, EstadoCuenta p_estadoCuenta, TipoUsuario p_tipoUsuario)
+    {
+        Usuario entity = new Usuario
+        {
+            NombreUsuario = p_nombreUsuario,
+            Email = p_email,
+            Contrasenia = _passwordHasher.HashPasswordIfNeeded(p_contrasenia),
+            FotoPerfil = p_fotoPerfil,
+            EstadoCuenta = p_estadoCuenta,
+            TipoUsuario = p_tipoUsuario,
+        };
+
+        await _repository.SaveAsync(entity);
+        return entity;
+    }
+
     public async Task DestroyAsync(int p_oid)
     {
         Usuario entity = await _repository.ReadAsync(p_oid)
@@ -136,28 +152,6 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveCartaAsync(int p_oid, IReadOnlyList<int> p_carta_oids)
-    {
-        Usuario entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Usuario not found.");
-        entity.Cartas ??= new List<Carta>();
-        foreach (var relatedId in p_carta_oids)
-        {
-            Carta relatedEntity = await _unitOfWork.CartaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Carta not found for Usuario.Cartas.");
-            if (!entity.Cartas.Remove(relatedEntity))
-            {
-                throw new ModelException("Carta is not related to Usuario.Cartas.");
-            }
-            if (relatedEntity.Usuario is not null && relatedEntity.Usuario.Equals(entity))
-            {
-                relatedEntity.Usuario = null!;
-            }
-            await _unitOfWork.CartaRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
     public async Task AddMazoAsync(int p_oid, IReadOnlyList<int> p_mazo_oids)
     {
         Usuario entity = await _repository.ReadAsync(p_oid)
@@ -177,28 +171,6 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveMazoAsync(int p_oid, IReadOnlyList<int> p_mazo_oids)
-    {
-        Usuario entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Usuario not found.");
-        entity.Mazos ??= new List<Mazo>();
-        foreach (var relatedId in p_mazo_oids)
-        {
-            Mazo relatedEntity = await _unitOfWork.MazoRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Mazo not found for Usuario.Mazos.");
-            if (!entity.Mazos.Remove(relatedEntity))
-            {
-                throw new ModelException("Mazo is not related to Usuario.Mazos.");
-            }
-            if (relatedEntity.Usuario is not null && relatedEntity.Usuario.Equals(entity))
-            {
-                relatedEntity.Usuario = null!;
-            }
-            await _unitOfWork.MazoRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
     public async Task AddPartidasLocalAsync(int p_oid, IReadOnlyList<int> p_partida_oids)
     {
         Usuario entity = await _repository.ReadAsync(p_oid)
@@ -213,28 +185,6 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
                 entity.PartidasLocal.Add(relatedEntity);
             }
             relatedEntity.Usuario1 = entity;
-            await _unitOfWork.PartidaRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
-    public async Task RemovePartidasLocalAsync(int p_oid, IReadOnlyList<int> p_partida_oids)
-    {
-        Usuario entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Usuario not found.");
-        entity.PartidasLocal ??= new List<Partida>();
-        foreach (var relatedId in p_partida_oids)
-        {
-            Partida relatedEntity = await _unitOfWork.PartidaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Partida not found for Usuario.PartidasLocal.");
-            if (!entity.PartidasLocal.Remove(relatedEntity))
-            {
-                throw new ModelException("Partida is not related to Usuario.PartidasLocal.");
-            }
-            if (relatedEntity.Usuario1 is not null && relatedEntity.Usuario1.Equals(entity))
-            {
-                relatedEntity.Usuario1 = null!;
-            }
             await _unitOfWork.PartidaRepository.SaveAsync(relatedEntity);
         }
         await _repository.SaveAsync(entity);

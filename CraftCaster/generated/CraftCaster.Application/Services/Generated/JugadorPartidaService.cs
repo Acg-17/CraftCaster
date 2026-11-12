@@ -106,26 +106,4 @@ public sealed partial class JugadorPartidaService : ServiceEntity<JugadorPartida
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveZonaAsync(int p_oid, IReadOnlyList<int> p_zonaPartida_oids)
-    {
-        JugadorPartida entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("JugadorPartida not found.");
-        entity.Zonas ??= new List<ZonaPartida>();
-        foreach (var relatedId in p_zonaPartida_oids)
-        {
-            ZonaPartida relatedEntity = await _unitOfWork.ZonaPartidaRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("ZonaPartida not found for JugadorPartida.Zonas.");
-            if (!entity.Zonas.Remove(relatedEntity))
-            {
-                throw new ModelException("ZonaPartida is not related to JugadorPartida.Zonas.");
-            }
-            if (relatedEntity.Jugador is not null && relatedEntity.Jugador.Equals(entity))
-            {
-                relatedEntity.Jugador = null!;
-            }
-            await _unitOfWork.ZonaPartidaRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
 }

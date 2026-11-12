@@ -100,26 +100,4 @@ public sealed partial class EstadoService : ServiceEntity<Estado>
         await _repository.SaveAsync(entity);
     }
 
-    public async Task RemoveHabilidadeAsync(int p_oid, IReadOnlyList<int> p_habilidad_oids)
-    {
-        Estado entity = await _repository.ReadAsync(p_oid)
-            ?? throw new ModelException("Estado not found.");
-        entity.Habilidades ??= new List<Habilidad>();
-        foreach (var relatedId in p_habilidad_oids)
-        {
-            Habilidad relatedEntity = await _unitOfWork.HabilidadRepository.ReadAsync(relatedId)
-                ?? throw new ModelException("Habilidad not found for Estado.Habilidades.");
-            if (!entity.Habilidades.Remove(relatedEntity))
-            {
-                throw new ModelException("Habilidad is not related to Estado.Habilidades.");
-            }
-            if (relatedEntity.Estado is not null && relatedEntity.Estado.Equals(entity))
-            {
-                relatedEntity.Estado = null!;
-            }
-            await _unitOfWork.HabilidadRepository.SaveAsync(relatedEntity);
-        }
-        await _repository.SaveAsync(entity);
-    }
-
 }
