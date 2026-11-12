@@ -1,4 +1,4 @@
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
@@ -9,19 +9,6 @@ using CraftCaster.Domain.Enums;
         /*PROTECTED REGION END*/
 
 namespace CraftCaster.Application.UseCases.Usuario;
-
-using Usuario = CraftCaster.Domain.Entities.Usuario;
-using Partida = CraftCaster.Domain.Entities.Partida;
-using JugadorPartida = CraftCaster.Domain.Entities.JugadorPartida;
-using ZonaPartida = CraftCaster.Domain.Entities.ZonaPartida;
-using CartaPartida = CraftCaster.Domain.Entities.CartaPartida;
-using Carta = CraftCaster.Domain.Entities.Carta;
-using Mazo = CraftCaster.Domain.Entities.Mazo;
-using Estado = CraftCaster.Domain.Entities.Estado;
-using Habilidad = CraftCaster.Domain.Entities.Habilidad;
-using Turno = CraftCaster.Domain.Entities.Turno;
-using Accion = CraftCaster.Domain.Entities.Accion;
-
 
 public sealed partial class UsuarioUseCase
 {
@@ -38,7 +25,7 @@ public sealed partial class UsuarioUseCase
 
             // Custom code:
             // Buscamos usuario que quiere crear la partida
-            Usuario usuario = await _unitOfWork.UsuarioRepository.ReadAsync(p_oid) 
+            Domain.Entities.Usuario usuario = await _unitOfWork.UsuarioRepository.ReadAsync(p_oid) 
                 ?? throw new ModelException("No existe el usuario indicado");
 
             // Buscamos mazo
@@ -47,7 +34,7 @@ public sealed partial class UsuarioUseCase
                 ?? throw new ModelException("El usuario no tiene ningún mazo para iniciar la partida.");
 
             // Creamos la partida
-            Partida partida = new Partida
+            Domain.Entities.Partida partida = new Domain.Entities.Partida
             {
                 Estado = EstadoPartida.Espera,
                 FechaInicio = DateTime.UtcNow,
@@ -59,7 +46,7 @@ public sealed partial class UsuarioUseCase
             usuario.PartidasLocal.Add(partida);
 
             // Creamos al jugador 1 en la partida con 30 de vida
-            JugadorPartida jugador = new JugadorPartida
+            Domain.Entities.JugadorPartida jugador = new Domain.Entities.JugadorPartida
             {
                 NumJugador = 1,
                 Vida = 30,
@@ -72,10 +59,10 @@ public sealed partial class UsuarioUseCase
             partida.Jugadores.Add(jugador);
 
             // Creamos las 4 zonas del tablero para este jugador
-            ZonaPartida zonaMazo = new ZonaPartida { TipoZona = TipoZona.Mazo, Jugador = jugador };
-            ZonaPartida zonaMano = new ZonaPartida { TipoZona = TipoZona.Mano, Jugador = jugador };
-            ZonaPartida zonaCampo = new ZonaPartida { TipoZona = TipoZona.Campo, Jugador = jugador };
-            ZonaPartida zonaDescarte = new ZonaPartida { TipoZona = TipoZona.Descarte, Jugador = jugador };
+            Domain.Entities.ZonaPartida zonaMazo = new Domain.Entities.ZonaPartida { TipoZona = TipoZona.Mazo, Jugador = jugador };
+            Domain.Entities.ZonaPartida zonaMano = new Domain.Entities.ZonaPartida { TipoZona = TipoZona.Mano, Jugador = jugador };
+            Domain.Entities.ZonaPartida zonaCampo = new Domain.Entities.ZonaPartida { TipoZona = TipoZona.Campo, Jugador = jugador };
+            Domain.Entities.ZonaPartida zonaDescarte = new Domain.Entities.ZonaPartida { TipoZona = TipoZona.Descarte, Jugador = jugador };
            
             await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMazo);
             await _unitOfWork.ZonaPartidaRepository.SaveAsync(zonaMano);

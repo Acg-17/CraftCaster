@@ -1,4 +1,4 @@
-using CraftCaster.Application.Abstractions;
+﻿using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
 using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
@@ -9,19 +9,6 @@ using CraftCaster.Domain.Enums;
         /*PROTECTED REGION END*/
 
 namespace CraftCaster.Application.UseCases.Partida;
-
-using Usuario = CraftCaster.Domain.Entities.Usuario;
-using Partida = CraftCaster.Domain.Entities.Partida;
-using JugadorPartida = CraftCaster.Domain.Entities.JugadorPartida;
-using ZonaPartida = CraftCaster.Domain.Entities.ZonaPartida;
-using CartaPartida = CraftCaster.Domain.Entities.CartaPartida;
-using Carta = CraftCaster.Domain.Entities.Carta;
-using Mazo = CraftCaster.Domain.Entities.Mazo;
-using Estado = CraftCaster.Domain.Entities.Estado;
-using Habilidad = CraftCaster.Domain.Entities.Habilidad;
-using Turno = CraftCaster.Domain.Entities.Turno;
-using Accion = CraftCaster.Domain.Entities.Accion;
-
 
 public sealed partial class PartidaUseCase
 {
@@ -37,7 +24,7 @@ public sealed partial class PartidaUseCase
             partidaService = new PartidaService(_unitOfWork);
 
             // Custom code:
-            Partida partida = await _unitOfWork.PartidaRepository.ReadAsync(p_oid) 
+            Domain.Entities.Partida partida = await _unitOfWork.PartidaRepository.ReadAsync(p_oid) 
                 ?? throw new ModelException($"No existe la partida con id {p_oid}.");
 
             if (partida.Estado == EstadoPartida.Finalizada)
@@ -45,16 +32,16 @@ public sealed partial class PartidaUseCase
                 throw new ModelException($"La partida con id {p_oid} ya se encuentra finalizada.");
             }
 
-            JugadorPartida? jugador1 = partida.Jugadores.FirstOrDefault(j => j.NumJugador == 1);
-            JugadorPartida? jugador2 = partida.Jugadores.FirstOrDefault(j => j.NumJugador == 2);
+            Domain.Entities.JugadorPartida? jugador1 = partida.Jugadores.FirstOrDefault(j => j.NumJugador == 1);
+            Domain.Entities.JugadorPartida? jugador2 = partida.Jugadores.FirstOrDefault(j => j.NumJugador == 2);
 
             if (jugador1 == null || jugador2 == null)
             {
                 throw new ModelException("La partida no cuenta con ambos jugadores para determinar un ganador.");
             }
 
-            ZonaPartida? mazoJugador1 = jugador1.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
-            ZonaPartida? mazoJugador2 = jugador2.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
+            Domain.Entities.ZonaPartida? mazoJugador1 = jugador1.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
+            Domain.Entities.ZonaPartida? mazoJugador2 = jugador2.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
             
             bool jugador1SinCartas = mazoJugador1 == null || mazoJugador1.Cartas == null || mazoJugador1.Cartas.Count == 0;
             bool jugador2SinCartas = mazoJugador2 == null || mazoJugador2.Cartas == null || mazoJugador2.Cartas.Count == 0;

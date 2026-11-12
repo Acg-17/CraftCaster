@@ -10,19 +10,6 @@ using CraftCaster.Domain.Enums;
 
 namespace CraftCaster.Application.UseCases.JugadorPartida;
 
-using Usuario = CraftCaster.Domain.Entities.Usuario;
-using Partida = CraftCaster.Domain.Entities.Partida;
-using JugadorPartida = CraftCaster.Domain.Entities.JugadorPartida;
-using ZonaPartida = CraftCaster.Domain.Entities.ZonaPartida;
-using CartaPartida = CraftCaster.Domain.Entities.CartaPartida;
-using Carta = CraftCaster.Domain.Entities.Carta;
-using Mazo = CraftCaster.Domain.Entities.Mazo;
-using Estado = CraftCaster.Domain.Entities.Estado;
-using Habilidad = CraftCaster.Domain.Entities.Habilidad;
-using Turno = CraftCaster.Domain.Entities.Turno;
-using Accion = CraftCaster.Domain.Entities.Accion;
-
-
 public sealed partial class JugadorPartidaUseCase
 {
     public async Task FinalTurnoAsync(int p_oid)
@@ -36,14 +23,14 @@ public sealed partial class JugadorPartidaUseCase
             await _unitOfWork.BeginTransactionAsync("JugadorPartidaUseCase.FinalTurnoAsync");
             jugadorPartidaService = new JugadorPartidaService(_unitOfWork);
 
-            JugadorPartida jugador = await _unitOfWork.JugadorPartidaRepository.ReadAsync(p_oid)
+            Domain.Entities.JugadorPartida jugador = await _unitOfWork.JugadorPartidaRepository.ReadAsync(p_oid)
                 ?? throw new ModelException("No existe el jugador indicado.");
 
             // 1. Establece activo en false
             jugador.Activo = false;
 
             // 2. Desactiva la posibilidad de atacar para sus cartas en campo hasta el siguiente turno
-            ZonaPartida? zonaCampo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo);
+            Domain.Entities.ZonaPartida? zonaCampo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo);
             if (zonaCampo?.Cartas != null)
             {
                 foreach (var carta in zonaCampo.Cartas)
