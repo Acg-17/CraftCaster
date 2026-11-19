@@ -139,6 +139,8 @@ ConceptualModel CraftCaster {
 
             // Relationer
             public addLinea::Relationer -> MazoLineaMazo.lineas (p_oid : OID -> Mazo, p_lineaMazo_oids : List<OID -> LineaMazo>) : Void;
+            public addPartidasLocal::Relationer -> MazoPartida1.partidasLocal (p_oid : OID -> Mazo, p_partida_oids : List<OID -> Partida>) : Void;
+            public addPartidasVisitante::Relationer -> MazoPartida2.partidasVisitante (p_oid : OID -> Mazo, p_partida_oids : List<OID -> Partida>) : Void;
         
             // Customs
             public compartir::Custom (p_oid : OID -> Mazo) : Void;
@@ -200,6 +202,9 @@ ConceptualModel CraftCaster {
             public modify::Modifier (p_oid : OID -> Carta, p_nombre : String, p_rareza : Rareza, p_costeMana : Integer, p_tipo : TipoCarta, p_descripcion : String, p_imagen : Byte, p_esPublica : Boolean, p_usuario_oid : OID -> Usuario) : Void;
             public readOID::ReadOID (p_oid : OID -> Carta) : Object->Carta;
             public readAll::ReadAll () : List<Object->Carta>;
+
+            // Relationer
+            public addEstado::Relationer -> CartaEstado.estados (p_oid : OID -> Carta, p_estado_oids : List<OID -> Estado>) : Void;
 
             // Customs
             public compartir::Custom (p_oid : OID -> Carta) : Void;
@@ -369,6 +374,8 @@ ConceptualModel CraftCaster {
             // Customs
             public actualizarVida::Custom (p_oid : OID -> JugadorPartida, p_vida : Integer) : Void;
             public actualizarMana::Custom (p_oid : OID -> JugadorPartida, p_mana : Integer) : Void;
+            public robarCartaDelMazo::Custom (p_oid : OID -> JugadorPartida) : Void;
+            public pasarTurno::Custom (p_oid : OID -> JugadorPartida) : Void;
 
             // Relationer
             public addZona::Relationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;

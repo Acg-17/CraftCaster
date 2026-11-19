@@ -41,6 +41,13 @@ public sealed partial class HabilidadService : ServiceEntity<Habilidad>
     public Task<Habilidad> ModifierHabilidadDefaultAsync(Habilidad entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyHabilidadRelationsAsync(Habilidad entity, int? p_estado_id)
+    {
+        if (p_estado_id is null) throw new ModelException("Habilidad.Estado is required.");
+        entity.Estado = p_estado_id is int selectedEstado
+            ? await _unitOfWork.EstadoRepository.ReadAsync(selectedEstado) ?? throw new ModelException("Estado not found for Habilidad.Estado.") : null!;
+    }
+
     public async Task<Habilidad> NewAsync(TipoHabilidad p_tipo, int p_cantidad, TipoObjetivo p_tipoObjetivo, int p_objetivo, int p_estado_oid)
     {
         Estado estadoEntity = await _unitOfWork.EstadoRepository.ReadAsync(p_estado_oid)

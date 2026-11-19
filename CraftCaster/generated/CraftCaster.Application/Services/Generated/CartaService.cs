@@ -41,6 +41,13 @@ public sealed partial class CartaService : ServiceEntity<Carta>
     public Task<Carta> ModifierCartaDefaultAsync(Carta entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyCartaRelationsAsync(Carta entity, int? p_usuario_id)
+    {
+        if (p_usuario_id is null) throw new ModelException("Carta.Usuario is required.");
+        entity.Usuario = p_usuario_id is int selectedUsuario
+            ? await _unitOfWork.UsuarioRepository.ReadAsync(selectedUsuario) ?? throw new ModelException("Usuario not found for Carta.Usuario.") : null!;
+    }
+
     public async Task<Carta> NewAsync(string p_nombre, Rareza p_rareza, int p_costeMana, TipoCarta p_tipo, string p_descripcion, byte p_imagen, bool p_esPublica, int p_usuario_oid)
     {
         Usuario usuarioEntity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario_oid)
@@ -91,6 +98,25 @@ public sealed partial class CartaService : ServiceEntity<Carta>
     public async Task<IReadOnlyList<Carta>> ReadAllAsync()
     {
         return await _repository.ReadAllAsync();
+    }
+
+    public async Task AddEstadoAsync(int p_oid, IReadOnlyList<int> p_estado_oids)
+    {
+        Carta entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Carta not found.");
+        entity.Estados ??= new List<Estado>();
+        foreach (var relatedId in p_estado_oids)
+        {
+            Estado relatedEntity = await _unitOfWork.EstadoRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("Estado not found for Carta.Estados.");
+            if (!entity.Estados.Contains(relatedEntity))
+            {
+                entity.Estados.Add(relatedEntity);
+            }
+            relatedEntity.Carta = entity;
+            await _unitOfWork.EstadoRepository.SaveAsync(relatedEntity);
+        }
+        await _repository.SaveAsync(entity);
     }
 
     public async Task<IReadOnlyList<Carta>> ObtenerCartasUsuarioAsync(int p_oid)

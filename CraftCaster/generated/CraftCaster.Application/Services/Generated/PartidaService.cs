@@ -41,6 +41,20 @@ public sealed partial class PartidaService : ServiceEntity<Partida>
     public Task<Partida> ModifierPartidaDefaultAsync(Partida entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyPartidaRelationsAsync(Partida entity, int? p_usuario1_id, int? p_usuario2_id, int? p_mazo1_id, int? p_mazo2_id)
+    {
+        if (p_usuario1_id is null) throw new ModelException("Partida.Usuario1 is required.");
+        entity.Usuario1 = p_usuario1_id is int selectedUsuario1
+            ? await _unitOfWork.UsuarioRepository.ReadAsync(selectedUsuario1) ?? throw new ModelException("Usuario not found for Partida.Usuario1.") : null!;
+        entity.Usuario2 = p_usuario2_id is int selectedUsuario2
+            ? await _unitOfWork.UsuarioRepository.ReadAsync(selectedUsuario2) ?? throw new ModelException("Usuario not found for Partida.Usuario2.") : null!;
+        if (p_mazo1_id is null) throw new ModelException("Partida.Mazo1 is required.");
+        entity.Mazo1 = p_mazo1_id is int selectedMazo1
+            ? await _unitOfWork.MazoRepository.ReadAsync(selectedMazo1) ?? throw new ModelException("Mazo not found for Partida.Mazo1.") : null!;
+        entity.Mazo2 = p_mazo2_id is int selectedMazo2
+            ? await _unitOfWork.MazoRepository.ReadAsync(selectedMazo2) ?? throw new ModelException("Mazo not found for Partida.Mazo2.") : null!;
+    }
+
     public async Task<Partida> NewAsync(EstadoPartida p_estado, DateTime p_fechaInicio, int p_usuario1_oid, int p_mazo1_oid)
     {
         Usuario usuario1Entity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario1_oid)

@@ -1,0 +1,49 @@
+@* HARIA-WEB GENERATED sha256:827ed4baec790f26af7974376d15e6a36faaabfbc5584166757462c60484f42e *@
+@model CraftCaster.Web.ViewModels.LineaMazoViewModel
+
+@{
+    ViewData["Title"] = "Crear";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Crear</span>
+                <h1 class="h3 mb-1">LineaMazo</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Cantidad" class="form-label"></label>
+            <input asp-for="Cantidad" class="form-control" />
+            <span asp-validation-for="Cantidad" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="MazoId" class="form-label"></label>
+            <select asp-for="MazoId" asp-items="Model.MazoOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="MazoId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="CartaId" class="form-label"></label>
+            <select asp-for="CartaId" asp-items="Model.CartaOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="CartaId" class="text-danger"></span>
+        </div>
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

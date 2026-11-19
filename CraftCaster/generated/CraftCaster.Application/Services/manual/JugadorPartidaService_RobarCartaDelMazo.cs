@@ -3,7 +3,7 @@ using CraftCaster.Application.Exceptions;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
 
-        /*PROTECTED REGION ID(usingCraftCaster.Application.Services_JugadorPartida_robarCarta) ENABLED START*/
+        /*PROTECTED REGION ID(usingCraftCaster.Application.Services_JugadorPartida_robarCartaDelMazo) ENABLED START*/
         // references to other libraries
         /*PROTECTED REGION END*/
 
@@ -11,9 +11,9 @@ namespace CraftCaster.Application.Services;
 
 public sealed partial class JugadorPartidaService
 {
-    public async Task RobarCartaAsync(int p_oid)
+    public async Task RobarCartaDelMazoAsync(int p_oid)
     {
-        /*PROTECTED REGION ID(CraftCaster.Application.Services_JugadorPartida_robarCarta) ENABLED START*/
+        /*PROTECTED REGION ID(CraftCaster.Application.Services_JugadorPartida_robarCartaDelMazo) ENABLED START*/
         const int maxCartasMano = 10;
 
         // Comprobar que el jugador existe

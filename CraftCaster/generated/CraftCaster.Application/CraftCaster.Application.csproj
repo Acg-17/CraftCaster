@@ -10,4 +10,5 @@
     <ProjectReference Include="..\CraftCaster.Domain\CraftCaster.Domain.csproj" />
   </ItemGroup>
 
+  <Import Project=".haria/obsolete-manual.targets" Condition="Exists('.haria/obsolete-manual.targets')" />
 </Project>

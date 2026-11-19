@@ -1,0 +1,26 @@
+@* HARIA-WEB GENERATED sha256:593c7f39e8d9ea1f820e765a796aebc2e668ef23335e4ca4278bcc82d975c83f *@
+@model CraftCaster.Web.ViewModels.EstadoViewModel
+@{
+    var templateData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData);
+    templateData.TemplateInfo.HtmlFieldPrefix = "Habilidades[__index__]";
+}
+<fieldset class="mb-4" data-haria-composition data-prefix="Habilidades">
+    <legend>Habilidades</legend>
+    <span asp-validation-for="Habilidades" class="text-danger"></span>
+    <div data-haria-rows>
+    @for (var index = 0; index < Model.Habilidades.Count; index++)
+    {
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_HabilidadesItem" for="Habilidades[index]" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    }
+    </div>
+    <template>
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_HabilidadesItem" model="Model.HabilidadesTemplate" view-data="templateData" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    </template>
+    <button type="button" class="btn btn-outline-primary" data-haria-add>Añadir línea</button>
+</fieldset>

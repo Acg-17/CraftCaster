@@ -22,7 +22,7 @@ public sealed partial class JugadorPartidaUseCase
             await _unitOfWork.BeginTransactionAsync("JugadorPartidaUseCase.RobarCartaAsync");
             jugadorPartidaService = new JugadorPartidaService(_unitOfWork);
 
-            await jugadorPartidaService.RobarCartaAsync(p_oid);
+            await jugadorPartidaService.RobarCartaDelMazoAsync(p_oid);
 
             await _unitOfWork.CommitAsync();
         }

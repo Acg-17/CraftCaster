@@ -1,0 +1,75 @@
+@* HARIA-WEB GENERATED sha256:254cfc27eb38e3d7e65d35bbb7b17d72d9d4fa1e19ac666fdeefe1aa04a1c5a8 *@
+@model CraftCaster.Web.ViewModels.PartidaViewModel
+
+@{
+    ViewData["Title"] = "Crear";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Crear</span>
+                <h1 class="h3 mb-1">Partida</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Estado" class="form-label"></label>
+            <select asp-for="Estado" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.EstadoPartida>()" class="form-select"></select>
+            <span asp-validation-for="Estado" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="FechaInicio" class="form-label"></label>
+            <input asp-for="FechaInicio" type="date" class="form-control" />
+            <span asp-validation-for="FechaInicio" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Usuario1Id" class="form-label"></label>
+            <select asp-for="Usuario1Id" asp-items="Model.Usuario1Options" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="Usuario1Id" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Usuario2Id" class="form-label"></label>
+            <select asp-for="Usuario2Id" asp-items="Model.Usuario2Options" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="Usuario2Id" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Mazo1Id" class="form-label"></label>
+            <select asp-for="Mazo1Id" asp-items="Model.Mazo1Options" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="Mazo1Id" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Mazo2Id" class="form-label"></label>
+            <select asp-for="Mazo2Id" asp-items="Model.Mazo2Options" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="Mazo2Id" class="text-danger"></span>
+        </div>
+                <aside class="alert alert-info">
+                    <h2 class="h6">Turnos</h2>
+                    <p>Guarda este registro y gestiona Turnos desde Turno, seleccionando Partida en su formulario.</p>
+                    <a asp-controller="Turno" asp-action="Index" class="btn btn-outline-primary">Gestionar Turnos</a>
+                </aside>
+
+                <aside class="alert alert-info">
+                    <h2 class="h6">Jugadores</h2>
+                    <p>Guarda este registro y gestiona Jugadores desde JugadorPartida, seleccionando Partida en su formulario.</p>
+                    <a asp-controller="JugadorPartida" asp-action="Index" class="btn btn-outline-primary">Gestionar Jugadores</a>
+                </aside>
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

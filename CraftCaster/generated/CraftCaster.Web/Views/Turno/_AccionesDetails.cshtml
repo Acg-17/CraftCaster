@@ -1,0 +1,18 @@
+@* HARIA-WEB GENERATED sha256:683e6050d5128297dd1b324911ffd50686b517f627dbb6fc58c13b161246ee44 *@
+@model IEnumerable<CraftCaster.Web.ViewModels.AccionViewModel>
+
+<h2 class="h5 mt-4">Acciones</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">@Html.DisplayNameFor(model => model.Name)</th>
+            <th scope="col">@Html.DisplayNameFor(model => model.OrigenLabel)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <partial name="_AccionesDetailsItem" model="item" />
+        }
+    </tbody>
+</table>

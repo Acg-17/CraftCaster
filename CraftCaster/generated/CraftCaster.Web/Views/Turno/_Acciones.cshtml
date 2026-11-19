@@ -1,0 +1,26 @@
+@* HARIA-WEB GENERATED sha256:561ccc1b35baa45f5fbbf7f9ed1f2b63720f41e44b31dcde2139f22a9643b221 *@
+@model CraftCaster.Web.ViewModels.TurnoViewModel
+@{
+    var templateData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData);
+    templateData.TemplateInfo.HtmlFieldPrefix = "Acciones[__index__]";
+}
+<fieldset class="mb-4" data-haria-composition data-prefix="Acciones">
+    <legend>Acciones</legend>
+    <span asp-validation-for="Acciones" class="text-danger"></span>
+    <div data-haria-rows>
+    @for (var index = 0; index < Model.Acciones.Count; index++)
+    {
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_AccionesItem" for="Acciones[index]" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    }
+    </div>
+    <template>
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_AccionesItem" model="Model.AccionesTemplate" view-data="templateData" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    </template>
+    <button type="button" class="btn btn-outline-primary" data-haria-add>Añadir línea</button>
+</fieldset>

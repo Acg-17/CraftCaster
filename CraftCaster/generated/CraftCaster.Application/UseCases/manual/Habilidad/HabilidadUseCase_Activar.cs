@@ -112,7 +112,7 @@ public sealed partial class HabilidadUseCase
                     break;
                 case TipoHabilidad.Robar:
                     for(int i = 0; i < habilidad.Cantidad; i++)
-                        await jugadorService.RobarCartaAsync(idSelf); // Id del jugador, no su indice
+                        await jugadorService.RobarCartaDelMazoAsync(idSelf); // Id del jugador, no su indice
                     break;
                 default:
                     throw new ModelException($"El tipo de la habilidad con id {p_oid} no es valido o no ha sido implementado");

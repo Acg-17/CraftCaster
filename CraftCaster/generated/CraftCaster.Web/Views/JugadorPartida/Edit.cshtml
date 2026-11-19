@@ -1,0 +1,65 @@
+@* HARIA-WEB GENERATED sha256:f567ffd88799f8b9f90ec92f35ac597b4b77505fa2e6cebf81a453696d1e5d9e *@
+@model CraftCaster.Web.ViewModels.JugadorPartidaViewModel
+
+@{
+    ViewData["Title"] = "Editar";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Editar</span>
+                <h1 class="h3 mb-1">JugadorPartida</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+                    <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label asp-for="Vida" class="form-label"></label>
+            <input asp-for="Vida" class="form-control" />
+            <span asp-validation-for="Vida" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="NumJugador" class="form-label"></label>
+            <input asp-for="NumJugador" class="form-control" />
+            <span asp-validation-for="NumJugador" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Mana" class="form-label"></label>
+            <input asp-for="Mana" class="form-control" />
+            <span asp-validation-for="Mana" class="text-danger"></span>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="Activo" class="form-check-input" />
+            <label asp-for="Activo" class="form-check-label"></label>
+            <span asp-validation-for="Activo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="PartidaId" class="form-label"></label>
+            <select asp-for="PartidaId" asp-items="Model.PartidaOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="PartidaId" class="text-danger"></span>
+        </div>
+                <aside class="alert alert-info">
+                    <h2 class="h6">Zonas</h2>
+                    <p>Guarda este registro y gestiona Zonas desde ZonaPartida, seleccionando Jugador en su formulario.</p>
+                    <a asp-controller="ZonaPartida" asp-action="Index" class="btn btn-outline-primary">Gestionar Zonas</a>
+                </aside>
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

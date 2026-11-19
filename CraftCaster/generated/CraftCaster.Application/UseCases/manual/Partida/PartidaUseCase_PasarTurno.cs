@@ -94,7 +94,7 @@ public sealed partial class PartidaUseCase
                 var mazo = siguiente.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
                 if (mazo?.Cartas != null && mazo.Cartas.Count > 0)
                 {
-                    await jugadorPartidaService.RobarCartaAsync(siguiente.Id);
+                    await jugadorPartidaService.RobarCartaDelMazoAsync(siguiente.Id);
                 }
             }
 

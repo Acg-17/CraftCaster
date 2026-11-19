@@ -1,0 +1,18 @@
+@* HARIA-WEB GENERATED sha256:2ea6a834e6bcf734627031e1df6f0f6438cd6369e5c70a05dd9194898905fd7c *@
+@model IEnumerable<CraftCaster.Web.ViewModels.LineaMazoViewModel>
+
+<h2 class="h5 mt-4">Lineas</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">@Html.DisplayNameFor(model => model.Cantidad)</th>
+            <th scope="col">@Html.DisplayNameFor(model => model.CartaLabel)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <partial name="_LineasDetailsItem" model="item" />
+        }
+    </tbody>
+</table>

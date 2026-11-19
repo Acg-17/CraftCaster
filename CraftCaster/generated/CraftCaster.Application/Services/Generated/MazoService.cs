@@ -41,6 +41,40 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
     public Task<Mazo> ModifierMazoDefaultAsync(Mazo entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyMazoRelationsAsync(Mazo entity, int? p_usuario_id, IReadOnlyList<LineaMazo> p_lineas)
+    {
+        if (p_usuario_id is null) throw new ModelException("Mazo.Usuario is required.");
+        entity.Usuario = p_usuario_id is int selectedUsuario
+            ? await _unitOfWork.UsuarioRepository.ReadAsync(selectedUsuario) ?? throw new ModelException("Usuario not found for Mazo.Usuario.") : null!;
+        if (p_lineas.Count < 0 || p_lineas.Count > 500) throw new ModelException("Invalid number of Lineas rows.");
+        foreach (var removed in entity.Lineas.Where(child => !p_lineas.Contains(child)).ToList()) entity.Lineas.Remove(removed);
+        foreach (var child in p_lineas)
+        {
+            child.Mazo = entity;
+            if (!entity.Lineas.Contains(child)) entity.Lineas.Add(child);
+        }
+    }
+
+    public async Task<List<LineaMazo>> PrepareMazoLineasAsync(Mazo? parent, IReadOnlyList<(int Id, LineaMazo Values, int? CartaId)> rows)
+    {
+        if (rows.Count < 0 || rows.Count > 500) throw new ModelException("Invalid number of Lineas rows.");
+        var seen = new HashSet<int>();
+        var result = new List<LineaMazo>();
+        foreach (var row in rows)
+        {
+            var existing = !EqualityComparer<int>.Default.Equals(row.Id, default!);
+            if (existing && (parent is null || !seen.Add(row.Id) || !parent.Lineas.Any(child => child.Id.Equals(row.Id))))
+                throw new ModelException("The row does not belong to this record or is duplicated.");
+            var child = existing ? parent!.Lineas.Single(item => item.Id.Equals(row.Id)) : new LineaMazo();
+            child.Cantidad = row.Values.Cantidad;
+            if (row.CartaId is null) throw new ModelException("LineaMazo.Carta is required.");
+            child.Carta = row.CartaId is int selectedCarta
+                ? await _unitOfWork.CartaRepository.ReadAsync(selectedCarta) ?? throw new ModelException("Carta not found for LineaMazo.Carta.") : null!;
+            result.Add(child);
+        }
+        return result;
+    }
+
     public async Task<Mazo> NewAsync(string p_nombre, float p_costeMedio, int p_numCartas, EstadoMazo p_estadoMazo, bool p_esPublico, float p_valoracion, byte p_imagen, int p_usuario_oid)
     {
         Usuario usuarioEntity = await _unitOfWork.UsuarioRepository.ReadAsync(p_usuario_oid)
@@ -108,6 +142,44 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
             }
             relatedEntity.Mazo = entity;
             await _unitOfWork.LineaMazoRepository.SaveAsync(relatedEntity);
+        }
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task AddPartidasLocalAsync(int p_oid, IReadOnlyList<int> p_partida_oids)
+    {
+        Mazo entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Mazo not found.");
+        entity.PartidasLocal ??= new List<Partida>();
+        foreach (var relatedId in p_partida_oids)
+        {
+            Partida relatedEntity = await _unitOfWork.PartidaRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("Partida not found for Mazo.PartidasLocal.");
+            if (!entity.PartidasLocal.Contains(relatedEntity))
+            {
+                entity.PartidasLocal.Add(relatedEntity);
+            }
+            relatedEntity.Mazo1 = entity;
+            await _unitOfWork.PartidaRepository.SaveAsync(relatedEntity);
+        }
+        await _repository.SaveAsync(entity);
+    }
+
+    public async Task AddPartidasVisitanteAsync(int p_oid, IReadOnlyList<int> p_partida_oids)
+    {
+        Mazo entity = await _repository.ReadAsync(p_oid)
+            ?? throw new ModelException("Mazo not found.");
+        entity.PartidasVisitante ??= new List<Partida>();
+        foreach (var relatedId in p_partida_oids)
+        {
+            Partida relatedEntity = await _unitOfWork.PartidaRepository.ReadAsync(relatedId)
+                ?? throw new ModelException("Partida not found for Mazo.PartidasVisitante.");
+            if (!entity.PartidasVisitante.Contains(relatedEntity))
+            {
+                entity.PartidasVisitante.Add(relatedEntity);
+            }
+            relatedEntity.Mazo2 = entity;
+            await _unitOfWork.PartidaRepository.SaveAsync(relatedEntity);
         }
         await _repository.SaveAsync(entity);
     }

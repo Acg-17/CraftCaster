@@ -1,0 +1,55 @@
+@* HARIA-WEB GENERATED sha256:280e62dc1265657f5f0d05b75487e93cdda9bec093c2eecfd2ad951822ea92aa *@
+@model CraftCaster.Web.ViewModels.MazoViewModel
+
+@{
+    ViewData["Title"] = "Crear";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Crear</span>
+                <h1 class="h3 mb-1">Mazo</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Nombre" class="form-label"></label>
+            <input asp-for="Nombre" class="form-control" />
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="EsPublico" class="form-check-input" />
+            <label asp-for="EsPublico" class="form-check-label"></label>
+            <span asp-validation-for="EsPublico" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Imagen" class="form-label"></label>
+            <input asp-for="Imagen" class="form-control" />
+            <span asp-validation-for="Imagen" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="UsuarioId" class="form-label"></label>
+            <select asp-for="UsuarioId" asp-items="Model.UsuarioOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="UsuarioId" class="text-danger"></span>
+        </div>
+        <partial name="_Lineas" model="Model" />
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/haria-numbers.js" asp-append-version="true"></script>
+    <script src="~/js/haria-compositions.js" asp-append-version="true"></script>
+}

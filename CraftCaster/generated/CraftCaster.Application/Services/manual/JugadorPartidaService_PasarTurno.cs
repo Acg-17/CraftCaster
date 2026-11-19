@@ -84,7 +84,7 @@ public sealed partial class JugadorPartidaService
         // Comprobar si el mazo del rival tiene cartas para robar
         ZonaPartida? mazoRival = rival.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Mazo);
         if (mazoRival?.Cartas != null && mazoRival.Cartas.Count > 0)
-            await RobarCartaAsync(rival.Id);
+            await RobarCartaDelMazoAsync(rival.Id);
             
         /*PROTECTED REGION END*/
     }

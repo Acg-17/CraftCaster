@@ -40,7 +40,7 @@ internal static class Program
             Console.WriteLine("-------------------------------------------------------");
 
             /*PROTECTED REGION ID(seedData) START*/
-            await SeedData.InitializeDataAsync(cfg, loggerFactory);
+            // await SeedData.InitializeDataAsync(cfg, loggerFactory);
             await SeedData.InitializeDataManualAsync(cfg, loggerFactory);
             /*PROTECTED REGION END*/
             Console.WriteLine("-----------------------------------------");

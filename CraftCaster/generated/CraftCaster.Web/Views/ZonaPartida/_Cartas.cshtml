@@ -1,0 +1,26 @@
+@* HARIA-WEB GENERATED sha256:bf36b1d1a39589d410fbbadeb2745a105892b702d32466a74e15a7a45b93243d *@
+@model CraftCaster.Web.ViewModels.ZonaPartidaViewModel
+@{
+    var templateData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData);
+    templateData.TemplateInfo.HtmlFieldPrefix = "Cartas[__index__]";
+}
+<fieldset class="mb-4" data-haria-composition data-prefix="Cartas">
+    <legend>Cartas</legend>
+    <span asp-validation-for="Cartas" class="text-danger"></span>
+    <div data-haria-rows>
+    @for (var index = 0; index < Model.Cartas.Count; index++)
+    {
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_CartasItem" for="Cartas[index]" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    }
+    </div>
+    <template>
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_CartasItem" model="Model.CartasTemplate" view-data="templateData" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    </template>
+    <button type="button" class="btn btn-outline-primary" data-haria-add>Añadir línea</button>
+</fieldset>

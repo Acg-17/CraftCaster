@@ -41,6 +41,16 @@ public sealed partial class CartaPartidaService : ServiceEntity<CartaPartida>
     public Task<CartaPartida> ModifierCartaPartidaDefaultAsync(CartaPartida entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyCartaPartidaRelationsAsync(CartaPartida entity, int? p_zona_id, int? p_original_id)
+    {
+        if (p_zona_id is null) throw new ModelException("CartaPartida.Zona is required.");
+        entity.Zona = p_zona_id is int selectedZona
+            ? await _unitOfWork.ZonaPartidaRepository.ReadAsync(selectedZona) ?? throw new ModelException("ZonaPartida not found for CartaPartida.Zona.") : null!;
+        if (p_original_id is null) throw new ModelException("CartaPartida.Original is required.");
+        entity.Original = p_original_id is int selectedOriginal
+            ? await _unitOfWork.CartaRepository.ReadAsync(selectedOriginal) ?? throw new ModelException("Carta not found for CartaPartida.Original.") : null!;
+    }
+
     public async Task<CartaPartida> NewAsync(int p_vidaActual, int p_ataqueActual, bool p_puedeAtacar, int p_zona_oid, int p_original_oid)
     {
         ZonaPartida zonaEntity = await _unitOfWork.ZonaPartidaRepository.ReadAsync(p_zona_oid)

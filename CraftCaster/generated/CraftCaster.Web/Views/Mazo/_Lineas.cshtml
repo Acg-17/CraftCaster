@@ -1,0 +1,26 @@
+@* HARIA-WEB GENERATED sha256:94d52cd1fcad14b14381112191aaa34c7b9626253e8c7722cae6f7f5c1f300e4 *@
+@model CraftCaster.Web.ViewModels.MazoViewModel
+@{
+    var templateData = new Microsoft.AspNetCore.Mvc.ViewFeatures.ViewDataDictionary(ViewData);
+    templateData.TemplateInfo.HtmlFieldPrefix = "Lineas[__index__]";
+}
+<fieldset class="mb-4" data-haria-composition data-prefix="Lineas">
+    <legend>Lineas</legend>
+    <span asp-validation-for="Lineas" class="text-danger"></span>
+    <div data-haria-rows>
+    @for (var index = 0; index < Model.Lineas.Count; index++)
+    {
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_LineasItem" for="Lineas[index]" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    }
+    </div>
+    <template>
+        <div class="border rounded p-3 mb-2" data-haria-row>
+            <partial name="_LineasItem" model="Model.LineasTemplate" view-data="templateData" />
+            <button type="button" class="btn btn-sm btn-outline-danger" data-haria-remove>Eliminar línea</button>
+        </div>
+    </template>
+    <button type="button" class="btn btn-outline-primary" data-haria-add>Añadir línea</button>
+</fieldset>

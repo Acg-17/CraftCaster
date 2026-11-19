@@ -41,6 +41,15 @@ public sealed partial class AccionService : ServiceEntity<Accion>
     public Task<Accion> ModifierAccionDefaultAsync(Accion entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyAccionRelationsAsync(Accion entity, int? p_turno_id, int? p_origen_id)
+    {
+        if (p_turno_id is null) throw new ModelException("Accion.Turno is required.");
+        entity.Turno = p_turno_id is int selectedTurno
+            ? await _unitOfWork.TurnoRepository.ReadAsync(selectedTurno) ?? throw new ModelException("Turno not found for Accion.Turno.") : null!;
+        entity.Origen = p_origen_id is int selectedOrigen
+            ? await _unitOfWork.CartaPartidaRepository.ReadAsync(selectedOrigen) ?? throw new ModelException("CartaPartida not found for Accion.Origen.") : null!;
+    }
+
     public async Task<Accion> NewAsync(TipoAccion p_name, int p_turno_oid)
     {
         Turno turnoEntity = await _unitOfWork.TurnoRepository.ReadAsync(p_turno_oid)

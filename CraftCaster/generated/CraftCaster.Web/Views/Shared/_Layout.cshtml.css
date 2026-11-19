@@ -1,0 +1,3 @@
+.navbar-brand { letter-spacing: .01em; }
+.nav-link { border-radius: .5rem; padding-inline: .75rem !important; }
+.nav-link:hover, .nav-link:focus { background: rgba(255, 255, 255, .12); }

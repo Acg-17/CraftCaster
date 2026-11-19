@@ -41,6 +41,16 @@ public sealed partial class LineaMazoService : ServiceEntity<LineaMazo>
     public Task<LineaMazo> ModifierLineaMazoDefaultAsync(LineaMazo entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyLineaMazoRelationsAsync(LineaMazo entity, int? p_mazo_id, int? p_carta_id)
+    {
+        if (p_mazo_id is null) throw new ModelException("LineaMazo.Mazo is required.");
+        entity.Mazo = p_mazo_id is int selectedMazo
+            ? await _unitOfWork.MazoRepository.ReadAsync(selectedMazo) ?? throw new ModelException("Mazo not found for LineaMazo.Mazo.") : null!;
+        if (p_carta_id is null) throw new ModelException("LineaMazo.Carta is required.");
+        entity.Carta = p_carta_id is int selectedCarta
+            ? await _unitOfWork.CartaRepository.ReadAsync(selectedCarta) ?? throw new ModelException("Carta not found for LineaMazo.Carta.") : null!;
+    }
+
     public async Task<LineaMazo> NewAsync(int p_cantidad, int p_mazo_oid, int p_carta_oid)
     {
         Mazo mazoEntity = await _unitOfWork.MazoRepository.ReadAsync(p_mazo_oid)

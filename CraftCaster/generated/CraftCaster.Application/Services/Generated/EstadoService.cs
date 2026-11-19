@@ -41,6 +41,40 @@ public sealed partial class EstadoService : ServiceEntity<Estado>
     public Task<Estado> ModifierEstadoDefaultAsync(Estado entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyEstadoRelationsAsync(Estado entity, int? p_carta_id, IReadOnlyList<Habilidad> p_habilidades)
+    {
+        if (p_carta_id is null) throw new ModelException("Estado.Carta is required.");
+        entity.Carta = p_carta_id is int selectedCarta
+            ? await _unitOfWork.CartaRepository.ReadAsync(selectedCarta) ?? throw new ModelException("Carta not found for Estado.Carta.") : null!;
+        if (p_habilidades.Count < 0 || p_habilidades.Count > 500) throw new ModelException("Invalid number of Habilidades rows.");
+        foreach (var removed in entity.Habilidades.Where(child => !p_habilidades.Contains(child)).ToList()) entity.Habilidades.Remove(removed);
+        foreach (var child in p_habilidades)
+        {
+            child.Estado = entity;
+            if (!entity.Habilidades.Contains(child)) entity.Habilidades.Add(child);
+        }
+    }
+
+    public async Task<List<Habilidad>> PrepareEstadoHabilidadesAsync(Estado? parent, IReadOnlyList<(int Id, Habilidad Values)> rows)
+    {
+        if (rows.Count < 0 || rows.Count > 500) throw new ModelException("Invalid number of Habilidades rows.");
+        var seen = new HashSet<int>();
+        var result = new List<Habilidad>();
+        foreach (var row in rows)
+        {
+            var existing = !EqualityComparer<int>.Default.Equals(row.Id, default!);
+            if (existing && (parent is null || !seen.Add(row.Id) || !parent.Habilidades.Any(child => child.Id.Equals(row.Id))))
+                throw new ModelException("The row does not belong to this record or is duplicated.");
+            var child = existing ? parent!.Habilidades.Single(item => item.Id.Equals(row.Id)) : new Habilidad();
+            child.Tipo = row.Values.Tipo;
+            child.Cantidad = row.Values.Cantidad;
+            child.TipoObjetivo = row.Values.TipoObjetivo;
+            child.Objetivo = row.Values.Objetivo;
+            result.Add(child);
+        }
+        return result;
+    }
+
     public async Task<Estado> NewAsync(TipoEstado p_tipo, int p_carta_oid)
     {
         Carta cartaEntity = await _unitOfWork.CartaRepository.ReadAsync(p_carta_oid)

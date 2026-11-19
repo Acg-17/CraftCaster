@@ -1,0 +1,25 @@
+@* HARIA-WEB GENERATED sha256:9fb46c0cda1dc76378b51c738ced5c036bd00fa2646f65cfad5c370cf03f7538 *@
+@model CraftCaster.Web.ViewModels.CartaPartidaViewModel
+    <input asp-for="Id" type="hidden" />
+    <span asp-validation-for="Id" class="text-danger"></span>
+        <div class="mb-3">
+            <label asp-for="VidaActual" class="form-label"></label>
+            <input asp-for="VidaActual" class="form-control" />
+            <span asp-validation-for="VidaActual" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="AtaqueActual" class="form-label"></label>
+            <input asp-for="AtaqueActual" class="form-control" />
+            <span asp-validation-for="AtaqueActual" class="text-danger"></span>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="PuedeAtacar" class="form-check-input" />
+            <label asp-for="PuedeAtacar" class="form-check-label"></label>
+            <span asp-validation-for="PuedeAtacar" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="OriginalId" class="form-label"></label>
+            <select asp-for="OriginalId" asp-items="Model.OriginalOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="OriginalId" class="text-danger"></span>
+        </div>
+

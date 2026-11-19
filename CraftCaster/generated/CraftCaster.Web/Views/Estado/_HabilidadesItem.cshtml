@@ -1,0 +1,24 @@
+@* HARIA-WEB GENERATED sha256:8515c8e07e01f464116860c20b5e3535898c9b9c773a334ee52ca101ae942388 *@
+@model CraftCaster.Web.ViewModels.HabilidadViewModel
+    <input asp-for="Id" type="hidden" />
+    <span asp-validation-for="Id" class="text-danger"></span>
+        <div class="mb-3">
+            <label asp-for="Tipo" class="form-label"></label>
+            <select asp-for="Tipo" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.TipoHabilidad>()" class="form-select"></select>
+            <span asp-validation-for="Tipo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Cantidad" class="form-label"></label>
+            <input asp-for="Cantidad" class="form-control" />
+            <span asp-validation-for="Cantidad" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TipoObjetivo" class="form-label"></label>
+            <select asp-for="TipoObjetivo" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.TipoObjetivo>()" class="form-select"></select>
+            <span asp-validation-for="TipoObjetivo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Objetivo" class="form-label"></label>
+            <input asp-for="Objetivo" class="form-control" />
+            <span asp-validation-for="Objetivo" class="text-danger"></span>
+        </div>

@@ -1,0 +1,40 @@
+@* HARIA-WEB GENERATED sha256:bca33b10039dc3e23db33d6c593a90b765775c8cc58f5f5f17fa80f05f215976 *@
+@model CraftCaster.Web.ViewModels.TurnoViewModel
+
+@{
+    ViewData["Title"] = "Detalles";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Detalles</span>
+                <h1 class="h3 mb-1">Turno</h1>
+                <p class="text-body-secondary mb-0">Review the complete record information.</p>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0 gy-2">
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Id)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Id)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.NumTurno)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.NumTurno)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.ManaTurno)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.ManaTurno)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.PartidaLabel)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.PartidaLabel)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.JugadorLabel)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.JugadorLabel)</dd>
+                </dl>
+                <partial name="_AccionesDetails" model="Model.Acciones" />
+
+            </div>
+            <div class="card-footer bg-body p-4">
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Volver al listado</a>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>

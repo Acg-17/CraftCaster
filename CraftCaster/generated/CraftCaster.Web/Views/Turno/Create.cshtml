@@ -1,0 +1,55 @@
+@* HARIA-WEB GENERATED sha256:7f884371c183a43a69a08679a633b15372f40cd03c952bbe2fa815e8865cfcbb *@
+@model CraftCaster.Web.ViewModels.TurnoViewModel
+
+@{
+    ViewData["Title"] = "Crear";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Crear</span>
+                <h1 class="h3 mb-1">Turno</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="NumTurno" class="form-label"></label>
+            <input asp-for="NumTurno" class="form-control" />
+            <span asp-validation-for="NumTurno" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ManaTurno" class="form-label"></label>
+            <input asp-for="ManaTurno" class="form-control" />
+            <span asp-validation-for="ManaTurno" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="PartidaId" class="form-label"></label>
+            <select asp-for="PartidaId" asp-items="Model.PartidaOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="PartidaId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="JugadorId" class="form-label"></label>
+            <select asp-for="JugadorId" asp-items="Model.JugadorOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="JugadorId" class="text-danger"></span>
+        </div>
+        <partial name="_Acciones" model="Model" />
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/haria-compositions.js" asp-append-version="true"></script>
+}

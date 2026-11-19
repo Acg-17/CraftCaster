@@ -494,6 +494,12 @@ public sealed class ModelGeneratedTests
             Ensure(sampleUsuario.PartidasVisitante.Contains(samplePartida), "Usuario.addPartidasVisitante relates Usuario and Partida.");
             await mazoService.AddLineaAsync(sampleMazo.Id, new[] { sampleLineaMazo.Id });
             Ensure(sampleMazo.Lineas.Contains(sampleLineaMazo), "Mazo.addLinea relates Mazo and LineaMazo.");
+            await mazoService.AddPartidasLocalAsync(sampleMazo.Id, new[] { samplePartida.Id });
+            Ensure(sampleMazo.PartidasLocal.Contains(samplePartida), "Mazo.addPartidasLocal relates Mazo and Partida.");
+            await mazoService.AddPartidasVisitanteAsync(sampleMazo.Id, new[] { samplePartida.Id });
+            Ensure(sampleMazo.PartidasVisitante.Contains(samplePartida), "Mazo.addPartidasVisitante relates Mazo and Partida.");
+            await cartaService.AddEstadoAsync(sampleCarta.Id, new[] { sampleEstado.Id });
+            Ensure(sampleCarta.Estados.Contains(sampleEstado), "Carta.addEstado relates Carta and Estado.");
             await estadoService.AddHabilidadeAsync(sampleEstado.Id, new[] { sampleHabilidad.Id });
             Ensure(sampleEstado.Habilidades.Contains(sampleHabilidad), "Estado.addHabilidade relates Estado and Habilidad.");
             await partidaService.AddTurnoAsync(samplePartida.Id, new[] { sampleTurno.Id });
@@ -526,18 +532,36 @@ public sealed class ModelGeneratedTests
             await accionService.RemoveObjetivoAsync(sampleAccion.Id, new[] { sampleCartaPartida.Id });
             Ensure(!sampleAccion.Objetivo.Contains(sampleCartaPartida), "Accion.removeObjetivo removes the relation between Accion and CartaPartida.");
 
+            // Detach optional references and shared collections before deleting seed data.
+            sampleUsuario.Cartas.Clear();
+            sampleUsuario.Mazos.Clear();
+            sampleUsuario.PartidasLocal.Clear();
+            sampleUsuario.PartidasVisitante.Clear();
+            await usuarioService.ModifierUsuarioDefaultAsync(sampleUsuario);
+            // Detach optional references and shared collections before deleting seed data.
+            sampleMazo.PartidasLocal.Clear();
+            sampleMazo.PartidasVisitante.Clear();
+            await mazoService.ModifierMazoDefaultAsync(sampleMazo);
+            // Detach optional references and shared collections before deleting seed data.
+            samplePartida.Usuario2 = null;
+            samplePartida.Mazo2 = null;
+            await partidaService.ModifierPartidaDefaultAsync(samplePartida);
+            // Detach optional references and shared collections before deleting seed data.
+            sampleAccion.Origen = null;
+            sampleAccion.Objetivo.Clear();
+            await accionService.ModifierAccionDefaultAsync(sampleAccion);
             await lineaMazoService.DestroyAsync(sampleLineaMazo.Id);
             await habilidadService.DestroyAsync(sampleHabilidad.Id);
-            await partidaService.DestroyAsync(samplePartida.Id);
-            await mazoService.DestroyAsync(sampleMazo.Id);
+            // await estadoService.DestroyAsync(sampleEstado.Id);
             await accionService.DestroyAsync(sampleAccion.Id);
             await cartaPartidaService.DestroyAsync(sampleCartaPartida.Id);
+            await cartaService.DestroyAsync(sampleCarta.Id);
+            await zonaPartidaService.DestroyAsync(sampleZonaPartida.Id);
             await turnoService.DestroyAsync(sampleTurno.Id);
             await jugadorPartidaService.DestroyAsync(sampleJugadorPartida.Id);
-            await zonaPartidaService.DestroyAsync(sampleZonaPartida.Id);
-            await cartaService.DestroyAsync(sampleCarta.Id);
+            await partidaService.DestroyAsync(samplePartida.Id);
+            await mazoService.DestroyAsync(sampleMazo.Id);
             await usuarioService.DestroyAsync(sampleUsuario.Id);
-            await estadoService.DestroyAsync(sampleEstado.Id);
 
             Ensure((await usuarioService.ReadAllAsync()).Count == 0, "Usuario seed cleanup completed.");
             Ensure((await mazoService.ReadAllAsync()).Count == 0, "Mazo seed cleanup completed.");

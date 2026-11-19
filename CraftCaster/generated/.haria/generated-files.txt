@@ -1,6 +1,7 @@
 ﻿# HARIA generated file manifest
 # Do not edit manually.
 .gitignore
+CraftCaster.Application\.haria\obsolete-manual.targets
 CraftCaster.Application\Abstractions\IAccionRepository.cs
 CraftCaster.Application\Abstractions\ICartaPartidaRepository.cs
 CraftCaster.Application\Abstractions\ICartaRepository.cs

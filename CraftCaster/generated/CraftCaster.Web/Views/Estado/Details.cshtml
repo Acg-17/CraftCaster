@@ -1,0 +1,36 @@
+@* HARIA-WEB GENERATED sha256:af1f1d1a5106fd09ae9923a94e14cefed4aeb2e4049dde715dbe8dc241492e1e *@
+@model CraftCaster.Web.ViewModels.EstadoViewModel
+
+@{
+    ViewData["Title"] = "Detalles";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Detalles</span>
+                <h1 class="h3 mb-1">Estado</h1>
+                <p class="text-body-secondary mb-0">Review the complete record information.</p>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0 gy-2">
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Id)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Id)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Tipo)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Tipo)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.CartaLabel)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.CartaLabel)</dd>
+                </dl>
+                <partial name="_HabilidadesDetails" model="Model.Habilidades" />
+
+            </div>
+            <div class="card-footer bg-body p-4">
+                <div class="d-flex flex-column flex-sm-row gap-2">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Editar</a>
+                <a asp-action="Index" class="btn btn-outline-secondary">Volver al listado</a>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>

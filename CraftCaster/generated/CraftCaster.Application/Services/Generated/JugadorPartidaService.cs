@@ -41,6 +41,13 @@ public sealed partial class JugadorPartidaService : ServiceEntity<JugadorPartida
     public Task<JugadorPartida> ModifierJugadorPartidaDefaultAsync(JugadorPartida entity) =>
         ModifierDefaultAsync(entity);
 
+    public async Task ApplyJugadorPartidaRelationsAsync(JugadorPartida entity, int? p_partida_id)
+    {
+        if (p_partida_id is null) throw new ModelException("JugadorPartida.Partida is required.");
+        entity.Partida = p_partida_id is int selectedPartida
+            ? await _unitOfWork.PartidaRepository.ReadAsync(selectedPartida) ?? throw new ModelException("Partida not found for JugadorPartida.Partida.") : null!;
+    }
+
     public async Task<JugadorPartida> NewAsync(int p_vida, int p_numJugador, int p_mana, bool p_activo, int p_partida_oid)
     {
         Partida partidaEntity = await _unitOfWork.PartidaRepository.ReadAsync(p_partida_oid)

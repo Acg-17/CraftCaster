@@ -1,0 +1,60 @@
+@* HARIA-WEB GENERATED sha256:8f1b3f79190dfc830705b5ae83419fa822a55518b92d845bf6a2939f5acf7027 *@
+@model CraftCaster.Web.ViewModels.CartaPartidaViewModel
+
+@{
+    ViewData["Title"] = "Editar";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Editar</span>
+                <h1 class="h3 mb-1">CartaPartida</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+                    <input type="hidden" asp-for="Id" />
+        <div class="mb-3">
+            <label asp-for="VidaActual" class="form-label"></label>
+            <input asp-for="VidaActual" class="form-control" />
+            <span asp-validation-for="VidaActual" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="AtaqueActual" class="form-label"></label>
+            <input asp-for="AtaqueActual" class="form-control" />
+            <span asp-validation-for="AtaqueActual" class="text-danger"></span>
+        </div>
+        <div class="form-check mb-3">
+            <input asp-for="PuedeAtacar" class="form-check-input" />
+            <label asp-for="PuedeAtacar" class="form-check-label"></label>
+            <span asp-validation-for="PuedeAtacar" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="ZonaId" class="form-label"></label>
+            <select asp-for="ZonaId" asp-items="Model.ZonaOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="ZonaId" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="OriginalId" class="form-label"></label>
+            <select asp-for="OriginalId" asp-items="Model.OriginalOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="OriginalId" class="text-danger"></span>
+        </div>
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

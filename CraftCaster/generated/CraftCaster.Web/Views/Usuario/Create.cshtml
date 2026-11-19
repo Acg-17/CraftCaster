@@ -1,0 +1,64 @@
+@* HARIA-WEB GENERATED sha256:8a04314b4038e46eb587f8783bae2353caf06d3e5ff52f2093f74b57f3cac0ce *@
+@model CraftCaster.Web.ViewModels.UsuarioViewModel
+
+@{
+    ViewData["Title"] = "Crear";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Crear</span>
+                <h1 class="h3 mb-1">Usuario</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="NombreUsuario" class="form-label"></label>
+            <input asp-for="NombreUsuario" class="form-control" />
+            <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Contrasenia" class="form-label"></label>
+            <input asp-for="Contrasenia" type="password" value="" autocomplete="new-password" required class="form-control" />
+            <span asp-validation-for="Contrasenia" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="FotoPerfil" class="form-label"></label>
+            <input asp-for="FotoPerfil" class="form-control" />
+            <span asp-validation-for="FotoPerfil" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="EstadoCuenta" class="form-label"></label>
+            <select asp-for="EstadoCuenta" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.EstadoCuenta>()" class="form-select"></select>
+            <span asp-validation-for="EstadoCuenta" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TipoUsuario" class="form-label"></label>
+            <select asp-for="TipoUsuario" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.TipoUsuario>()" class="form-select"></select>
+            <span asp-validation-for="TipoUsuario" class="text-danger"></span>
+        </div>
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

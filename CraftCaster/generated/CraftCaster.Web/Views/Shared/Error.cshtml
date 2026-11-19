@@ -1,0 +1,21 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-danger-subtle shadow-sm">
+            <div class="card-body p-4 p-md-5 text-center">
+                <span class="badge text-bg-danger mb-3">Error</span>
+                <h1 class="h2">Se ha producido un error</h1>
+                <p class="text-body-secondary">No se ha podido completar la petición. Inténtalo de nuevo.</p>
+                @if (Model.ShowRequestId)
+                {
+                    <p class="small mb-4"><strong>Identificador de petición:</strong> <code>@Model.RequestId</code></p>
+                }
+                <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Volver al inicio</a>
+            </div>
+        </div>
+    </div>
+</div>

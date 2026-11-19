@@ -1,0 +1,20 @@
+@* HARIA-WEB GENERATED sha256:2053f2401c464f212190e6e995bf96fd03c60ab420bf77e0295f21c60270b81a *@
+@model IEnumerable<CraftCaster.Web.ViewModels.CartaPartidaViewModel>
+
+<h2 class="h5 mt-4">Cartas</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">@Html.DisplayNameFor(model => model.VidaActual)</th>
+            <th scope="col">@Html.DisplayNameFor(model => model.AtaqueActual)</th>
+            <th scope="col">@Html.DisplayNameFor(model => model.PuedeAtacar)</th>
+            <th scope="col">@Html.DisplayNameFor(model => model.OriginalLabel)</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <partial name="_CartasDetailsItem" model="item" />
+        }
+    </tbody>
+</table>

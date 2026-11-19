@@ -1,0 +1,49 @@
+@* HARIA-WEB GENERATED sha256:99faf5301eb4bd231d8b384551931da075b2b6e144d197ffa34529e1ea8c77b8 *@
+@model CraftCaster.Web.ViewModels.JugadorPartidaViewModel
+
+@{
+    ViewData["Title"] = "Eliminar";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-danger mb-3">Eliminar</span>
+                <h1 class="h3 mb-1">JugadorPartida</h1>
+                <p class="text-body-secondary mb-0">Review the record before deleting it. This action cannot be undone.</p>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0 gy-2">
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Id)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Id)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Vida)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Vida)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.NumJugador)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.NumJugador)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Mana)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Mana)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Activo)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Activo)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.PartidaLabel)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.PartidaLabel)</dd>
+                </dl>
+
+
+                <aside class="alert alert-info">
+                    <h2 class="h6">Zonas</h2>
+                    <p>Guarda este registro y gestiona Zonas desde ZonaPartida, seleccionando Jugador en su formulario.</p>
+                    <a asp-controller="ZonaPartida" asp-action="Index" class="btn btn-outline-primary">Gestionar Zonas</a>
+                </aside>
+            </div>
+            <div class="card-footer bg-body p-4">
+                <form asp-action="Delete" method="post" class="d-flex flex-column flex-sm-row gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="btn btn-danger">Eliminar definitivamente</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </form>
+            </div>
+        </div>
+    </div>
+</div>

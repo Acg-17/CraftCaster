@@ -1,0 +1,59 @@
+@* HARIA-WEB GENERATED sha256:74f5fcc6c731e640aadd72101d52abbe11190ca8ec2de8dc28cc265c29425e9e *@
+@model CraftCaster.Web.ViewModels.HabilidadViewModel
+
+@{
+    ViewData["Title"] = "Crear";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-3">Crear</span>
+                <h1 class="h3 mb-1">Habilidad</h1>
+                <p class="text-body-secondary mb-0">Completa los campos y guarda los cambios.</p>
+            </div>
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                <div class="card-body p-4">
+                    <div asp-validation-summary="All" class="alert alert-danger py-2" role="alert"></div>
+        <div class="mb-3">
+            <label asp-for="Tipo" class="form-label"></label>
+            <select asp-for="Tipo" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.TipoHabilidad>()" class="form-select"></select>
+            <span asp-validation-for="Tipo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Cantidad" class="form-label"></label>
+            <input asp-for="Cantidad" class="form-control" />
+            <span asp-validation-for="Cantidad" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="TipoObjetivo" class="form-label"></label>
+            <select asp-for="TipoObjetivo" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.TipoObjetivo>()" class="form-select"></select>
+            <span asp-validation-for="TipoObjetivo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="Objetivo" class="form-label"></label>
+            <input asp-for="Objetivo" class="form-control" />
+            <span asp-validation-for="Objetivo" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="EstadoId" class="form-label"></label>
+            <select asp-for="EstadoId" asp-items="Model.EstadoOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="EstadoId" class="text-danger"></span>
+        </div>
+                </div>
+                <div class="card-footer bg-body p-4 d-flex flex-column flex-sm-row gap-2">
+                    <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+
+}

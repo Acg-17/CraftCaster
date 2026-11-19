@@ -1,0 +1,44 @@
+@* HARIA-WEB GENERATED sha256:8de421fae3e7f8fcf04e11a7d1a19bfce148a81a83cd3a4a4c9e1f9f98e851fe *@
+@model CraftCaster.Web.ViewModels.HabilidadViewModel
+
+@{
+    ViewData["Title"] = "Eliminar";
+}
+
+<div class="row justify-content-center">
+    <div class="col-xl-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-4">
+                <span class="badge text-bg-danger mb-3">Eliminar</span>
+                <h1 class="h3 mb-1">Habilidad</h1>
+                <p class="text-body-secondary mb-0">Review the record before deleting it. This action cannot be undone.</p>
+            </div>
+            <div class="card-body p-4">
+                <dl class="row mb-0 gy-2">
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Id)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Id)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Tipo)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Tipo)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Cantidad)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Cantidad)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.TipoObjetivo)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.TipoObjetivo)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.Objetivo)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.Objetivo)</dd>
+            <dt class="col-sm-4 col-lg-3 text-body-secondary">@Html.DisplayNameFor(model => model.EstadoLabel)</dt>
+            <dd class="col-sm-8 col-lg-9">@Html.DisplayFor(model => model.EstadoLabel)</dd>
+                </dl>
+
+
+            </div>
+            <div class="card-footer bg-body p-4">
+                <form asp-action="Delete" method="post" class="d-flex flex-column flex-sm-row gap-2">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <button type="submit" class="btn btn-danger">Eliminar definitivamente</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </form>
+            </div>
+        </div>
+    </div>
+</div>

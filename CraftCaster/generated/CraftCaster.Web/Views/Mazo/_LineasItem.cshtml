@@ -1,0 +1,15 @@
+@* HARIA-WEB GENERATED sha256:4f8c84018f96e9ab0fe06a4c54a736d02f339fac629aba6473a5800f230db027 *@
+@model CraftCaster.Web.ViewModels.LineaMazoViewModel
+    <input asp-for="Id" type="hidden" />
+    <span asp-validation-for="Id" class="text-danger"></span>
+        <div class="mb-3">
+            <label asp-for="Cantidad" class="form-label"></label>
+            <input asp-for="Cantidad" class="form-control" />
+            <span asp-validation-for="Cantidad" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="CartaId" class="form-label"></label>
+            <select asp-for="CartaId" asp-items="Model.CartaOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="CartaId" class="text-danger"></span>
+        </div>
+

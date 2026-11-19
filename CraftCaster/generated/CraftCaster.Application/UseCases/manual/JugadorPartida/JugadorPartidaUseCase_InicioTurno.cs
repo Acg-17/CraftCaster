@@ -45,7 +45,7 @@ public sealed partial class JugadorPartidaUseCase
             }
 
             // 4. Roba una carta del mazo al iniciar el turno
-            await jugadorPartidaService.RobarCartaAsync(jugador.Id);
+            await jugadorPartidaService.RobarCartaDelMazoAsync(jugador.Id);
 
             await _unitOfWork.JugadorPartidaRepository.SaveAsync(jugador);
 

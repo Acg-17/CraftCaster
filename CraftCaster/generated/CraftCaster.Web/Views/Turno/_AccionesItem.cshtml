@@ -1,0 +1,15 @@
+@* HARIA-WEB GENERATED sha256:c143df30010d9770580776e9843a5f36d767ddd9c7afcc461aefe00304689603 *@
+@model CraftCaster.Web.ViewModels.AccionViewModel
+    <input asp-for="Id" type="hidden" />
+    <span asp-validation-for="Id" class="text-danger"></span>
+        <div class="mb-3">
+            <label asp-for="Name" class="form-label"></label>
+            <select asp-for="Name" asp-items="Html.GetEnumSelectList<CraftCaster.Domain.Enums.TipoAccion>()" class="form-select"></select>
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label asp-for="OrigenId" class="form-label"></label>
+            <select asp-for="OrigenId" asp-items="Model.OrigenOptions" class="form-select"><option value="">Selecciona...</option></select>
+            <span asp-validation-for="OrigenId" class="text-danger"></span>
+        </div>
+
