@@ -282,8 +282,107 @@ public static class SeedData
         {
             using var unitOfWorkFactory = new UnitOfWorkFactory(cfg, loggerFactory);
 
-            /*PROTECTED REGION ID(initializeDataManual) ENABLED START*/
+                        /*PROTECTED REGION ID(initializeDataManual) ENABLED START*/
+            var usuarioService = new UsuarioService(unitOfWorkFactory);
+            var cartaService = new CartaService(unitOfWorkFactory);
+            var estadoService = new EstadoService(unitOfWorkFactory);
+            var habilidadService = new HabilidadService(unitOfWorkFactory);
+            var mazoService = new MazoService(unitOfWorkFactory);
+            var lineaMazoService = new LineaMazoService(unitOfWorkFactory);
+            var partidaService = new PartidaService(unitOfWorkFactory);
+            var jugadorPartidaService = new JugadorPartidaService(unitOfWorkFactory);
+            var zonaPartidaService = new ZonaPartidaService(unitOfWorkFactory);
+            var cartaPartidaService = new CartaPartidaService(unitOfWorkFactory);
+            var turnoService = new TurnoService(unitOfWorkFactory);
+
+            // ---------- Usuarios (contrasenya de todos: Password123!) ----------
+            var admin = await usuarioService.NewAsync("admin", "admin@craftcaster.com", "Password123!", 1, EstadoCuenta.Activa, TipoUsuario.Admin);
+            var ana = await usuarioService.NewAsync("ana", "ana@craftcaster.com", "Password123!", 1, EstadoCuenta.Activa, TipoUsuario.Cliente);
+            var beto = await usuarioService.NewAsync("beto", "beto@craftcaster.com", "Password123!", 1, EstadoCuenta.Activa, TipoUsuario.Cliente);
+
+            // ---------- Cartas (ataque y vida solo cuentan en las criaturas) ----------
+            var dragon = await cartaService.NewAsync("Dragon Rojo", Rareza.Legendario, 6, TipoCarta.Criatura, "Al entrar inflige 2 de danyo a un enemigo.", 1, true, 6, 6, ana.Id);
+            var caballero = await cartaService.NewAsync("Caballero Novato", Rareza.Comun, 2, TipoCarta.Criatura, "Un soldado fiel.", 1, true, 2, 3, ana.Id);
+            var arquera = await cartaService.NewAsync("Arquera Elfica", Rareza.Especial, 3, TipoCarta.Criatura, "Al atacar inflige 1 de danyo extra.", 1, true, 3, 2, ana.Id);
+            var bolaFuego = await cartaService.NewAsync("Bola de Fuego", Rareza.Epico, 4, TipoCarta.Hechizo, "Inflige 5 de danyo al objetivo elegido.", 1, true, 0, 0, ana.Id);
+            var pocion = await cartaService.NewAsync("Pocion de Curacion", Rareza.Comun, 1, TipoCarta.Hechizo, "Cura 3 puntos de vida al jugador.", 1, true, 0, 0, ana.Id);
+            var golem = await cartaService.NewAsync("Golem de Piedra", Rareza.Especial, 5, TipoCarta.Criatura, "Al entrar gana 2 de defensa.", 1, true, 4, 8, ana.Id);
+            var lobo = await cartaService.NewAsync("Lobo Sombrio", Rareza.Comun, 2, TipoCarta.Criatura, "Rapido y agresivo.", 1, true, 3, 1, beto.Id);
+            var rayo = await cartaService.NewAsync("Rayo Arcano", Rareza.Especial, 2, TipoCarta.Hechizo, "Inflige 3 de danyo a un enemigo.", 1, true, 0, 0, beto.Id);
+            await cartaService.NewAsync("Carta Secreta", Rareza.Epico, 7, TipoCarta.Criatura, "Carta privada de beto, aun sin compartir.", 1, false, 7, 7, beto.Id);
+
+            // ---------- Estados y habilidades de las cartas ----------
+            var estadoDragon = await estadoService.NewAsync(TipoEstado.Entrar, dragon.Id);
+            await habilidadService.NewAsync(TipoHabilidad.Danyo, 2, TipoObjetivo.Enemigo, 0, estadoDragon.Id);
+            var estadoArquera = await estadoService.NewAsync(TipoEstado.Atacar, arquera.Id);
+            await habilidadService.NewAsync(TipoHabilidad.Danyo, 1, TipoObjetivo.Enemigo, 0, estadoArquera.Id);
+            var estadoBola = await estadoService.NewAsync(TipoEstado.Entrar, bolaFuego.Id);
+            await habilidadService.NewAsync(TipoHabilidad.Danyo, 5, TipoObjetivo.Libre, 0, estadoBola.Id);
+            var estadoPocion = await estadoService.NewAsync(TipoEstado.Entrar, pocion.Id);
+            await habilidadService.NewAsync(TipoHabilidad.Cura, 3, TipoObjetivo.Jugador, 0, estadoPocion.Id);
+            var estadoGolem = await estadoService.NewAsync(TipoEstado.Entrar, golem.Id);
+            await habilidadService.NewAsync(TipoHabilidad.Defensa, 2, TipoObjetivo.Self, 0, estadoGolem.Id);
+            var estadoRayo = await estadoService.NewAsync(TipoEstado.Entrar, rayo.Id);
+            await habilidadService.NewAsync(TipoHabilidad.Danyo, 3, TipoObjetivo.Enemigo, 0, estadoRayo.Id);
+
+            // ---------- Mazos (numCartas y costeMedio cuadran con sus lineas) ----------
+            // Fuego y Acero: 10x2 + 8x3 + 6x4 + 2x6 + 4x1 = 84 de mana en 30 cartas -> coste medio 2,8
+            var mazoAna = await mazoService.NewAsync("Fuego y Acero", 2.8f, 30, EstadoMazo.Jugable, true, 4.5f, 1, ana.Id);
+            await lineaMazoService.NewAsync(10, mazoAna.Id, caballero.Id);
+            await lineaMazoService.NewAsync(8, mazoAna.Id, arquera.Id);
+            await lineaMazoService.NewAsync(6, mazoAna.Id, bolaFuego.Id);
+            await lineaMazoService.NewAsync(2, mazoAna.Id, dragon.Id);
+            await lineaMazoService.NewAsync(4, mazoAna.Id, pocion.Id);
+
+            // Manada Nocturna: 16x2 + 14x2 = 60 de mana en 30 cartas -> coste medio 2
+            var mazoBeto = await mazoService.NewAsync("Manada Nocturna", 2f, 30, EstadoMazo.Jugable, true, 3.5f, 1, beto.Id);
+            await lineaMazoService.NewAsync(16, mazoBeto.Id, lobo.Id);
+            await lineaMazoService.NewAsync(14, mazoBeto.Id, rayo.Id);
+
+            // Pruebas: privado y sin terminar (5 cartas de coste 1)
+            var mazoPruebas = await mazoService.NewAsync("Pruebas", 1f, 5, EstadoMazo.Incompleto, false, 0f, 1, ana.Id);
+            await lineaMazoService.NewAsync(5, mazoPruebas.Id, pocion.Id);
+
+            // ---------- Partida en espera: beto busca rival ----------
+            await partidaService.NewAsync(EstadoPartida.Espera, DateTime.Today, beto.Id, mazoBeto.Id);
+
+            // ---------- Partida en curso: ana (jugador 1) contra beto (jugador 2), turno 1 ----------
+            var partida = await partidaService.NewAsync(EstadoPartida.EnCurso, DateTime.Today, ana.Id, mazoAna.Id);
+            await partidaService.AddUsuario2Async(partida.Id, beto.Id);
+            await partidaService.AddMazo2Async(partida.Id, mazoBeto.Id);
+
+            var jugador1 = await jugadorPartidaService.NewAsync(20, 1, 1, true, partida.Id);
+            var jugador2 = await jugadorPartidaService.NewAsync(20, 2, 0, false, partida.Id);
+
+            // Zonas de cada jugador
+            var mano1 = await zonaPartidaService.NewAsync(TipoZona.Mano, jugador1.Id);
+            var campo1 = await zonaPartidaService.NewAsync(TipoZona.Campo, jugador1.Id);
+            await zonaPartidaService.NewAsync(TipoZona.Descarte, jugador1.Id);
+            var mazo1 = await zonaPartidaService.NewAsync(TipoZona.Mazo, jugador1.Id);
+            var mano2 = await zonaPartidaService.NewAsync(TipoZona.Mano, jugador2.Id);
+            await zonaPartidaService.NewAsync(TipoZona.Campo, jugador2.Id);
+            await zonaPartidaService.NewAsync(TipoZona.Descarte, jugador2.Id);
+            var mazo2 = await zonaPartidaService.NewAsync(TipoZona.Mazo, jugador2.Id);
+
+            // Cartas en juego (vidaActual, ataqueActual, puedeAtacar, zona, carta original)
+            await cartaPartidaService.NewAsync(3, 2, false, campo1.Id, caballero.Id);
+            await cartaPartidaService.NewAsync(3, 2, false, mano1.Id, caballero.Id);
+            await cartaPartidaService.NewAsync(0, 0, false, mano1.Id, pocion.Id);
+            await cartaPartidaService.NewAsync(2, 3, false, mazo1.Id, arquera.Id);
+            await cartaPartidaService.NewAsync(0, 0, false, mazo1.Id, bolaFuego.Id);
+            await cartaPartidaService.NewAsync(6, 6, false, mazo1.Id, dragon.Id);
+            await cartaPartidaService.NewAsync(1, 3, false, mano2.Id, lobo.Id);
+            await cartaPartidaService.NewAsync(0, 0, false, mano2.Id, rayo.Id);
+            await cartaPartidaService.NewAsync(1, 3, false, mazo2.Id, lobo.Id);
+            await cartaPartidaService.NewAsync(1, 3, false, mazo2.Id, lobo.Id);
+            await cartaPartidaService.NewAsync(0, 0, false, mazo2.Id, rayo.Id);
+
+            // Turno actual: turno 1 de ana con 1 de mana
+            await turnoService.NewAsync(1, 1, partida.Id, jugador1.Id);
+
+            Console.WriteLine("Datos de ejemplo creados: 3 usuarios, 9 cartas, 3 mazos y 2 partidas.");
             /*PROTECTED REGION END*/
+
         }
         catch (Exception ex)
         {
