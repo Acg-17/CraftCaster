@@ -184,6 +184,11 @@ public sealed partial class MazoService : ServiceEntity<Mazo>
         await _repository.SaveAsync(entity);
     }
 
+    public async Task<IReadOnlyList<Mazo>> ObtenerMazosPublicosAsync()
+    {
+        return await _repository.ObtenerMazosPublicosAsync();
+    }
+
     public async Task<IReadOnlyList<Mazo>> ObtenerMazosUsuarioAsync(int p_oid)
     {
         return await _repository.ObtenerMazosUsuarioAsync(p_oid);

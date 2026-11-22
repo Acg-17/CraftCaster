@@ -1,0 +1,120 @@
+@model CraftCaster.Web.ViewModels.DetalleMazoViewModel
+@{
+    ViewData["Title"] = Model.Mazo.Nombre;
+    var estrellas = (int)Math.Round(Model.Mazo.Valoracion);
+    var curva = Model.CurvaMana;
+    var maximo = Math.Max(1, curva.Max(c => c.Cantidad));
+}
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between gap-3">
+        <div>
+            <h1 class="h3 mb-1">@Model.Mazo.Nombre</h1>
+            <p class="text-body-secondary mb-2">Por @@@Model.Mazo.UsuarioLabel</p>
+            <span class="badge text-bg-light border">@Model.Mazo.EstadoMazo</span>
+            <span class="badge @(Model.Mazo.EsPublico ? "text-bg-primary" : "text-bg-secondary")">@(Model.Mazo.EsPublico ? "Público" : "Privado")</span>
+        </div>
+        <dl class="row mb-0 small text-md-end">
+            <dt class="col-6 col-md-8 text-body-secondary">Cartas</dt><dd class="col-6 col-md-4 mb-1">@Model.Mazo.NumCartas / 30</dd>
+            <dt class="col-6 col-md-8 text-body-secondary">Coste medio</dt><dd class="col-6 col-md-4 mb-1">@Model.Mazo.CosteMedio.ToString("0.0")</dd>
+            <dt class="col-6 col-md-8 text-body-secondary">Valoración</dt>
+            <dd class="col-6 col-md-4 mb-0 text-warning">@for (var i = 1; i <= 5; i++) { @(i <= estrellas ? "★" : "☆") }</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <section class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-3"><h2 class="h5 mb-0">Cartas del mazo</h2></div>
+            <div class="card-body p-0">
+                @if (Model.Cartas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th class="ps-3">Maná</th><th>Carta</th><th>Tipo</th><th>Rareza</th><th class="text-end pe-3">Copias</th></tr></thead>
+                            <tbody>
+                                @foreach (var carta in Model.Cartas)
+                                {
+                                    <tr>
+                                        <td class="ps-3"><span class="badge rounded-pill text-bg-primary">@carta.CosteMana</span></td>
+                                        <td>@carta.Nombre</td>
+                                        <td>@carta.Tipo</td>
+                                        <td>@carta.Rareza</td>
+                                        <td class="text-end pe-3">x@(carta.Cantidad)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="p-3 mb-0 text-body-secondary">Este mazo todavía no tiene cartas.</p>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-4 d-flex flex-column gap-4">
+        <section class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-3"><h2 class="h5 mb-0">Curva de maná</h2></div>
+            <div class="card-body">
+                <div class="d-flex align-items-end gap-2" style="height: 120px" aria-label="Cartas por coste de maná">
+                    @foreach (var punto in curva)
+                    {
+                        var alto = (int)Math.Round(100.0 * punto.Cantidad / maximo);
+                        <div class="flex-fill d-flex flex-column align-items-center justify-content-end h-100">
+                            <span class="small text-body-secondary">@punto.Cantidad</span>
+                            <div class="w-100 bg-primary rounded-top" style="height: @(alto)%; min-height: 2px"></div>
+                        </div>
+                    }
+                </div>
+                <div class="d-flex gap-2 mt-1">
+                    @foreach (var punto in curva)
+                    {
+                        <span class="flex-fill text-center small">@punto.Coste</span>
+                    }
+                </div>
+            </div>
+        </section>
+
+        @if (Model.PuedeValorar)
+        {
+            <section class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Valorar este mazo</h2>
+                    <form asp-action="Valorar" asp-route-id="@Model.Mazo.Id" method="post" class="d-flex gap-2">
+                        <select asp-for="Valorar.Valoracion" class="form-select" aria-label="Tu valoración">
+                            <option value="">Elige...</option>
+                            <option value="5">★★★★★ (5)</option>
+                            <option value="4">★★★★☆ (4)</option>
+                            <option value="3">★★★☆☆ (3)</option>
+                            <option value="2">★★☆☆☆ (2)</option>
+                            <option value="1">★☆☆☆☆ (1)</option>
+                        </select>
+                        <button type="submit" class="btn btn-dark">Valorar</button>
+                    </form>
+                </div>
+            </section>
+        }
+        else if (!Model.EsPropio)
+        {
+            <p class="small text-body-secondary mb-0"><a asp-controller="Cuenta" asp-action="Acceso" asp-route-returnUrl="@Context.Request.Path">Inicia sesión</a> para valorar este mazo.</p>
+        }
+
+        <div class="d-flex gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary flex-fill">Volver a Explorar</a>
+            <a asp-controller="Partida" asp-action="Index" class="btn btn-dark flex-fill">Luchar</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,129 @@
+@model CraftCaster.Web.ViewModels.MiCuentaViewModel
+@{
+    ViewData["Title"] = "Mi cuenta";
+    var miId = Model.Usuario.Id;
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between gap-3">
+        <div>
+            <h1 class="h3 mb-1">@Model.Usuario.NombreUsuario</h1>
+            <p class="text-body-secondary mb-2">@Model.Usuario.Email</p>
+            <span class="badge @(Model.Usuario.EstadoCuenta == CraftCaster.Domain.Enums.EstadoCuenta.Activa ? "text-bg-success" : "text-bg-danger")">Cuenta @Model.Usuario.EstadoCuenta</span>
+            <span class="badge text-bg-secondary">@Model.Usuario.TipoUsuario</span>
+        </div>
+        <div class="d-flex flex-wrap align-items-start gap-2">
+            <a asp-controller="Mazo" asp-action="Create" class="btn btn-dark">+ Crear mazo</a>
+            <a asp-controller="Carta" asp-action="Create" class="btn btn-outline-dark">+ Crear carta</a>
+            <form asp-action="Salir" method="post" class="m-0">
+                <button type="submit" class="btn btn-outline-secondary">Cerrar sesión</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <section class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Mis mazos</h2>
+                <span class="badge text-bg-light">@Model.Mazos.Count</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.Mazos.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var mazo in Model.Mazos)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                                <div>
+                                    <a asp-controller="Explorar" asp-action="Detalle" asp-route-id="@mazo.Id" class="fw-semibold">@mazo.Nombre</a>
+                                    <div class="small text-body-secondary">@mazo.NumCartas cartas · coste medio @mazo.CosteMedio.ToString("0.0") · @mazo.EstadoMazo</div>
+                                </div>
+                                <span class="badge @(mazo.EsPublico ? "text-bg-primary" : "text-bg-secondary")">@(mazo.EsPublico ? "Público" : "Privado")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="p-3 mb-0 text-body-secondary">Todavía no tienes mazos. <a asp-controller="Mazo" asp-action="Create">Crea el primero</a>.</p>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Mis cartas</h2>
+                <span class="badge text-bg-light">@Model.Cartas.Count</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.Cartas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th class="ps-3">Carta</th><th>Tipo</th><th>Rareza</th><th class="text-end pe-3">Maná</th></tr></thead>
+                            <tbody>
+                                @foreach (var carta in Model.Cartas)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <a asp-controller="Carta" asp-action="Details" asp-route-id="@carta.Id">@carta.Nombre</a>
+                                            @if (!carta.EsPublica) { <span class="badge text-bg-secondary ms-1">Privada</span> }
+                                        </td>
+                                        <td>@carta.Tipo</td>
+                                        <td>@carta.Rareza</td>
+                                        <td class="text-end pe-3">@carta.CosteMana</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="p-3 mb-0 text-body-secondary">Todavía no has creado cartas. <a asp-controller="Carta" asp-action="Create">Crea la primera</a>.</p>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12">
+        <section class="card border-0 shadow-sm">
+            <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Mis partidas</h2>
+                <span class="badge text-bg-light">@Model.Partidas.Count</span>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.Partidas.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead><tr><th class="ps-3">Fecha</th><th>Estado</th><th>Rival</th><th class="pe-3">Mi mazo</th></tr></thead>
+                            <tbody>
+                                @foreach (var partida in Model.Partidas)
+                                {
+                                    var soyLocal = partida.Usuario1Id == miId;
+                                    var rival = soyLocal ? (partida.Usuario2Label ?? "Esperando rival") : partida.Usuario1Label;
+                                    var miMazo = soyLocal ? partida.Mazo1Label : partida.Mazo2Label;
+                                    <tr>
+                                        <td class="ps-3">@partida.FechaInicio.ToString("dd/MM/yyyy")</td>
+                                        <td><span class="badge text-bg-light">@partida.Estado</span></td>
+                                        <td>@rival</td>
+                                        <td class="pe-3">@miMazo</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="p-3 mb-0 text-body-secondary">Todavía no has jugado ninguna partida.</p>
+                }
+            </div>
+        </section>
+    </div>
+</div>

@@ -4,6 +4,7 @@ namespace CraftCaster.Application.Abstractions;
 
 public interface IMazoRepository : IRepository<Mazo>
 {
+    Task<IReadOnlyList<Mazo>> ObtenerMazosPublicosAsync();
     Task<IReadOnlyList<Mazo>> ObtenerMazosUsuarioAsync(int p_oid);
     Task<IReadOnlyList<Mazo>> ObtenerMazosPorNombreAsync(string p_nombre);
     Task<IReadOnlyList<Mazo>> ObtenerMazoPorCosteMedioAsync(int p_min_mana, int p_max_mana);

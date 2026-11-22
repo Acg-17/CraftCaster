@@ -236,4 +236,9 @@ public sealed partial class UsuarioService : ServiceEntity<Usuario>
         return await _repository.ObtenerUsuarioLocalAsync(p_oid);
     }
 
+    public async Task<IReadOnlyList<Usuario>> ObtenerUsuarioPorEmailONombreAsync(string p_identificador)
+    {
+        return await _repository.ObtenerUsuarioPorEmailONombreAsync(p_identificador);
+    }
+
 }

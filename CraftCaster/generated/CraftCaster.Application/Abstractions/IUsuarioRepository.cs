@@ -5,4 +5,5 @@ namespace CraftCaster.Application.Abstractions;
 public interface IUsuarioRepository : IRepository<Usuario>
 {
     Task<IReadOnlyList<Usuario>> ObtenerUsuarioLocalAsync(int p_oid);
+    Task<IReadOnlyList<Usuario>> ObtenerUsuarioPorEmailONombreAsync(string p_identificador);
 }

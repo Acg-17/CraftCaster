@@ -70,6 +70,22 @@ public sealed class MazoRepository : RepositoryBase<Mazo>, IMazoRepository
             $"Error deleting {EntityName} entity.");
     }
 
+    public async Task<IReadOnlyList<Mazo>> ObtenerMazosPublicosAsync()
+    {
+        try
+        {
+            using var context = OpenSession();
+            return await context.Session.Query<Mazo>()
+                .Where(entity => entity.EsPublico == true)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "Error executing ReadFilter Mazo.obtenerMazosPublicos.");
+            throw new DataException("Error executing ReadFilter Mazo.obtenerMazosPublicos.", ex);
+        }
+    }
+
     public async Task<IReadOnlyList<Mazo>> ObtenerMazosUsuarioAsync(int p_oid)
     {
         try
@@ -92,7 +108,7 @@ public sealed class MazoRepository : RepositoryBase<Mazo>, IMazoRepository
         {
             using var context = OpenSession();
             return await context.Session.Query<Mazo>()
-                .Where(entity => entity.Nombre == p_nombre && entity.EsPublico == true)
+                .Where(entity => entity.Nombre.Contains(p_nombre) && entity.EsPublico == true)
                 .ToListAsync();
         }
         catch (Exception ex)

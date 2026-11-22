@@ -85,4 +85,20 @@ public sealed class UsuarioRepository : RepositoryBase<Usuario>, IUsuarioReposit
             throw new DataException("Error executing ReadFilter Usuario.obtenerUsuarioLocal.", ex);
         }
     }
+
+    public async Task<IReadOnlyList<Usuario>> ObtenerUsuarioPorEmailONombreAsync(string p_identificador)
+    {
+        try
+        {
+            using var context = OpenSession();
+            return await context.Session.Query<Usuario>()
+                .Where(entity => entity.Email.ToLower() == p_identificador.ToLower() || entity.NombreUsuario.ToLower() == p_identificador.ToLower())
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError(ex, "Error executing ReadFilter Usuario.obtenerUsuarioPorEmailONombre.");
+            throw new DataException("Error executing ReadFilter Usuario.obtenerUsuarioPorEmailONombre.", ex);
+        }
+    }
 }

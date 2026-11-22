@@ -1,0 +1,77 @@
+@model CraftCaster.Web.ViewModels.AccesoViewModel
+@{
+    ViewData["Title"] = "Acceso";
+    // Solo se pinta la alerta si hay un error de verdad (si no, sale una banda roja vacia)
+    string? ErrorDe(string clave) =>
+        ViewData.ModelState.TryGetValue(clave, out var entrada) && entrada.Errors.Count > 0
+            ? entrada.Errors[0].ErrorMessage
+            : null;
+    var errorLogin = ErrorDe("Login");
+    var errorRegistro = ErrorDe("Registro");
+}
+
+<div class="row g-4 justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1">Iniciar sesión</h1>
+                <p class="text-body-secondary small mb-4">Accede a tu perfil y recupera tus mazos y creaciones.</p>
+
+                <form asp-action="Entrar" method="post" novalidate>
+                    @if (errorLogin is not null)
+                    {
+                        <div class="alert alert-danger py-2" role="alert">@errorLogin</div>
+                    }
+                    <input asp-for="Login.ReturnUrl" type="hidden" />
+                    <div class="mb-3">
+                        <label asp-for="Login.Identificador" class="form-label fw-semibold"></label>
+                        <input asp-for="Login.Identificador" class="form-control" autocomplete="username" placeholder="alvaro@craftcaster.com" />
+                        <span asp-validation-for="Login.Identificador" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Login.Contrasenia" class="form-label fw-semibold"></label>
+                        <input asp-for="Login.Contrasenia" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Login.Contrasenia" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-dark w-100">Entrar a CraftCaster</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-5" id="registro">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body p-4">
+                <h2 class="h4 mb-1">Crear cuenta</h2>
+                <p class="text-body-secondary small mb-4">Regístrate para guardar tus cartas y jugar en la arena.</p>
+
+                <form asp-action="Registrarse" method="post" novalidate>
+                    @if (errorRegistro is not null)
+                    {
+                        <div class="alert alert-danger py-2" role="alert">@errorRegistro</div>
+                    }
+                    <div class="mb-3">
+                        <label asp-for="Registro.NombreUsuario" class="form-label fw-semibold"></label>
+                        <input asp-for="Registro.NombreUsuario" class="form-control" autocomplete="username" placeholder="Ej: PauCremades" />
+                        <span asp-validation-for="Registro.NombreUsuario" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Registro.Email" class="form-label fw-semibold"></label>
+                        <input asp-for="Registro.Email" class="form-control" autocomplete="email" placeholder="tu@correo.com" />
+                        <span asp-validation-for="Registro.Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="Registro.Contrasenia" class="form-label fw-semibold"></label>
+                        <input asp-for="Registro.Contrasenia" class="form-control" autocomplete="new-password" placeholder="Mínimo 8 caracteres" />
+                        <span asp-validation-for="Registro.Contrasenia" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-outline-dark w-100">Registrarse y empezar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

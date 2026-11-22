@@ -103,6 +103,12 @@ ConceptualModel CraftCaster {
                 filterLinQ = "entity => entity.PartidasLocal.Any(p => p.Id == p_oid)"
             };
 
+            // Login por email o nombre de usuario
+            public obtenerUsuarioPorEmailONombre::ReadFilter (p_identificador : String) : List<Object->Usuario>
+            {
+                filterLinQ = "entity => entity.Email.ToLower() == p_identificador.ToLower() || entity.NombreUsuario.ToLower() == p_identificador.ToLower()"
+            };
+
             //Transacciones
             public registrarUsuario::CustomTransaction (p_nombreUsuario : String, p_email : String, p_contrasenia : Password, p_fotoPerfil : Byte) : Object->Usuario;
             public iniciarPartida::CustomTransaction (p_oid : OID -> Usuario) : Void; //Crea una partida con sigo mismo como local y asigna esa partida a su lista de partidas locales
@@ -148,13 +154,17 @@ ConceptualModel CraftCaster {
             public valorarMazo::Custom (p_oid : OID -> Mazo, p_valoracion : Float) : Void;
 
             // Buscar Mazos
+            public obtenerMazosPublicos::ReadFilter () : List<Object->Mazo>
+            {
+                filterLinQ = "entity => entity.EsPublico == true"
+            };
             public obtenerMazosUsuario::ReadFilter (p_oid : OID -> Usuario) : List<Object->Mazo>
             {
                 filterLinQ = "entity => entity.Usuario.Id == p_oid"
             };
             public obtenerMazosPorNombre::ReadFilter (p_nombre : String) : List<Object->Mazo>
             {
-                filterLinQ = "entity => entity.Nombre == p_nombre && entity.EsPublico == true"
+                filterLinQ = "entity => entity.Nombre.Contains(p_nombre) && entity.EsPublico == true"
             };
             public obtenerMazoPorCosteMedio::ReadFilter (p_min_mana : Integer, p_max_mana : Integer) : List<Object->Mazo>
             {

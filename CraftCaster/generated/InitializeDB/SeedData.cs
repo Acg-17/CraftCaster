@@ -36,6 +36,8 @@ public static class SeedData
             Ensure(sampleUsuarioReadAll.Count > 0, "Usuario read all returns generated data.");
             var sampleUsuarioObtenerUsuarioLocalResult = await usuarioService.ObtenerUsuarioLocalAsync(default!);
             Ensure(sampleUsuarioObtenerUsuarioLocalResult is not null, "Usuario.obtenerUsuarioLocal filter executes.");
+            var sampleUsuarioObtenerUsuarioPorEmailONombreResult = await usuarioService.ObtenerUsuarioPorEmailONombreAsync("Sample Usuario Identificador");
+            Ensure(sampleUsuarioObtenerUsuarioPorEmailONombreResult is not null, "Usuario.obtenerUsuarioPorEmailONombre filter executes.");
             await usuarioService.ModifyAsync(sampleUsuario.Id, "Sample Usuario NombreUsuario", "sample1@example.com", "Password123!", 1, EstadoCuenta.Activa, TipoUsuario.Cliente);
             Ensure(await usuarioService.ReadOIDAsync(sampleUsuario.Id) is not null, "Usuario modify keeps the entity readable.");
 
@@ -46,6 +48,8 @@ public static class SeedData
             Ensure(sampleMazoReadBack is not null, "Mazo read by OID returns the generated entity.");
             var sampleMazoReadAll = await mazoService.ReadAllAsync();
             Ensure(sampleMazoReadAll.Count > 0, "Mazo read all returns generated data.");
+            var sampleMazoObtenerMazosPublicosResult = await mazoService.ObtenerMazosPublicosAsync();
+            Ensure(sampleMazoObtenerMazosPublicosResult is not null, "Mazo.obtenerMazosPublicos filter executes.");
             var sampleMazoObtenerMazosUsuarioResult = await mazoService.ObtenerMazosUsuarioAsync(sampleUsuario.Id);
             Ensure(sampleMazoObtenerMazosUsuarioResult is not null, "Mazo.obtenerMazosUsuario filter executes.");
             var sampleMazoObtenerMazosPorNombreResult = await mazoService.ObtenerMazosPorNombreAsync("Sample Mazo Nombre");
@@ -245,7 +249,7 @@ public static class SeedData
             await accionService.ModifierAccionDefaultAsync(sampleAccion);
             await lineaMazoService.DestroyAsync(sampleLineaMazo.Id);
             await habilidadService.DestroyAsync(sampleHabilidad.Id);
-            // await estadoService.DestroyAsync(sampleEstado.Id);
+            await estadoService.DestroyAsync(sampleEstado.Id);
             await accionService.DestroyAsync(sampleAccion.Id);
             await cartaPartidaService.DestroyAsync(sampleCartaPartida.Id);
             await cartaService.DestroyAsync(sampleCarta.Id);
@@ -282,7 +286,7 @@ public static class SeedData
         {
             using var unitOfWorkFactory = new UnitOfWorkFactory(cfg, loggerFactory);
 
-                        /*PROTECTED REGION ID(initializeDataManual) ENABLED START*/
+            /*PROTECTED REGION ID(initializeDataManual) ENABLED START*/
             var usuarioService = new UsuarioService(unitOfWorkFactory);
             var cartaService = new CartaService(unitOfWorkFactory);
             var estadoService = new EstadoService(unitOfWorkFactory);
@@ -382,7 +386,6 @@ public static class SeedData
 
             Console.WriteLine("Datos de ejemplo creados: 3 usuarios, 9 cartas, 3 mazos y 2 partidas.");
             /*PROTECTED REGION END*/
-
         }
         catch (Exception ex)
         {

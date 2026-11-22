@@ -133,6 +133,38 @@ public sealed class ModelGeneratedTests
     }
 
     [Fact]
+    public void Usuario_ObtenerUsuarioPorEmailONombre_Filter_Contract()
+    {
+        // <haria-protected id="test:filter:Usuario:obtenerUsuarioPorEmailONombre:arrange">
+        // extra user setup
+        // </haria-protected>
+
+        var operationName = "obtenerUsuarioPorEmailONombre";
+        var filterExpression = "entity => entity.Email.ToLower() == p_identificador.ToLower() || entity.NombreUsuario.ToLower() == p_identificador.ToLower()";
+
+        // <haria-protected id="test:filter:Usuario:obtenerUsuarioPorEmailONombre:assert">
+        Ensure(!string.IsNullOrWhiteSpace(operationName), "Usuario.obtenerUsuarioPorEmailONombre declares the generated operation name.");
+        Ensure(!string.IsNullOrWhiteSpace(filterExpression), "Usuario.obtenerUsuarioPorEmailONombre declares the generated filter expression.");
+        // </haria-protected>
+    }
+
+    [Fact]
+    public void Mazo_ObtenerMazosPublicos_Filter_Contract()
+    {
+        // <haria-protected id="test:filter:Mazo:obtenerMazosPublicos:arrange">
+        // extra user setup
+        // </haria-protected>
+
+        var operationName = "obtenerMazosPublicos";
+        var filterExpression = "entity => entity.EsPublico == true";
+
+        // <haria-protected id="test:filter:Mazo:obtenerMazosPublicos:assert">
+        Ensure(!string.IsNullOrWhiteSpace(operationName), "Mazo.obtenerMazosPublicos declares the generated operation name.");
+        Ensure(!string.IsNullOrWhiteSpace(filterExpression), "Mazo.obtenerMazosPublicos declares the generated filter expression.");
+        // </haria-protected>
+    }
+
+    [Fact]
     public void Mazo_ObtenerMazosUsuario_Filter_Contract()
     {
         // <haria-protected id="test:filter:Mazo:obtenerMazosUsuario:arrange">
@@ -156,7 +188,7 @@ public sealed class ModelGeneratedTests
         // </haria-protected>
 
         var operationName = "obtenerMazosPorNombre";
-        var filterExpression = "entity => entity.Nombre == p_nombre && entity.EsPublico == true";
+        var filterExpression = "entity => entity.Nombre.Contains(p_nombre) && entity.EsPublico == true";
 
         // <haria-protected id="test:filter:Mazo:obtenerMazosPorNombre:assert">
         Ensure(!string.IsNullOrWhiteSpace(operationName), "Mazo.obtenerMazosPorNombre declares the generated operation name.");
@@ -343,6 +375,8 @@ public sealed class ModelGeneratedTests
             Ensure(sampleUsuarioReadAll.Count > 0, "Usuario read all returns generated data.");
             var sampleUsuarioObtenerUsuarioLocalResult = await usuarioService.ObtenerUsuarioLocalAsync(default!);
             Ensure(sampleUsuarioObtenerUsuarioLocalResult is not null, "Usuario.obtenerUsuarioLocal filter executes.");
+            var sampleUsuarioObtenerUsuarioPorEmailONombreResult = await usuarioService.ObtenerUsuarioPorEmailONombreAsync("Sample Usuario Identificador");
+            Ensure(sampleUsuarioObtenerUsuarioPorEmailONombreResult is not null, "Usuario.obtenerUsuarioPorEmailONombre filter executes.");
             await usuarioService.ModifyAsync(sampleUsuario.Id, "Sample Usuario NombreUsuario", "sample1@example.com", "Password123!", 1, EstadoCuenta.Activa, TipoUsuario.Cliente);
             Ensure(await usuarioService.ReadOIDAsync(sampleUsuario.Id) is not null, "Usuario modify keeps the entity readable.");
 
@@ -353,6 +387,8 @@ public sealed class ModelGeneratedTests
             Ensure(sampleMazoReadBack is not null, "Mazo read by OID returns the generated entity.");
             var sampleMazoReadAll = await mazoService.ReadAllAsync();
             Ensure(sampleMazoReadAll.Count > 0, "Mazo read all returns generated data.");
+            var sampleMazoObtenerMazosPublicosResult = await mazoService.ObtenerMazosPublicosAsync();
+            Ensure(sampleMazoObtenerMazosPublicosResult is not null, "Mazo.obtenerMazosPublicos filter executes.");
             var sampleMazoObtenerMazosUsuarioResult = await mazoService.ObtenerMazosUsuarioAsync(sampleUsuario.Id);
             Ensure(sampleMazoObtenerMazosUsuarioResult is not null, "Mazo.obtenerMazosUsuario filter executes.");
             var sampleMazoObtenerMazosPorNombreResult = await mazoService.ObtenerMazosPorNombreAsync("Sample Mazo Nombre");
@@ -552,7 +588,7 @@ public sealed class ModelGeneratedTests
             await accionService.ModifierAccionDefaultAsync(sampleAccion);
             await lineaMazoService.DestroyAsync(sampleLineaMazo.Id);
             await habilidadService.DestroyAsync(sampleHabilidad.Id);
-            // await estadoService.DestroyAsync(sampleEstado.Id);
+            await estadoService.DestroyAsync(sampleEstado.Id);
             await accionService.DestroyAsync(sampleAccion.Id);
             await cartaPartidaService.DestroyAsync(sampleCartaPartida.Id);
             await cartaService.DestroyAsync(sampleCarta.Id);
