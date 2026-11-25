@@ -348,7 +348,13 @@ public static class SeedData
             await lineaMazoService.NewAsync(5, mazoPruebas.Id, pocion.Id);
 
             // ---------- Partida en espera: beto busca rival ----------
-            await partidaService.NewAsync(EstadoPartida.Espera, DateTime.Today, beto.Id, mazoBeto.Id);
+            // Se crea con la CustomTransaction iniciarPartida (como desde la web) para que tenga su
+            // JugadorPartida 1, sus 4 zonas y las cartas del mazo. Con partidaService.NewAsync la partida
+            // quedaba sin jugadores y no se podía abrir el tablero ni empezarla.
+            await using (var unitOfWorkEspera = unitOfWorkFactory.Create())
+            {
+                await new UsuarioUseCase(unitOfWorkEspera).IniciarPartidaAsync(beto.Id);
+            }
 
             // ---------- Partida en curso: ana (jugador 1) contra beto (jugador 2), turno 1 ----------
             var partida = await partidaService.NewAsync(EstadoPartida.EnCurso, DateTime.Today, ana.Id, mazoAna.Id);

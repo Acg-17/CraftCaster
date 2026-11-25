@@ -105,7 +105,8 @@ public partial class UsuarioController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    /*PROTECTED REGION ID(UsuarioController_IniciarPartida_POST_attributes) START*/
+    /*PROTECTED REGION ID(UsuarioController_IniciarPartida_POST_attributes) ENABLED START*/
+    [Authorize(Roles = "Admin")] // Recibe ids arbitrarios: los jugadores usan JuegoController, que toma el usuario de la cookie
     /*PROTECTED REGION END*/
     public async Task<IActionResult> IniciarPartida(int p_oid)
     {
@@ -121,7 +122,8 @@ public partial class UsuarioController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    /*PROTECTED REGION ID(UsuarioController_UnirsePartida_POST_attributes) START*/
+    /*PROTECTED REGION ID(UsuarioController_UnirsePartida_POST_attributes) ENABLED START*/
+    [Authorize(Roles = "Admin")] // Recibe ids arbitrarios: los jugadores usan JuegoController, que toma el usuario de la cookie
     /*PROTECTED REGION END*/
     public async Task<IActionResult> UnirsePartida(int p_oid, int p_partida_oid)
     {
@@ -137,7 +139,8 @@ public partial class UsuarioController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    /*PROTECTED REGION ID(UsuarioController_AbandonarPartida_POST_attributes) START*/
+    /*PROTECTED REGION ID(UsuarioController_AbandonarPartida_POST_attributes) ENABLED START*/
+    [Authorize(Roles = "Admin")] // Recibe ids arbitrarios: los jugadores usan JuegoController, que toma el usuario de la cookie
     /*PROTECTED REGION END*/
     public async Task<IActionResult> AbandonarPartida(int p_oid)
     {

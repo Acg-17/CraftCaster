@@ -12,8 +12,9 @@ using CraftCaster.Domain.Enums;
 namespace CraftCaster.Web.Controllers;
 
 /*PROTECTED REGION ID(TurnoController_manual_class_attributes) ENABLED START*/
-// Class-level authorization applies to both partial files.
-// [Authorize(Roles = "Admin")]
+// Datos internos de las partidas: su CRUD (vistas generadas) solo lo usa el administrador.
+// Los jugadores juegan desde JuegoController (sala, tablero y fin de partida).
+[Authorize(Roles = "Admin")]
 /*PROTECTED REGION END*/
 public partial class TurnoController
 {

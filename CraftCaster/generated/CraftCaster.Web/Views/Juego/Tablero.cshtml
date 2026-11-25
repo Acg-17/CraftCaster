@@ -1,0 +1,117 @@
+@model CraftCaster.Web.ViewModels.TableroViewModel
+@{
+    ViewData["Title"] = $"Partida #{Model.PartidaId}";
+    ViewData["PartidaId"] = Model.PartidaId;
+    var esperandoRival = Model.Rival is null;
+}
+
+<h1>Partida #@Model.PartidaId</h1>
+<p>
+    Estado: <strong>@Model.Estado</strong> · Turno nº @Model.NumTurno ·
+    @if (esperandoRival)
+    {
+        <text>Esperando a que se una un rival...</text>
+    }
+    else if (Model.PartidaSinEmpezar)
+    {
+        <text>La partida aún no ha empezado.</text>
+    }
+    else
+    {
+        <text>Turno de <strong>@Model.NombreJugadorActivo</strong>@(Model.EsMiTurno ? " (tú)" : "")</text>
+    }
+</p>
+<p>
+    <a asp-action="Tablero" asp-route-id="@Model.PartidaId">Actualizar tablero</a> ·
+    <a asp-action="Index">Volver a la sala</a>
+</p>
+
+<partial name="_Mensajes" />
+
+@* ===================== RIVAL ===================== *@
+<h2>Rival: @(Model.Rival?.Nombre ?? "—")</h2>
+@if (Model.Rival is { } rival)
+{
+    <table class="table table-sm w-auto">
+        <tr><th>Vida</th><td>@rival.Vida</td></tr>
+        <tr><th>Maná</th><td>@rival.Mana</td></tr>
+        <tr><th>Mazo</th><td>@rival.Mazo (@rival.CartasEnMazo cartas)</td></tr>
+        <tr><th>Mano</th><td>@rival.CartasEnMano cartas (ocultas)</td></tr>
+    </table>
+
+    <h3 class="h5">Campo del rival</h3>
+    @if (rival.Campo.Any())
+    {
+        <ul>@foreach (var carta in rival.Campo) { <partial name="_CartaTablero" model="carta" /> }</ul>
+    }
+    else { <p>Sin cartas.</p> }
+
+    <h3 class="h5">Descarte del rival</h3>
+    @if (rival.Descarte.Any())
+    {
+        <ul>@foreach (var carta in rival.Descarte) { <partial name="_CartaTablero" model="carta" /> }</ul>
+    }
+    else { <p>Sin cartas.</p> }
+}
+
+<hr />
+
+@* ===================== YO ===================== *@
+<h2>Tú: @Model.Yo.Nombre (jugador @Model.Yo.NumJugador)</h2>
+<table class="table table-sm w-auto">
+    <tr><th>Vida</th><td>@Model.Yo.Vida</td></tr>
+    <tr><th>Maná</th><td>@Model.Yo.Mana</td></tr>
+    <tr><th>Mazo</th><td>@Model.Yo.Mazo (@Model.Yo.CartasEnMazo cartas)</td></tr>
+</table>
+
+@* Acciones del turno *@
+<div class="mb-3">
+    @if (!esperandoRival && Model.PartidaSinEmpezar)
+    {
+        <form asp-action="PasarTurno" asp-route-id="@Model.PartidaId" method="post" class="d-inline">
+            <button type="submit" class="btn btn-success">Empezar partida</button>
+        </form>
+    }
+    @if (Model.EsMiTurno)
+    {
+        <form asp-action="Robar" asp-route-id="@Model.PartidaId" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-primary">Robar carta</button>
+        </form>
+        <form asp-action="PasarTurno" asp-route-id="@Model.PartidaId" method="post" class="d-inline">
+            <button type="submit" class="btn btn-warning">Terminar turno</button>
+        </form>
+    }
+    <form asp-action="Abandonar" method="post" class="d-inline"
+          onsubmit="return confirm('¿Seguro que quieres abandonar la partida? Si está en curso, perderás.');">
+        <button type="submit" class="btn btn-outline-danger">Abandonar</button>
+    </form>
+</div>
+
+<h3 class="h5">Tu mano (@Model.Yo.CartasEnMano)</h3>
+@if (Model.Yo.Mano.Any())
+{
+    <ul>@foreach (var carta in Model.Yo.Mano) { <partial name="_CartaTablero" model="carta" /> }</ul>
+}
+else { <p>Sin cartas.</p> }
+
+<h3 class="h5">Tu campo</h3>
+@if (Model.Yo.Campo.Any())
+{
+    <ul>@foreach (var carta in Model.Yo.Campo) { <partial name="_CartaTablero" model="carta" /> }</ul>
+}
+else { <p>Sin cartas.</p> }
+
+<h3 class="h5">Tu descarte</h3>
+@if (Model.Yo.Descarte.Any())
+{
+    <ul>@foreach (var carta in Model.Yo.Descarte) { <partial name="_CartaTablero" model="carta" /> }</ul>
+}
+else { <p>Sin cartas.</p> }
+
+@section Scripts {
+    @if (!Model.EsMiTurno)
+    {
+        @* Mientras juega el rival (o se espera a que entre) se recarga el tablero cada 5 segundos *@
+        <script>setTimeout(function () { window.location.reload(); }, 5000);</script>
+    }
+}

@@ -1,0 +1,30 @@
+@model CraftCaster.Web.ViewModels.FinPartidaViewModel
+@{
+    ViewData["Title"] = "Fin de la partida";
+}
+
+<h1>Fin de la partida #@Model.PartidaId</h1>
+
+<partial name="_Mensajes" />
+
+@if (Model.GanadorNombre is null)
+{
+    <h2>La partida ha terminado sin ganador.</h2>
+}
+else if (Model.SoyParticipante)
+{
+    <h2>@(Model.HeGanado ? "¡Has ganado!" : "Has perdido.")</h2>
+}
+
+<table class="table w-auto">
+    <tr><th>@Html.DisplayNameFor(m => m.GanadorNombre)</th><td>@(Model.GanadorNombre ?? "—")</td></tr>
+    <tr><th>Anfitrión</th><td>@Model.NombreLocal (vida final: @(Model.VidaLocal?.ToString() ?? "—"))</td></tr>
+    <tr><th>Visitante</th><td>@(Model.NombreVisitante ?? "—") (vida final: @(Model.VidaVisitante?.ToString() ?? "—"))</td></tr>
+    <tr><th>Turnos jugados</th><td>@Model.NumTurnos</td></tr>
+    <tr><th>Fecha</th><td>@Model.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td></tr>
+</table>
+
+<p>
+    <a asp-action="Index" class="btn btn-primary">Volver a la sala</a>
+    <a asp-action="Historial" class="btn btn-outline-secondary">Mis partidas</a>
+</p>

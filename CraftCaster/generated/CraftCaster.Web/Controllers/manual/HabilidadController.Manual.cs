@@ -21,7 +21,8 @@ public partial class HabilidadController
 {
     [HttpPost]
     [ValidateAntiForgeryToken]
-    /*PROTECTED REGION ID(HabilidadController_Activar_POST_attributes) START*/
+    /*PROTECTED REGION ID(HabilidadController_Activar_POST_attributes) ENABLED START*/
+    [Authorize(Roles = "Admin")] // Recibe ids arbitrarios: los jugadores usan JuegoController, que toma el usuario de la cookie
     /*PROTECTED REGION END*/
     public async Task<IActionResult> Activar(int p_oid, int p_partida_oid)
     {

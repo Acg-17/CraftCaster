@@ -1,0 +1,86 @@
+@model CraftCaster.Web.ViewModels.SalaViewModel
+@{
+    ViewData["Title"] = "Sala de partidas";
+}
+
+<h1>Sala de partidas</h1>
+<p>
+    <a asp-action="Historial">Mis partidas (historial)</a>
+</p>
+
+<partial name="_Mensajes" />
+
+@if (Model.PartidaActiva is { } activa)
+{
+    <h2>Tu partida actual</h2>
+    <table class="table">
+        <tr><th>Partida</th><td>#@activa.Id</td></tr>
+        <tr><th>Estado</th><td>@activa.Estado</td></tr>
+        <tr><th>Eres</th><td>@(Model.SoyLocal ? "Anfitrión (jugador 1)" : "Visitante (jugador 2)")</td></tr>
+        <tr><th>Anfitrión</th><td>@activa.Usuario1Label (mazo: @activa.Mazo1Label)</td></tr>
+        <tr><th>Visitante</th><td>@(activa.Usuario2Label ?? "Esperando rival...") @if (activa.Mazo2Label is not null) { <text>(mazo: @activa.Mazo2Label)</text> }</td></tr>
+        <tr><th>Creada</th><td>@activa.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td></tr>
+    </table>
+
+    <a asp-action="Tablero" asp-route-id="@activa.Id" class="btn btn-primary">Ir al tablero</a>
+
+    <form asp-action="Abandonar" method="post" class="d-inline"
+          onsubmit="return confirm('¿Seguro que quieres abandonar la partida? Si está en curso, perderás.');">
+        <button type="submit" class="btn btn-outline-danger">Abandonar partida</button>
+    </form>
+}
+else
+{
+    <h2>Crear partida</h2>
+    @if (Model.MazoConElQueJuego is null)
+    {
+        <p>Necesitas al menos un mazo para jugar. <a asp-controller="Mazo" asp-action="Create">Crear mazo</a></p>
+    }
+    else
+    {
+        <p>Jugarás con el mazo <strong>@Model.MazoConElQueJuego</strong> (el primero jugable de tus mazos).</p>
+        <form asp-action="Crear" method="post">
+            <button type="submit" class="btn btn-primary">Crear partida</button>
+        </form>
+    }
+
+    <h2 class="mt-4">Partidas esperando rival</h2>
+    @if (Model.PartidasEnEspera.Any())
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Partida</th>
+                    <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].Anfitrion)</th>
+                    <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].Mazo)</th>
+                    <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].FechaInicio)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var partida in Model.PartidasEnEspera)
+                {
+                    <tr>
+                        <td>#@partida.Id</td>
+                        <td>@partida.Anfitrion</td>
+                        <td>@partida.Mazo</td>
+                        <td>@partida.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            @if (Model.MazoConElQueJuego is not null)
+                            {
+                                <form asp-action="Unirse" method="post">
+                                    <input type="hidden" name="PartidaId" value="@partida.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">Unirse</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No hay partidas esperando rival. ¡Crea una!</p>
+    }
+}

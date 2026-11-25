@@ -1,0 +1,51 @@
+@model CraftCaster.Web.ViewModels.HistorialViewModel
+@{
+    ViewData["Title"] = "Mis partidas";
+}
+
+<h1>Mis partidas</h1>
+<p><a asp-action="Index">Volver a la sala</a></p>
+
+@if (Model.Partidas.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Partida</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Rival</th>
+                <th>Mi mazo</th>
+                <th>Resultado</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var partida in Model.Partidas)
+            {
+                <tr>
+                    <td>#@partida.Id</td>
+                    <td>@partida.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@partida.Estado</td>
+                    <td>@partida.Rival</td>
+                    <td>@partida.MiMazo</td>
+                    <td>@partida.Resultado</td>
+                    <td>
+                        @if (partida.Estado == CraftCaster.Domain.Enums.EstadoPartida.Finalizada)
+                        {
+                            <a asp-action="Fin" asp-route-id="@partida.Id">Ver resultado</a>
+                        }
+                        else
+                        {
+                            <a asp-action="Tablero" asp-route-id="@partida.Id">Ir al tablero</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Todavía no has jugado ninguna partida.</p>
+}

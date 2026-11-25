@@ -1,0 +1,9 @@
+@* Mensajes de resultado tras un POST (patrón Post/Redirect/Get con TempData) *@
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}

@@ -1,0 +1,42 @@
+@model CraftCaster.Web.ViewModels.CartaTableroViewModel
+@{
+    // El Tablero deja el id de la partida en ViewData (las vistas parciales la heredan)
+    var partidaId = ViewData["PartidaId"];
+}
+
+<li class="mb-2">
+    <strong>@Model.Nombre</strong>
+    [@Model.Tipo · @Model.Rareza · coste @Model.CosteMana]
+    @if (Model.Tipo == CraftCaster.Domain.Enums.TipoCarta.Criatura)
+    {
+        <text> · ATQ @Model.AtaqueActual / VIDA @Model.VidaActual @(Model.PuedeAtacar ? " · puede atacar" : "")</text>
+    }
+    <br /><small>@Model.Descripcion</small>
+
+    @if (Model.SePuedeLanzar)
+    {
+        <form asp-action="Lanzar" asp-route-id="@partidaId" method="post" class="d-inline">
+            <input type="hidden" name="Lanzar.CartaPartidaId" value="@Model.CartaPartidaId" />
+            <button type="submit" class="btn btn-sm btn-primary">Lanzar</button>
+        </form>
+    }
+
+    @if (Model.Habilidades.Any())
+    {
+        <ul>
+            @foreach (var habilidad in Model.Habilidades)
+            {
+                <li>
+                    @habilidad.Texto
+                    @if (Model.SePuedenActivarHabilidades)
+                    {
+                        <form asp-action="ActivarHabilidad" asp-route-id="@partidaId" method="post" class="d-inline">
+                            <input type="hidden" name="Activar.HabilidadId" value="@habilidad.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">Activar</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</li>
