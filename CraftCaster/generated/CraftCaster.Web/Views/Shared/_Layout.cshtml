@@ -30,7 +30,10 @@
                         <li class="nav-item"><a class="nav-link" asp-controller="Explorar" asp-action="Index">Explorar</a></li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Mazo" asp-action="Create">Crear mazo</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="MisCartas" asp-action="Index">Mis cartas</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="MisCartas" asp-action="Crear">Crear carta</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="EditorMazo" asp-action="Index">Mis mazos</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="EditorMazo" asp-action="Crear">Crear mazo</a></li>
                         }
                         @* Menú según el rol (los roles salen de TipoUsuario, ver Utils/Security/manual) *@
                         @if (User.IsInRole(HariaWebAuthentication.RolCliente) || User.IsInRole(HariaWebAuthentication.RolAdmin))

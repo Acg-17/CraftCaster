@@ -1,0 +1,78 @@
+@model IReadOnlyList<CraftCaster.Domain.Entities.Carta>
+@using CraftCaster.Domain.Enums
+@{
+    ViewData["Title"] = "Mis cartas";
+    var imagenes = ViewBag.Imagenes as Dictionary<int, string?> ?? new();
+}
+
+<link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">Mis cartas</h1>
+            <p class="text-body-secondary mb-0">Gestiona tus cartas creadas: consulta el detalle, edita en el creador, comparte o elimina.</p>
+        </div>
+        <a class="btn btn-dark" asp-action="Crear">+ Crear carta</a>
+    </div>
+</div>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5 text-center">
+            <h2 class="h5">Todavía no has creado ninguna carta</h2>
+            <p class="text-body-secondary mb-3">Empieza creando tu primera Criatura o Hechizo en el creador.</p>
+            <a class="btn btn-primary" asp-action="Crear">Crear mi primera carta</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-4">
+        @foreach (var carta in Model)
+        {
+            imagenes.TryGetValue(carta.Id, out var imgUrl);
+            var vd = new ViewDataDictionary(ViewData) { ["ImagenUrl"] = imgUrl, ["Compacta"] = false };
+            <div class="d-flex flex-column align-items-center" style="width: 240px;">
+                <partial name="_CartaTcg" model="carta" view-data="vd" />
+
+                <div class="d-flex flex-wrap justify-content-center gap-1 mt-2 w-100">
+                    <a class="btn btn-dark btn-sm" asp-action="Detalle" asp-route-id="@carta.Id">Ver</a>
+                    <a class="btn btn-outline-dark btn-sm" asp-action="Editar" asp-route-id="@carta.Id">Editar</a>
+                    @if (!carta.EsPublica)
+                    {
+                        <form asp-action="Compartir" asp-route-id="@carta.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-primary btn-sm">Compartir</button>
+                        </form>
+                    }
+                    <form asp-action="Borrar" asp-route-id="@carta.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('¿Seguro que quieres borrar esta carta?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Borrar</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/cartas-alternancia.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,47 @@
+@model CraftCaster.Web.ViewModels.CrearMazoViewModel
+@{
+    ViewData["Title"] = "Crear mazo";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Crear mazo</h1>
+        <p class="text-body-secondary mb-0">Crea un mazo nuevo con <code>Mazo.newCustomized</code> y después añade sus 30 cartas.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Volver a Mis mazos</a>
+</div>
+
+<div class="card shadow-sm" style="max-width: 600px;">
+    <div class="card-body">
+        <form asp-action="Crear" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
+                <input asp-for="Nombre" class="form-control" placeholder="Ej. Mazo Fuego Rápido" />
+                <span asp-validation-for="Nombre" class="text-danger small"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ImagenArchivo" class="form-label"></label>
+                <input asp-for="ImagenArchivo" type="file" accept="image/*" class="form-control" />
+                <div class="form-text">Opcional. Portada del mazo.</div>
+            </div>
+
+            <div class="form-check mb-4">
+                <input asp-for="EsPublico" class="form-check-input" />
+                <label asp-for="EsPublico" class="form-check-label"></label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Crear y abrir editor</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

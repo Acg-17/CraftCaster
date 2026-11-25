@@ -1,0 +1,217 @@
+@model CraftCaster.Web.ViewModels.EditorMazoViewModel
+@using CraftCaster.Domain.Enums
+@{
+    ViewData["Title"] = $"Editor: {Model.Mazo.Nombre}";
+    var lineasOrdenadas = (Model.Mazo.Lineas ?? Enumerable.Empty<CraftCaster.Domain.Entities.LineaMazo>())
+        .OrderBy(l => l.Carta?.CosteMana ?? 0)
+        .ThenBy(l => l.Carta?.Nombre)
+        .ToList();
+}
+
+<link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
+
+<!-- Cabecera limpia estilo Inicio/Explorar -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body p-4 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-3 bg-body-tertiary overflow-hidden d-flex align-items-center justify-content-center flex-shrink-0" style="width: 112px; aspect-ratio: 16 / 9;">
+                @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                {
+                    <img src="@Model.ImagenUrl" alt="@Model.Mazo.Nombre" class="w-100 h-100 object-fit-cover" />
+                }
+                else
+                {
+                    <span class="small text-body-secondary">Portada</span>
+                }
+            </div>
+            <div>
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-1">Editor de mazos</span>
+                <h1 class="h3 mb-0">@Model.Mazo.Nombre</h1>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <form asp-action="SubirPortada" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2 m-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="mazoId" value="@Model.Mazo.Id" />
+                <input type="file" name="imagenArchivo" accept="image/*" class="form-control form-control-sm" style="max-width: 210px;" />
+                <button type="submit" class="btn btn-sm btn-outline-dark text-nowrap">Subir portada</button>
+            </form>
+            @if (!Model.Mazo.EsPublico)
+            {
+                <form asp-action="Compartir" asp-route-id="@Model.Mazo.Id" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-primary">Compartir mazo</button>
+                </form>
+            }
+            else
+            {
+                <span class="badge text-bg-light border align-self-center px-3 py-2">Público</span>
+            }
+            <a class="btn btn-sm btn-outline-dark" asp-action="Index">Mis mazos</a>
+        </div>
+    </div>
+</div>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show py-2" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger border-0 shadow-sm alert-dismissible fade show py-2" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+<!-- Resumen: Recuento 30/30 + Estado + Coste medio + Cuotas + Curva de mana -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-7">
+                <div class="d-flex flex-wrap align-items-center gap-4 mb-2">
+                    <div>
+                        <div class="small text-body-secondary">Recuento</div>
+                        <div class="h5 mb-0 fw-bold">@Model.TotalCartas / 30 cartas</div>
+                    </div>
+                    <div>
+                        <div class="small text-body-secondary">Estado</div>
+                        <span class="badge text-bg-light border">@Model.Mazo.EstadoMazo</span>
+                    </div>
+                    <div>
+                        <div class="small text-body-secondary">Coste medio</div>
+                        <div class="fw-semibold">@Model.Mazo.CosteMedio.ToString("0.0") Maná</div>
+                    </div>
+                </div>
+                <div class="small text-body-secondary">
+                    Legendarias: <strong>@Model.NumLegendarias/2</strong> ·
+                    Épicas: <strong>@Model.NumEpicas/4</strong> ·
+                    Especiales: <strong>@Model.NumEspeciales/8</strong> ·
+                    Comunes: <strong>@Model.NumComunes/16+</strong>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="small fw-semibold text-body-secondary text-center mb-1">Curva de maná</div>
+                <div class="d-flex justify-content-between align-items-end text-center px-2" style="height: 76px;">
+                    @for (int coste = 0; coste <= 7; coste++)
+                    {
+                        var cantidad = Model.CurvaMana.TryGetValue(coste, out var c) ? c : 0;
+                        var alturaPx = cantidad == 0 ? 4 : Math.Max(10, (int)Math.Round(cantidad * 44.0 / Model.MaxCurva));
+                        var etiqueta = coste == 7 ? "7+" : coste.ToString();
+                        <div class="flex-fill">
+                            <div class="small text-body-secondary" style="font-size: 0.7rem;">@cantidad</div>
+                            <div class="mx-auto rounded-top bg-primary bg-opacity-75" style="width: 16px; height: @(alturaPx)px;"></div>
+                            <div class="small text-body-secondary border-top mt-1" style="font-size: 0.72rem;">@etiqueta</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 2 columnas: Coleccion de cartas | Cartas en el mazo -->
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                    <h2 class="h6 fw-semibold mb-0">Colección de cartas (@Model.Coleccion.Count)</h2>
+                    <form method="get" asp-action="Editar" asp-route-id="@Model.Mazo.Id" class="d-flex gap-2">
+                        <input type="text" name="buscar" value="@Model.Buscar" class="form-control form-control-sm" placeholder="Buscar carta..." />
+                        <button type="submit" class="btn btn-sm btn-primary">Buscar</button>
+                    </form>
+                </div>
+
+                @if (Model.Coleccion.Count == 0)
+                {
+                    <p class="text-body-secondary text-center py-4 mb-0">No se encontraron cartas.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-wrap justify-content-center justify-content-sm-start gap-3">
+                        @foreach (var carta in Model.Coleccion)
+                        {
+                            Model.ImagenesCartas.TryGetValue(carta.Id, out var imgCarta);
+                            var vd = new ViewDataDictionary(ViewData) { ["ImagenUrl"] = imgCarta, ["Compacta"] = true };
+                            <div class="d-flex flex-column align-items-center" style="width: 190px;">
+                                <partial name="_CartaTcg" model="carta" view-data="vd" />
+
+                                <form asp-action="AnadirCarta" method="post" class="w-100 mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="mazoId" value="@Model.Mazo.Id" />
+                                    <input type="hidden" name="cartaId" value="@carta.Id" />
+                                    <input type="hidden" name="buscar" value="@Model.Buscar" />
+                                    <button type="submit" class="btn btn-dark btn-sm w-100" disabled="@(Model.TotalCartas >= 30)">+ Añadir</button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h6 fw-semibold mb-0">Cartas en el mazo (@Model.TotalCartas / 30)</h2>
+                    @if (lineasOrdenadas.Count > 0)
+                    {
+                        <form asp-action="Vaciar" method="post" class="m-0" onsubmit="return confirm('¿Vaciar todas las cartas del mazo?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="mazoId" value="@Model.Mazo.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Vaciar</button>
+                        </form>
+                    }
+                </div>
+
+                @if (lineasOrdenadas.Count == 0)
+                {
+                    <p class="text-body-secondary text-center py-4 mb-0">Añade cartas desde la colección de la izquierda.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var linea in lineasOrdenadas)
+                        {
+                            <div class="bg-body-tertiary rounded-3 px-3 py-2 d-flex justify-content-between align-items-center gap-2">
+                                <div class="text-truncate">
+                                    <span class="badge text-bg-dark rounded-pill me-1">@(linea.Carta?.CosteMana ?? 0)</span>
+                                    <span class="fw-semibold small">@(linea.Carta?.Nombre ?? $"Carta #{linea.Id}")</span>
+                                    <span class="small text-body-secondary ms-1">@(linea.Carta?.Rareza)</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                    <span class="fw-semibold small me-1">x@(linea.Cantidad)</span>
+                                    <form asp-action="AnadirCarta" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="mazoId" value="@Model.Mazo.Id" />
+                                        <input type="hidden" name="cartaId" value="@(linea.Carta?.Id ?? 0)" />
+                                        <input type="hidden" name="buscar" value="@Model.Buscar" />
+                                        <button type="submit" class="btn btn-sm btn-outline-dark py-0 px-2" disabled="@(Model.TotalCartas >= 30)">+</button>
+                                    </form>
+                                    <form asp-action="QuitarCarta" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="mazoId" value="@Model.Mazo.Id" />
+                                        <input type="hidden" name="lineaId" value="@linea.Id" />
+                                        <input type="hidden" name="buscar" value="@Model.Buscar" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">-</button>
+                                    </form>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/cartas-alternancia.js" asp-append-version="true"></script>
+}

@@ -1,6 +1,14 @@
 @model CraftCaster.Web.ViewModels.HomeIndexViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 @{
     ViewData["Title"] = "Inicio";
+    string? BuscarPortadaMazo(int mazoId)
+    {
+        var dir = System.IO.Path.Combine(Env.WebRootPath, "uploads", "mazos");
+        if (!System.IO.Directory.Exists(dir)) return null;
+        var file = System.IO.Directory.GetFiles(dir, $"mazo_{mazoId}.*").FirstOrDefault();
+        return file is null ? null : $"/uploads/mazos/{System.IO.Path.GetFileName(file)}";
+    }
 }
 
 <section class="card border-0 shadow-sm mb-4">
@@ -54,8 +62,19 @@
             @foreach (var mazo in Model.MazosDestacados)
             {
                 var estrellas = (int)Math.Round(mazo.Valoracion);
+                var portadaUrl = BuscarPortadaMazo(mazo.Id);
                 <div class="col">
-                    <div class="card border-0 shadow-sm h-100">
+                    <div class="card border-0 shadow-sm h-100 overflow-hidden">
+                        <div class="bg-body-tertiary d-flex align-items-center justify-content-center overflow-hidden" style="aspect-ratio: 16 / 9;">
+                            @if (!string.IsNullOrEmpty(portadaUrl))
+                            {
+                                <img src="@portadaUrl" class="w-100 h-100 object-fit-cover" alt="@mazo.Nombre" />
+                            }
+                            else
+                            {
+                                <span class="small text-body-secondary">Ilustración del mazo</span>
+                            }
+                        </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <span class="badge text-bg-light border">@mazo.EstadoMazo</span>

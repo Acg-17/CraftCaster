@@ -1,0 +1,98 @@
+@model CraftCaster.Web.ViewModels.DetalleCartaViewModel
+@using CraftCaster.Domain.Enums
+@{
+    ViewData["Title"] = Model.Carta.Nombre;
+    var carta = Model.Carta;
+    var vd = new ViewDataDictionary(ViewData) { ["ImagenUrl"] = Model.ImagenUrl, ["Compacta"] = false };
+}
+
+<link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">@carta.Nombre</h1>
+            <p class="text-body-secondary mb-0">Detalle de carta · @carta.Tipo · @carta.Rareza</p>
+        </div>
+        <a class="btn btn-outline-dark" asp-action="Index">Volver a Mis cartas</a>
+    </div>
+</div>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-md-4 d-flex justify-content-center">
+        <partial name="_CartaTcg" model="carta" view-data="vd" />
+    </div>
+
+    <div class="col-md-8">
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body p-4">
+                <h2 class="h6 fw-semibold mb-3">Habilidades configuradas</h2>
+                @if (carta.Estados is null || carta.Estados.Count == 0)
+                {
+                    <p class="text-body-secondary mb-0">Esta carta no tiene habilidades asociadas.</p>
+                }
+                else
+                {
+                    <div class="scratch-stack">
+                        @foreach (var estado in carta.Estados)
+                        {
+                            @if (estado.Habilidades is not null)
+                            {
+                                @foreach (var hab in estado.Habilidades)
+                                {
+                                    <div class="scratch-block block-stack block-effect">
+                                        <span class="badge text-bg-light border">@(hab.Tipo == TipoHabilidad.Defensa ? "Al recibir daño" : estado.Tipo.ToString())</span>
+                                        <span>@hab.Tipo (@hab.Cantidad)</span>
+                                        <span class="small text-body-secondary">a @hab.TipoObjetivo</span>
+                                    </div>
+                                }
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @if (Model.EsPropia)
+        {
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 d-flex flex-wrap gap-2">
+                    <a class="btn btn-dark" asp-action="Editar" asp-route-id="@carta.Id">Editar carta</a>
+
+                    @if (!carta.EsPublica)
+                    {
+                        <form asp-action="Compartir" asp-route-id="@carta.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-primary">Compartir con la comunidad</button>
+                        </form>
+                    }
+
+                    <form asp-action="Borrar" asp-route-id="@carta.Id" method="post" class="d-inline"
+                          onsubmit="return confirm('¿Seguro que quieres borrar esta carta definitivamente?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger">Borrar carta</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/cartas-alternancia.js" asp-append-version="true"></script>
+}

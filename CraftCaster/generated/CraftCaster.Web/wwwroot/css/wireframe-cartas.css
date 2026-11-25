@@ -1,0 +1,314 @@
+/* Estilos modernos y limpios (sin outline negro) integrados con la identidad de CraftCaster */
+
+/* === 1. Bloques estilo Scratch (pulidos, suaves y sin outline brusco) === */
+.scratch-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.08));
+}
+
+.scratch-block {
+    position: relative;
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    background-color: #ffffff;
+    color: #212529;
+    font-weight: 600;
+    font-size: 0.86rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0.65rem;
+    box-shadow: inset 0 -2px 0 rgba(15, 23, 42, 0.06);
+    user-select: none;
+    max-width: 100%;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.scratch-block.block-palette {
+    cursor: grab;
+    width: 100%;
+    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    box-shadow: none;
+}
+
+.scratch-block.block-palette:hover {
+    background-color: #eef2f6;
+    transform: translateY(-1px);
+}
+
+.scratch-block.block-hat {
+    background-color: #eef2f6;
+    border-top-left-radius: 1.2rem 0.9rem;
+    border-top-right-radius: 0.75rem;
+    padding-top: 11px;
+    margin-bottom: 2px;
+}
+
+.scratch-block.block-hat::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 14px;
+    width: 46px;
+    height: 7px;
+    background: inherit;
+    border-top: 1px solid rgba(15, 23, 42, 0.08);
+    border-left: 1px solid rgba(15, 23, 42, 0.08);
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 10px 10px 0 0;
+    z-index: 1;
+}
+
+.scratch-block.block-stack {
+    margin-top: -1px;
+}
+
+.scratch-block.block-effect {
+    background-color: #ffffff;
+}
+
+.scratch-block.block-hat::after,
+.scratch-block.block-stack::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 18px;
+    width: 18px;
+    height: 6px;
+    background: inherit;
+    border-left: 1px solid rgba(15, 23, 42, 0.08);
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 0 0 4px 4px;
+    z-index: 3;
+}
+
+.scratch-pill {
+    background: #f8f9fa;
+    color: #212529;
+    border: 1px solid #dee2e6;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    outline: none;
+}
+
+.scratch-pill:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+.scratch-pill.input-number {
+    width: 54px;
+    text-align: center;
+}
+
+.scratch-dropzone {
+    min-height: 340px;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 0.85rem;
+    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    padding: 20px 16px;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.scratch-dropzone.drag-over {
+    background-color: #eef2ff;
+    border-color: #0d6efd;
+}
+
+/* === 2. Tarjeta de Carta TCG (proporcion fija 5:7 estilo Magic/Pokemon, nunca se deforma) === */
+.cc-card {
+    position: relative;
+    width: 240px;
+    height: 336px;
+    flex-shrink: 0;
+    margin: 22px auto 0 auto;
+    border: 0;
+    border-radius: 1rem;
+    background-color: #ffffff;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+    padding: 26px 14px 12px 14px;
+    color: #212529;
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-card.cc-card-sm {
+    width: 190px;
+    height: 266px;
+    padding: 22px 12px 10px 12px;
+    margin: 18px auto 0 auto;
+}
+
+.cc-card-desc {
+    font-size: 0.74rem;
+    line-height: 1.35;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.cc-card-desc .cc-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    margin-bottom: 2px;
+}
+
+.cc-inline-ico {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.cc-card-top-left-group {
+    position: absolute;
+    top: -16px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 2;
+}
+
+.cc-icon-badge {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border-radius: 0.65rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+.scratch-block.block-when {
+    background-color: #f1f5f9;
+}
+
+.scratch-block.block-effect-child {
+    background-color: #ffffff;
+    margin-left: 14px;
+}
+
+.cc-card-top-center {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.cc-card-top-center .cc-mana-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #212529;
+    color: #ffffff;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.cc-card-top-center .cc-heart-wrap {
+    position: relative;
+    width: 42px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 2px 6px rgba(15, 23, 42, 0.15));
+}
+
+.cc-card-top-center .cc-heart-num {
+    position: absolute;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #212529;
+    top: 8px;
+}
+
+.cc-card-top-right {
+    position: absolute;
+    top: -16px;
+    right: 10px;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: #ffffff;
+    border-radius: 0.65rem;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+    font-weight: 700;
+    font-size: 0.85rem;
+    z-index: 2;
+}
+
+/* Ilustracion limpia proporcional a la carta TCG */
+.cc-art-box {
+    position: relative;
+    width: 100%;
+    height: 132px;
+    flex-shrink: 0;
+    border-radius: 0.75rem;
+    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.cc-art-box.cc-art-sm {
+    height: 98px;
+}
+
+.cc-art-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cc-art-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Linea divisoria sutil de rareza */
+.cc-rarity-divider {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 8px 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.cc-rarity-divider::before,
+.cc-rarity-divider::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid rgba(15, 23, 42, 0.1);
+}

@@ -1,0 +1,627 @@
+@model CraftCaster.Web.ViewModels.CreadorCartaViewModel
+@using CraftCaster.Domain.Enums
+@using System.Text.Json
+@{
+    bool esEdicion = Model.Id > 0;
+    ViewData["Title"] = esEdicion ? $"Editar: {Model.Nombre}" : "Creador de cartas";
+    var bloquesInicialesJson = JsonSerializer.Serialize(
+        (Model.Bloques ?? new()).Select(b => new
+        {
+            tipoEstado = (int)b.TipoEstado,
+            tipoHabilidad = (int)b.TipoHabilidad,
+            cantidad = b.Cantidad,
+            tipoObjetivo = (int)b.TipoObjetivo,
+            objetivo = b.Objetivo
+        }));
+}
+
+<link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
+
+<form asp-action="@(esEdicion ? "Editar" : "Crear")" asp-route-id="@(esEdicion ? Model.Id : (int?)null)" method="post" enctype="multipart/form-data" id="formCreador">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <!-- Cabecera integrada con la identidad de Inicio y Explorar -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-body p-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                <div>
+                    <h1 class="h3 mb-1">@(esEdicion ? "Editar carta" : "Creador de cartas")</h1>
+                    <p class="text-body-secondary mb-0">Monta tu Criatura (máx. 2 habilidades) o Hechizo (máx. 3 efectos). El coste se equilibra automáticamente.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge text-bg-light border px-3 py-2" id="badgeBalance">Equilibrada (0/10 maná)</span>
+                    <a class="btn btn-outline-dark" asp-action="Index">Mis cartas</a>
+                    <button type="submit" class="btn btn-primary" id="btnGuardar">@(esEdicion ? "Guardar cambios" : "Guardar carta")</button>
+                </div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 mb-3" role="alert"></div>
+            <div class="alert alert-danger py-2 mb-3 d-none" id="alertaRota" role="alert">
+                Esta carta supera el límite de 10 de maná y está demasiado rota. Reduce ataque, vida o habilidades para equilibrarla.
+            </div>
+
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label asp-for="Nombre" class="form-label small fw-semibold">Nombre</label>
+                    <input asp-for="Nombre" class="form-control" id="inpNombre" placeholder="Ej. Descarte final" />
+                    <span asp-validation-for="Nombre" class="text-danger small"></span>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label asp-for="Rareza" class="form-label small fw-semibold">Rareza</label>
+                    <select asp-for="Rareza" class="form-select" id="inpRareza">
+                        <option value="@((int)Rareza.Comun)">Común (+0 maná)</option>
+                        <option value="@((int)Rareza.Especial)">Especial (+0 maná)</option>
+                        <option value="@((int)Rareza.Epico)">Épico (-1 maná)</option>
+                        <option value="@((int)Rareza.Legendario)">Legendario (-4 maná)</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label asp-for="CosteMana" class="form-label small fw-semibold">Coste de maná</label>
+                    <input asp-for="CosteMana" type="number" readonly class="form-control bg-body-tertiary fw-semibold text-center" id="inpMana" />
+                </div>
+                <div class="col-12 col-md-3">
+                    <label asp-for="ImagenArchivo" class="form-label small fw-semibold">Ilustración (opcional)</label>
+                    <input asp-for="ImagenArchivo" type="file" accept="image/*" class="form-control" id="inpImagen" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campos sincronizados por el ensamblador Scratch -->
+    <input type="hidden" asp-for="Tipo" id="hidTipo" />
+    <input type="hidden" asp-for="Ataque" id="hidAtaque" />
+    <input type="hidden" asp-for="Vida" id="hidVida" />
+    <input type="hidden" asp-for="Descripcion" id="hidDescripcion" />
+    <div id="hiddenBloques"></div>
+
+    <!-- 3 columnas limpias con cards sin outline -->
+    <div class="row g-3">
+        <!-- Columna 1: Bloques disponibles -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h2 class="h6 fw-semibold mb-3">Bloques disponibles</h2>
+
+                    <div class="small text-uppercase text-body-secondary fw-semibold mb-2">Tipo de carta</div>
+                    <div class="d-flex flex-column gap-2 mb-4">
+                        <div class="scratch-block block-palette" draggable="true" data-kind="tipo" data-value="1">
+                            <span>Criatura</span>
+                            <span class="small text-body-secondary ms-auto">En mesa · Máx. 2 hab.</span>
+                        </div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="tipo" data-value="2">
+                            <span>Hechizo</span>
+                            <span class="small text-body-secondary ms-auto">Al instante · Máx. 3 ef.</span>
+                        </div>
+                    </div>
+
+                    <div class="small text-uppercase text-body-secondary fw-semibold mb-2">Habilidades</div>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="2">Daño instantáneo</div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="3">Sumar vida</div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="4">Robar carta</div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="5">Descartar mano rival</div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="6">Descartar carta objetivo</div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="7">Daño al defender</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna 2: Ensamblador de logica (Scratch) -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <h2 class="h6 fw-semibold mb-0">Ensamblador de lógica</h2>
+                            <span class="badge text-bg-light border" id="contadorHabilidades">0 / 2</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiar">Limpiar</button>
+                    </div>
+
+                    <div class="small text-danger mb-2 d-none" id="avisoLimite"></div>
+
+                    <div class="scratch-dropzone flex-grow-1" id="dropzone">
+                        <div class="scratch-stack" id="pilaScratch"></div>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3 pt-2">
+                        <div class="form-check m-0">
+                            <input asp-for="EsPublica" class="form-check-input" id="inpPublica" />
+                            <label asp-for="EsPublica" class="form-check-label small">Compartir con la comunidad</label>
+                        </div>
+                        <span class="small text-body-secondary">Arrastra o haz clic en un bloque</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna 3: Vista previa (proporcion TCG fija 5:7) -->
+        <div class="col-lg-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-3 d-flex flex-column align-items-center">
+                    <h2 class="h6 fw-semibold text-center mb-2">Vista previa</h2>
+
+                    <div class="cc-card" id="cartaPreview">
+                        <div class="cc-card-top-left-group" id="prevIconsLeft"></div>
+
+                        <div class="cc-card-top-center" id="prevCenterSlot" title="Haz clic para alternar Maná / Vida">
+                            <div class="cc-mana-circle" id="prevManaBadge">1</div>
+                            <div class="cc-heart-wrap d-none" id="prevHeartBadge">
+                                <svg viewBox="0 0 40 38" width="42" height="40" fill="#ffffff" stroke="#212529" stroke-width="2">
+                                    <path d="M20 35 C20 35 4 24 4 13 C4 7 8.5 3 13.5 3 C16.8 3 19 4.8 20 7 C21 4.8 23.2 3 26.5 3 C31.5 3 36 7 36 13 C36 24 20 35 20 35 Z" />
+                                </svg>
+                                <span class="cc-heart-num" id="prevVidaNum">1</span>
+                            </div>
+                        </div>
+
+                        <div class="cc-card-top-right d-none" id="prevIconRight" title="Ataque / 3.º efecto"></div>
+
+                        <div class="cc-art-box mt-2">
+                            <span class="cc-art-label @(string.IsNullOrEmpty(Model.ImagenUrlActual) ? "" : "d-none")" id="prevArtLabel">Ilustración</span>
+                            <img id="prevImagen" src="@(Model.ImagenUrlActual ?? "")" alt="Vista previa" class="@(string.IsNullOrEmpty(Model.ImagenUrlActual) ? "d-none" : "")" />
+                        </div>
+
+                        <div class="cc-rarity-divider" id="prevRarezaText">COMÚN</div>
+
+                        <div class="fw-semibold text-center small mb-1 text-truncate" id="prevNombre">@(string.IsNullOrWhiteSpace(Model.Nombre) ? "Nombre de la carta" : Model.Nombre)</div>
+                        <div class="cc-card-desc text-body-secondary text-center" id="prevDescripcion"></div>
+                    </div>
+
+                    <p class="small text-body-secondary text-center mt-3 mb-0" id="notaAlternancia"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            function iconoSvg(id, size) {
+                const s = size || 18;
+                switch (id) {
+                    case 1: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><path d="M14.5 3.5L20.5 3.5L20.5 9.5L10 20L4 14L14.5 3.5Z"/><line x1="3" y1="21" x2="7" y2="17"/><line x1="6" y1="12" x2="12" y2="18"/></svg>`;
+                    case 2: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><polygon points="13 2 4 14 11 14 10 22 20 10 13 10 13 2"/></svg>`;
+                    case 3: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><path d="M12 20 C12 20 4 14 4 8.5 C4 5.5 6.5 3.5 9 3.5 C10.6 3.5 11.6 4.4 12 5.5 C12.4 4.4 13.4 3.5 15 3.5 C17.5 3.5 20 5.5 20 8.5 C20 14 12 20 12 20 Z"/><line x1="12" y1="8.5" x2="12" y2="14.5"/><line x1="9" y1="11.5" x2="15" y2="11.5"/></svg>`;
+                    case 4: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><rect x="7" y="4" width="12" height="16" rx="1.5"/><line x1="4" y1="12" x2="10" y2="12"/><line x1="7" y1="9" x2="7" y2="15"/></svg>`;
+                    case 5: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M6 6L7 20H17L18 6"/><line x1="10" y1="10" x2="10" y2="16"/><line x1="14" y1="10" x2="14" y2="16"/></svg>`;
+                    case 6: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><circle cx="12" cy="9" r="5"/><circle cx="10" cy="8.5" r="0.8" fill="#212529"/><circle cx="14" cy="8.5" r="0.8" fill="#212529"/><line x1="5" y1="19" x2="19" y2="15"/><line x1="5" y1="15" x2="19" y2="19"/></svg>`;
+                    case 7: return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="#212529" stroke-width="2"><path d="M12 3L4 6V12C4 16.5 7.5 19.5 12 21C16.5 19.5 20 16.5 20 12V6L12 3Z"/></svg>`;
+                    default: return '';
+                }
+            }
+
+            const EVENTOS = {
+                1: 'Al entrar',
+                2: 'Al atacar',
+                3: 'Al iniciar turno',
+                4: 'Al finalizar turno',
+                5: 'Al morir'
+            };
+
+            const EFECTOS = {
+                2: { nombre: 'Daño instantáneo', costeUnit: 1.0, objetivosCriatura: [2, 1, 4], objetivosHechizo: [2, 1, 4], cantidadFija: null, cuandoFijo: null },
+                3: { nombre: 'Sumar vida', costeUnit: 0.6, objetivosCriatura: [1, 5], objetivosHechizo: [1], cantidadFija: null, cuandoFijo: null },
+                4: { nombre: 'Robar carta', costeUnit: 1.4, objetivosCriatura: [1], objetivosHechizo: [1], cantidadFija: null, cuandoFijo: null },
+                5: { nombre: 'Descartar mano rival', costeUnit: 2.0, objetivosCriatura: [2], objetivosHechizo: [2], cantidadFija: null, cuandoFijo: null },
+                6: { nombre: 'Descartar carta objetivo', costeUnit: 3.5, objetivosCriatura: [2, 1], objetivosHechizo: [2, 1], cantidadFija: 1, cuandoFijo: null },
+                7: { nombre: 'Daño al defender', costeUnit: 0.9, objetivosCriatura: [2], objetivosHechizo: [2], cantidadFija: null, cuandoFijo: 'Al recibir daño' }
+            };
+
+            const OBJETIVOS = {
+                1: 'Jugador',
+                2: 'Enemigo',
+                4: 'Todos los enemigos',
+                5: 'Sí mismo'
+            };
+
+            const RAREZAS = {
+                1: { etiqueta: 'COMÚN', descuento: 0 },
+                2: { etiqueta: 'ESPECIAL', descuento: 0 },
+                3: { etiqueta: 'ÉPICO', descuento: -1 },
+                4: { etiqueta: 'LEGENDARIO', descuento: -4 }
+            };
+
+            // Hidratar estado desde el modelo (sirve tanto para Crear como para Editar)
+            const bloquesIniciales = @Html.Raw(bloquesInicialesJson);
+            let estado = {
+                tipo: @((int)Model.Tipo),
+                ataque: @(Model.Ataque > 0 ? Model.Ataque : 1),
+                vida: @(Model.Vida > 0 ? Model.Vida : 1),
+                bloques: bloquesIniciales.filter(b => EFECTOS[b.tipoHabilidad])
+            };
+
+            let mostrandoVida = false;
+
+            const pila = document.getElementById('pilaScratch');
+            const dropzone = document.getElementById('dropzone');
+            const inpNombre = document.getElementById('inpNombre');
+            const inpRareza = document.getElementById('inpRareza');
+            const inpMana = document.getElementById('inpMana');
+            const inpImagen = document.getElementById('inpImagen');
+            const avisoLimite = document.getElementById('avisoLimite');
+
+            function maxBloquesActual() {
+                return estado.tipo === 1 ? 2 : 3;
+            }
+
+            function objetivosPermitidos(tipoHabilidad) {
+                const ef = EFECTOS[tipoHabilidad] || EFECTOS[2];
+                return estado.tipo === 1 ? ef.objetivosCriatura : ef.objetivosHechizo;
+            }
+
+            function calcularMana() {
+                let total = 0;
+
+                if (estado.tipo === 1) {
+                    total += (Math.max(1, estado.ataque) * 0.6) + (Math.max(1, estado.vida) * 0.5);
+                }
+
+                estado.bloques.forEach(b => {
+                    const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
+                    const repetible = estado.tipo === 1 && !ef.cuandoFijo && (b.tipoEstado === 2 || b.tipoEstado === 3 || b.tipoEstado === 4);
+
+                    let multCuando = 1.0;
+                    if (repetible) {
+                        if (b.tipoHabilidad === 6) multCuando = 2.5;
+                        else if (b.tipoHabilidad === 5) multCuando = 2.0;
+                        else multCuando = 1.8;
+                    }
+
+                    const multObj = (b.tipoHabilidad === 2 && b.tipoObjetivo === 4) ? 2.5 : 1.0;
+                    const cant = ef.cantidadFija ?? Math.max(1, b.cantidad);
+                    total += ef.costeUnit * cant * multCuando * multObj;
+                });
+
+                if (estado.bloques.length === 2) total += 0.5;
+                else if (estado.bloques.length >= 3) total += 1.5;
+
+                const rar = RAREZAS[parseInt(inpRareza.value, 10)] || RAREZAS[1];
+                total += rar.descuento;
+
+                return Math.max(0, Math.round(total));
+            }
+
+            function generarTextoPlano() {
+                const partes = [];
+                if (estado.tipo === 1) {
+                    partes.push(`Criatura ${estado.ataque}/${estado.vida}.`);
+                } else {
+                    partes.push('Hechizo. Al entrar:');
+                }
+                estado.bloques.forEach(b => {
+                    const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
+                    const cuando = estado.tipo === 1
+                        ? (ef.cuandoFijo || EVENTOS[b.tipoEstado] || 'Al entrar') + ': '
+                        : '';
+                    if (b.tipoHabilidad === 4) partes.push(`${cuando}Robar ${b.cantidad} carta(s).`);
+                    else if (b.tipoHabilidad === 5) partes.push(`${cuando}Rival descarta ${b.cantidad} carta(s).`);
+                    else if (b.tipoHabilidad === 6) partes.push(`${cuando}Descartar 1 carta (${OBJETIVOS[b.tipoObjetivo] || 'Enemigo'}).`);
+                    else if (b.tipoHabilidad === 7) partes.push(`${cuando}Devuelve ${b.cantidad} de daño al atacante.`);
+                    else partes.push(`${cuando}${ef.nombre} ${b.cantidad} a ${OBJETIVOS[b.tipoObjetivo] || 'Enemigo'}.`);
+                });
+                return partes.join(' ');
+            }
+
+            // Vista previa estructurada por lineas con negritas e iconos vectoriales inline
+            function generarHtmlPreview() {
+                const lineas = [];
+                if (estado.tipo === 1) {
+                    lineas.push(`<div class="cc-line text-dark"><span>Criatura</span><strong>${estado.ataque}/${estado.vida}</strong></div>`);
+                    estado.bloques.forEach(b => {
+                        const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
+                        const cuando = ef.cuandoFijo || EVENTOS[b.tipoEstado] || 'Al entrar';
+                        lineas.push(lineaEfectoHtml(b, `<span class="fw-semibold text-dark">${cuando}:</span>`));
+                    });
+                } else {
+                    lineas.push(`<div class="cc-line text-dark"><span>Hechizo ·</span><strong>Al entrar</strong></div>`);
+                    estado.bloques.forEach(b => {
+                        lineas.push(lineaEfectoHtml(b, ''));
+                    });
+                }
+                return lineas.join('');
+            }
+
+            function lineaEfectoHtml(b, prefijoCuando) {
+                const ico = `<span class="cc-inline-ico">${iconoSvg(b.tipoHabilidad, 13)}</span>`;
+                const num = `<strong class="text-dark">${b.cantidad}</strong>`;
+                let detalle = '';
+                if (b.tipoHabilidad === 4) detalle = `<span>carta(s)</span>`;
+                else if (b.tipoHabilidad === 5) detalle = `<span>mano rival</span>`;
+                else if (b.tipoHabilidad === 6) detalle = `<span>carta (${OBJETIVOS[b.tipoObjetivo] || 'Enemigo'})</span>`;
+                else if (b.tipoHabilidad === 7) detalle = `<span>al atacante</span>`;
+                else detalle = `<span>a ${OBJETIVOS[b.tipoObjetivo] || 'Enemigo'}</span>`;
+
+                return `<div class="cc-line">${prefijoCuando}${ico}${num}${detalle}</div>`;
+            }
+
+            function mostrarAvisoLimite(msg) {
+                avisoLimite.textContent = msg;
+                avisoLimite.classList.toggle('d-none', !msg);
+            }
+
+            function renderPila() {
+                pila.innerHTML = '';
+
+                const hat = document.createElement('div');
+                hat.className = 'scratch-block block-hat';
+                if (estado.tipo === 1) {
+                    hat.innerHTML = `
+                        <span>Criatura</span>
+                        <span class="small text-body-secondary">ATK</span>
+                        <input type="number" min="1" max="99" value="${estado.ataque}" class="scratch-pill input-number" id="hatAtaque" />
+                        <span class="small text-body-secondary">VID</span>
+                        <input type="number" min="1" max="99" value="${estado.vida}" class="scratch-pill input-number" id="hatVida" />
+                    `;
+                } else {
+                    hat.innerHTML = `<span>Hechizo</span><span class="small text-body-secondary">(se aplica al lanzarse)</span>`;
+                }
+                pila.appendChild(hat);
+
+                if (estado.tipo === 1) {
+                    document.getElementById('hatAtaque').addEventListener('input', e => {
+                        estado.ataque = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        sincronizarTodo();
+                    });
+                    document.getElementById('hatVida').addEventListener('input', e => {
+                        estado.vida = Math.max(1, parseInt(e.target.value, 10) || 1);
+                        sincronizarTodo();
+                    });
+                }
+
+                estado.bloques.forEach((b, idx) => {
+                    const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
+                    const permitidos = objetivosPermitidos(b.tipoHabilidad);
+                    if (!permitidos.includes(b.tipoObjetivo)) b.tipoObjetivo = permitidos[0];
+                    if (ef.cantidadFija !== null) b.cantidad = ef.cantidadFija;
+                    if (estado.tipo === 2 || ef.cuandoFijo) b.tipoEstado = 1;
+
+                    const whenDiv = document.createElement('div');
+                    whenDiv.className = 'scratch-block block-stack block-when';
+                    if (ef.cuandoFijo) {
+                        whenDiv.innerHTML = `
+                            <span class="small text-body-secondary">Cuándo:</span>
+                            <span>${ef.cuandoFijo}</span>
+                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-1 text-decoration-none" data-remove="${idx}" title="Quitar bloque">x</button>
+                        `;
+                    } else if (estado.tipo === 1) {
+                        whenDiv.innerHTML = `
+                            <span class="small text-body-secondary">Cuándo:</span>
+                            <select class="scratch-pill" data-field="tipoEstado" data-idx="${idx}">
+                                ${Object.entries(EVENTOS).map(([k, v]) => `<option value="${k}" ${Number(k) === b.tipoEstado ? 'selected' : ''}>${v}</option>`).join('')}
+                            </select>
+                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-1 text-decoration-none" data-remove="${idx}" title="Quitar bloque">x</button>
+                        `;
+                    } else {
+                        whenDiv.innerHTML = `
+                            <span class="small text-body-secondary">Cuándo:</span>
+                            <span>Al entrar (instantáneo)</span>
+                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-1 text-decoration-none" data-remove="${idx}" title="Quitar bloque">x</button>
+                        `;
+                    }
+                    pila.appendChild(whenDiv);
+
+                    const efDiv = document.createElement('div');
+                    efDiv.className = 'scratch-block block-stack block-effect-child';
+
+                    const cantidadHtml = ef.cantidadFija !== null
+                        ? `<span class="badge text-bg-light border">1</span>`
+                        : `<input type="number" min="1" max="99" value="${b.cantidad}" class="scratch-pill input-number" data-field="cantidad" data-idx="${idx}" />`;
+
+                    let objetivoHtml = '';
+                    if (permitidos.length > 1) {
+                        objetivoHtml = `<span class="small text-body-secondary">a</span>
+                            <select class="scratch-pill" data-field="tipoObjetivo" data-idx="${idx}">
+                                ${permitidos.map(k => `<option value="${k}" ${k === b.tipoObjetivo ? 'selected' : ''}>${OBJETIVOS[k]}</option>`).join('')}
+                            </select>`;
+                    } else if (b.tipoHabilidad === 7) {
+                        objetivoHtml = `<span class="small text-body-secondary">al atacante</span>`;
+                    } else if (b.tipoHabilidad === 3) {
+                        objetivoHtml = `<span class="small text-body-secondary">a Jugador</span>`;
+                    }
+
+                    efDiv.innerHTML = `
+                        <span>${ef.nombre}</span>
+                        ${cantidadHtml}
+                        ${objetivoHtml}
+                    `;
+                    pila.appendChild(efDiv);
+                });
+
+                pila.querySelectorAll('[data-field]').forEach(el => {
+                    el.addEventListener('change', onCampoBloqueChange);
+                    el.addEventListener('input', onCampoBloqueChange);
+                });
+                pila.querySelectorAll('[data-remove]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        estado.bloques.splice(Number(btn.dataset.remove), 1);
+                        mostrarAvisoLimite('');
+                        renderPila();
+                    });
+                });
+
+                sincronizarTodo();
+            }
+
+            function onCampoBloqueChange(e) {
+                const idx = Number(e.target.dataset.idx);
+                const field = e.target.dataset.field;
+                estado.bloques[idx][field] = Math.max(1, parseInt(e.target.value, 10) || 1);
+                sincronizarTodo();
+            }
+
+            function sincronizarTodo() {
+                const mana = calcularMana();
+                const textoPlano = generarTextoPlano();
+                const rar = RAREZAS[parseInt(inpRareza.value, 10)] || RAREZAS[1];
+                const esRota = mana > 10;
+
+                document.getElementById('contadorHabilidades').textContent = `${estado.bloques.length} / ${maxBloquesActual()}`;
+                const badgeBalance = document.getElementById('badgeBalance');
+                badgeBalance.textContent = esRota ? `Demasiado rota (${mana}/10 maná)` : `Equilibrada (${mana}/10 maná)`;
+                badgeBalance.className = esRota
+                    ? 'badge text-bg-danger px-3 py-2'
+                    : 'badge text-bg-light border px-3 py-2';
+                document.getElementById('alertaRota').classList.toggle('d-none', !esRota);
+                document.getElementById('btnGuardar').disabled = esRota;
+
+                inpMana.value = mana;
+                document.getElementById('hidTipo').value = estado.tipo;
+                document.getElementById('hidAtaque').value = estado.tipo === 1 ? estado.ataque : 0;
+                document.getElementById('hidVida').value = estado.tipo === 1 ? estado.vida : 0;
+                document.getElementById('hidDescripcion').value = textoPlano;
+
+                const hiddenBloques = document.getElementById('hiddenBloques');
+                hiddenBloques.innerHTML = estado.bloques.map((b, i) => `
+                    <input type="hidden" name="Bloques[${i}].TipoEstado" value="${estado.tipo === 2 ? 1 : b.tipoEstado}" />
+                    <input type="hidden" name="Bloques[${i}].TipoHabilidad" value="${b.tipoHabilidad}" />
+                    <input type="hidden" name="Bloques[${i}].Cantidad" value="${b.cantidad}" />
+                    <input type="hidden" name="Bloques[${i}].TipoObjetivo" value="${b.tipoObjetivo}" />
+                    <input type="hidden" name="Bloques[${i}].Objetivo" value="${b.objetivo}" />
+                `).join('');
+
+                document.getElementById('prevNombre').textContent = inpNombre.value.trim() || 'Nombre de la carta';
+                document.getElementById('prevRarezaText').textContent = rar.etiqueta;
+                document.getElementById('prevDescripcion').innerHTML = generarHtmlPreview();
+                document.getElementById('prevManaBadge').textContent = mana;
+                document.getElementById('prevVidaNum').textContent = estado.vida;
+
+                const iconsLeft = document.getElementById('prevIconsLeft');
+                iconsLeft.innerHTML = '';
+                estado.bloques.slice(0, 2).forEach(b => {
+                    const div = document.createElement('div');
+                    div.className = 'cc-icon-badge';
+                    div.title = (EFECTOS[b.tipoHabilidad] || { nombre: '' }).nombre;
+                    div.innerHTML = iconoSvg(b.tipoHabilidad, 17);
+                    iconsLeft.appendChild(div);
+                });
+
+                const iconRight = document.getElementById('prevIconRight');
+                if (estado.tipo === 1) {
+                    iconRight.innerHTML = `${iconoSvg(1, 17)}<span>${estado.ataque}</span>`;
+                    iconRight.classList.remove('d-none');
+                } else if (estado.bloques.length >= 3) {
+                    iconRight.innerHTML = iconoSvg(estado.bloques[2].tipoHabilidad, 17);
+                    iconRight.classList.remove('d-none');
+                } else {
+                    iconRight.classList.add('d-none');
+                }
+
+                actualizarAlternanciaCentro();
+            }
+
+            function actualizarAlternanciaCentro() {
+                const manaEl = document.getElementById('prevManaBadge');
+                const heartEl = document.getElementById('prevHeartBadge');
+                const nota = document.getElementById('notaAlternancia');
+
+                if (estado.tipo === 1 && mostrandoVida) {
+                    manaEl.classList.add('d-none');
+                    heartEl.classList.remove('d-none');
+                } else {
+                    manaEl.classList.remove('d-none');
+                    heartEl.classList.add('d-none');
+                }
+                nota.textContent = estado.tipo === 1
+                    ? 'Alterna entre Maná (círculo) y Vida (corazón).'
+                    : 'Hechizo: muestra el coste de Maná.';
+            }
+
+            setInterval(() => {
+                if (estado.tipo === 1) {
+                    mostrandoVida = !mostrandoVida;
+                    actualizarAlternanciaCentro();
+                }
+            }, 2500);
+
+            document.getElementById('prevCenterSlot').addEventListener('click', () => {
+                if (estado.tipo === 1) {
+                    mostrandoVida = !mostrandoVida;
+                    actualizarAlternanciaCentro();
+                }
+            });
+
+            function aplicarBloque(kind, value) {
+                const val = Number(value);
+                mostrarAvisoLimite('');
+
+                if (kind === 'tipo') {
+                    estado.tipo = val;
+                    if (val === 1) {
+                        estado.ataque = Math.max(1, estado.ataque);
+                        estado.vida = Math.max(1, estado.vida);
+                        if (estado.bloques.length > 2) estado.bloques = estado.bloques.slice(0, 2);
+                    } else {
+                        mostrandoVida = false;
+                        estado.bloques = estado.bloques.map(b => ({ ...b, tipoEstado: 1 }));
+                    }
+                } else if (kind === 'efecto') {
+                    if (estado.bloques.length >= maxBloquesActual()) {
+                        mostrarAvisoLimite(estado.tipo === 1
+                            ? 'Una criatura puede tener como máximo 2 habilidades.'
+                            : 'Un hechizo puede tener como máximo 3 efectos.');
+                        return;
+                    }
+                    const ef = EFECTOS[val] || EFECTOS[2];
+                    const permitidos = objetivosPermitidos(val);
+                    estado.bloques.push({
+                        tipoEstado: 1,
+                        tipoHabilidad: val,
+                        cantidad: ef.cantidadFija ?? 1,
+                        tipoObjetivo: permitidos[0],
+                        objetivo: 1
+                    });
+                }
+                renderPila();
+            }
+
+            document.querySelectorAll('.block-palette').forEach(el => {
+                el.addEventListener('click', () => aplicarBloque(el.dataset.kind, el.dataset.value));
+                el.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', JSON.stringify({ kind: el.dataset.kind, value: el.dataset.value }));
+                });
+            });
+
+            dropzone.addEventListener('dragover', e => {
+                e.preventDefault();
+                dropzone.classList.add('drag-over');
+            });
+            dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+            dropzone.addEventListener('drop', e => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+                try {
+                    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                    aplicarBloque(data.kind, data.value);
+                } catch { }
+            });
+
+            document.getElementById('btnLimpiar').addEventListener('click', () => {
+                estado.bloques = [];
+                mostrarAvisoLimite('');
+                renderPila();
+            });
+
+            inpNombre.addEventListener('input', sincronizarTodo);
+            inpRareza.addEventListener('change', sincronizarTodo);
+
+            inpImagen.addEventListener('change', () => {
+                const prevImg = document.getElementById('prevImagen');
+                const prevLabel = document.getElementById('prevArtLabel');
+                if (inpImagen.files && inpImagen.files[0]) {
+                    prevImg.src = URL.createObjectURL(inpImagen.files[0]);
+                    prevImg.classList.remove('d-none');
+                    prevLabel.classList.add('d-none');
+                } else {
+                    prevImg.classList.add('d-none');
+                    prevLabel.classList.remove('d-none');
+                }
+            });
+
+            renderPila();
+        })();
+    </script>
+}

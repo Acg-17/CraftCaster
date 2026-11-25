@@ -1,0 +1,89 @@
+@model IReadOnlyList<CraftCaster.Domain.Entities.Mazo>
+@using CraftCaster.Domain.Enums
+@{
+    ViewData["Title"] = "Mis mazos";
+    var imagenes = ViewBag.Imagenes as Dictionary<int, string?> ?? new();
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">Mis mazos</h1>
+            <p class="text-body-secondary mb-0">Crea y edita tus mazos hasta completar 30 cartas jugables.</p>
+        </div>
+        <a class="btn btn-dark" asp-action="Crear">+ Crear mazo</a>
+    </div>
+</div>
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+
+@if (Model.Count == 0)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-5 text-center">
+            <h2 class="h5">Todavía no has creado ningún mazo</h2>
+            <p class="text-body-secondary mb-3">Crea un mazo nuevo y añade 30 cartas desde tu colección.</p>
+            <a class="btn btn-primary" asp-action="Crear">Crear mi primer mazo</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+        @foreach (var mazo in Model)
+        {
+            imagenes.TryGetValue(mazo.Id, out var imgUrl);
+            <div class="col">
+                <div class="card border-0 shadow-sm h-100 overflow-hidden">
+                    <div class="bg-body-tertiary d-flex align-items-center justify-content-center overflow-hidden" style="aspect-ratio: 16 / 9;">
+                        @if (!string.IsNullOrEmpty(imgUrl))
+                        {
+                            <img src="@imgUrl" class="w-100 h-100 object-fit-cover" alt="@mazo.Nombre" />
+                        }
+                        else
+                        {
+                            <span class="small text-body-secondary">Ilustración del mazo</span>
+                        }
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge text-bg-light border">@mazo.EstadoMazo</span>
+                            <span class="small text-body-secondary">@mazo.NumCartas / 30 cartas</span>
+                        </div>
+                        <h2 class="h6 mb-1">@mazo.Nombre</h2>
+                        <p class="small text-body-secondary mb-2">@(mazo.EsPublico ? "Público" : "Privado")</p>
+                        <p class="small mb-0">Coste medio: <strong>@mazo.CosteMedio.ToString("0.0")</strong></p>
+                    </div>
+                    <div class="card-footer bg-body border-0 pt-0 pb-3 d-flex flex-wrap gap-2">
+                        <a class="btn btn-dark btn-sm flex-fill" asp-action="Editar" asp-route-id="@mazo.Id">Editar mazo</a>
+                        @if (!mazo.EsPublico)
+                        {
+                            <form asp-action="Compartir" asp-route-id="@mazo.Id" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-primary btn-sm">Compartir</button>
+                            </form>
+                        }
+                        <form asp-action="Borrar" asp-route-id="@mazo.Id" method="post" class="m-0"
+                              onsubmit="return confirm('¿Seguro que quieres borrar este mazo?');">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Borrar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
