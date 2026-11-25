@@ -16,7 +16,7 @@ namespace CraftCaster.Web.Controllers;
 // [Authorize(Roles = "Admin")]
 /*PROTECTED REGION ID(UsuarioController_manual_class_attributes) ENABLED START*/
 // Class-level authorization applies to both partial files.
-// [Authorize(Roles = "Admin")]
+[Authorize(Roles = HariaWebAuthentication.RolAdmin)]
 /*PROTECTED REGION END*/
 public partial class UsuarioController
 {

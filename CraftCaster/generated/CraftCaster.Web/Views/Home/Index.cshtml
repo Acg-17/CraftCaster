@@ -1,4 +1,93 @@
-@* HARIA-WEB GENERATED sha256:8f8ec3988845d58a673b4ac9dfc8a716a77f52a855041accdde5e1ef9a481f96 *@
-@{ ViewData["Title"] = "Inicio"; }
+@model CraftCaster.Web.ViewModels.HomeIndexViewModel
+@{
+    ViewData["Title"] = "Inicio";
+}
 
-<partial name="_BusinessNavigation" />
+<section class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 p-lg-5">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-8">
+                <span class="badge text-bg-primary-subtle text-primary-emphasis mb-2">CraftCaster</span>
+                <h1 class="display-6 fw-bold mb-2">Diseña tus propias cartas, arma tu mazo y combate</h1>
+                <p class="text-body-secondary mb-4">
+                    Crea cartas personalizadas con habilidades y efectos, construye mazos de 30 cartas, explora las creaciones mejor valoradas de la comunidad y enfréntate en duelos por turnos.
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a asp-controller="Explorar" asp-action="Index" class="btn btn-primary">Explorar mazos</a>
+                    <a asp-controller="Mazo" asp-action="Create" class="btn btn-dark">+ Crear mazo</a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-controller="Juego" asp-action="Index" class="btn btn-outline-dark">Jugar partida</a>
+                    }
+                    else
+                    {
+                        <a asp-controller="Cuenta" asp-action="Acceso" class="btn btn-outline-secondary">Iniciar sesión / Registrarse</a>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="border rounded-3 p-3 bg-body-tertiary">
+                    <h2 class="h6 mb-2">¿Cómo funciona?</h2>
+                    <ol class="small text-body-secondary ps-3 mb-0">
+                        <li class="mb-1">Crea cartas de tipo Criatura o Hechizo con sus estados y habilidades.</li>
+                        <li class="mb-1">Combina cartas en un mazo jugable y compártelo con la comunidad.</li>
+                        <li>Únete a una partida o crea una nueva sala para enfrentarte a otro jugador.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section aria-labelledby="mazos-famosos-title">
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+        <div>
+            <h2 id="mazos-famosos-title" class="h4 mb-0">Mazos más famosos</h2>
+            <p class="text-body-secondary small mb-0">Los mazos públicos mejor valorados por la comunidad.</p>
+        </div>
+        <a asp-controller="Explorar" asp-action="Index" class="btn btn-outline-primary btn-sm">Ver todos en Explorar</a>
+    </div>
+
+    @if (Model.MazosDestacados.Any())
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+            @foreach (var mazo in Model.MazosDestacados)
+            {
+                var estrellas = (int)Math.Round(mazo.Valoracion);
+                <div class="col">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge text-bg-light border">@mazo.EstadoMazo</span>
+                                <span class="small text-body-secondary">@mazo.NumCartas cartas</span>
+                            </div>
+                            <h3 class="h6 mb-1">@mazo.Nombre</h3>
+                            <p class="small text-body-secondary mb-2">Por @@@mazo.UsuarioLabel</p>
+                            <p class="small mb-1">Coste medio: <strong>@mazo.CosteMedio.ToString("0.0")</strong></p>
+                            <p class="mb-0 text-warning" title="Valoración @mazo.Valoracion.ToString("0.0") de 5">
+                                @for (var i = 1; i <= 5; i++)
+                                {
+                                    @(i <= estrellas ? "★" : "☆")
+                                }
+                                <span class="small text-body-secondary ms-1">@mazo.Valoracion.ToString("0.0")</span>
+                            </p>
+                        </div>
+                        <div class="card-footer bg-body border-0 pt-0 pb-3 d-flex gap-2">
+                            <a asp-controller="Explorar" asp-action="Detalle" asp-route-id="@mazo.Id" class="btn btn-dark btn-sm flex-fill">Ver mazo</a>
+                            <a asp-controller="Juego" asp-action="Index" class="btn btn-outline-dark btn-sm flex-fill">Luchar</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4 text-center">
+                <p class="text-body-secondary mb-3">Todavía no hay mazos públicos valorados.</p>
+                <a asp-controller="Explorar" asp-action="Index" class="btn btn-outline-primary btn-sm">Ir a Explorar</a>
+            </div>
+        </div>
+    }
+</section>

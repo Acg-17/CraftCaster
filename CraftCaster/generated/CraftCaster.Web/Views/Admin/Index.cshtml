@@ -1,0 +1,224 @@
+@model CraftCaster.Web.ViewModels.AdminPanelViewModel
+@using CraftCaster.Domain.Enums
+@{
+    ViewData["Title"] = "Panel de Administración";
+}
+
+@if (TempData["Mensaje"] is string mensaje)
+{
+    <div class="alert alert-success" role="status">@mensaje</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger" role="alert">@error</div>
+}
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+        <div>
+            <span class="badge text-bg-dark mb-2">Administración</span>
+            <h1 class="h3 mb-1">Panel de Administración</h1>
+            <p class="text-body-secondary mb-0">Gestión de usuarios, suspensión de cuentas, reportes y acceso a los CRUDs del sistema.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-controller="Usuario" asp-action="Create" class="btn btn-primary btn-sm">+ Crear usuario</a>
+            <a asp-controller="Usuario" asp-action="Index" class="btn btn-outline-dark btn-sm">CRUD Usuarios</a>
+            <a asp-controller="Partida" asp-action="Index" class="btn btn-outline-dark btn-sm">CRUD Partidas</a>
+            <a asp-controller="Home" asp-action="Entidades" class="btn btn-outline-secondary btn-sm">Todas las entidades</a>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-2 row-cols-md-4 g-3 mb-4">
+    <div class="col">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-body-secondary">Usuarios totales</div>
+                <div class="h3 mb-0">@Model.TotalUsuarios</div>
+                <div class="small text-body-secondary">@Model.TotalAdmins admin(s)</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-body-secondary">Cuentas activas</div>
+                <div class="h3 mb-0 text-success">@Model.UsuariosActivos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-body-secondary">Suspendidas / Reportadas</div>
+                <div class="h3 mb-0 text-danger">@Model.UsuariosSuspendidos</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="small text-body-secondary">Contenido del sistema</div>
+                <div class="small mt-1"><strong>@Model.TotalCartas</strong> cartas · <strong>@Model.TotalMazos</strong> mazos</div>
+                <div class="small text-body-secondary"><strong>@Model.TotalPartidas</strong> partidas</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form asp-action="Index" method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-5">
+                <label for="busqueda" class="form-label small fw-semibold">Buscar usuario</label>
+                <input id="busqueda" name="busqueda" value="@Model.Busqueda" class="form-control" placeholder="Nombre de usuario o correo..." />
+            </div>
+            <div class="col-6 col-md-3">
+                <label for="estado" class="form-label small fw-semibold">Estado</label>
+                <select id="estado" name="estado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="@((int)EstadoCuenta.Activa)" selected="@(Model.FiltroEstado == EstadoCuenta.Activa)">Activa</option>
+                    <option value="@((int)EstadoCuenta.Suspendida)" selected="@(Model.FiltroEstado == EstadoCuenta.Suspendida)">Suspendida</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label for="tipo" class="form-label small fw-semibold">Rol</label>
+                <select id="tipo" name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="@((int)TipoUsuario.Cliente)" selected="@(Model.FiltroTipo == TipoUsuario.Cliente)">Cliente</option>
+                    <option value="@((int)TipoUsuario.Admin)" selected="@(Model.FiltroTipo == TipoUsuario.Admin)">Admin</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<section class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Gestión de usuarios</h2>
+        <span class="badge text-bg-light">@Model.Usuarios.Count usuario(s)</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Usuarios.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">ID</th>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th class="text-end pe-3">Moderación y CRUD</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var usuario in Model.Usuarios)
+                        {
+                            var esActual = usuario.Id == Model.UsuarioActualId;
+                            var estaSuspendida = usuario.EstadoCuenta == EstadoCuenta.Suspendida;
+                            <tr>
+                                <td class="ps-3">@usuario.Id</td>
+                                <td>
+                                    <span class="fw-semibold">@usuario.NombreUsuario</span>
+                                    @if (esActual)
+                                    {
+                                        <span class="badge text-bg-info ms-1">Tú</span>
+                                    }
+                                </td>
+                                <td>@usuario.Email</td>
+                                <td>
+                                    <span class="badge @(usuario.TipoUsuario == TipoUsuario.Admin ? "text-bg-dark" : "text-bg-secondary")">@usuario.TipoUsuario</span>
+                                </td>
+                                <td>
+                                    <span class="badge @(estaSuspendida ? "text-bg-danger" : "text-bg-success")">@usuario.EstadoCuenta</span>
+                                </td>
+                                <td class="text-end text-nowrap pe-3">
+                                    @if (!esActual)
+                                    {
+                                        if (estaSuspendida)
+                                        {
+                                            <form asp-action="CambiarEstado" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@usuario.Id" />
+                                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Activa" />
+                                                <button type="submit" class="btn btn-sm btn-outline-success">Reactivar</button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="CambiarEstado" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@usuario.Id" />
+                                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Suspendida" />
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">Suspender</button>
+                                            </form>
+                                            <form asp-action="Reportar" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@usuario.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Reportar</button>
+                                            </form>
+                                        }
+                                    }
+                                    <a asp-controller="Usuario" asp-action="Details" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-primary">Detalles</a>
+                                    <a asp-controller="Usuario" asp-action="Edit" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-secondary">Editar</a>
+                                    @if (!esActual)
+                                    {
+                                        <a asp-controller="Usuario" asp-action="Delete" asp-route-id="@usuario.Id" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="p-4 text-center text-body-secondary">
+                No se encontraron usuarios con los filtros seleccionados.
+            </div>
+        }
+    </div>
+</section>
+
+<section class="card border-0 shadow-sm">
+    <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Cuentas suspendidas y reportes</h2>
+        <span class="badge text-bg-danger">@Model.UsuariosSuspendidosLista.Count</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.UsuariosSuspendidosLista.Any())
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var suspendido in Model.UsuariosSuspendidosLista)
+                {
+                    <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                        <div>
+                            <span class="fw-semibold">@suspendido.NombreUsuario</span>
+                            <span class="text-body-secondary small ms-2">@suspendido.Email</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <form asp-action="CambiarEstado" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@suspendido.Id" />
+                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Activa" />
+                                <button type="submit" class="btn btn-sm btn-success">Reactivar cuenta</button>
+                            </form>
+                            <a asp-controller="Usuario" asp-action="Details" asp-route-id="@suspendido.Id" class="btn btn-sm btn-outline-secondary">Ver ficha</a>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="p-3 mb-0 text-body-secondary">No hay cuentas suspendidas ni reportes pendientes.</p>
+        }
+    </div>
+</section>
