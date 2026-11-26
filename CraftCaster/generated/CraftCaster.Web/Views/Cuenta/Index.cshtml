@@ -1,4 +1,5 @@
 @model CraftCaster.Web.ViewModels.MiCuentaViewModel
+@using CraftCaster.Web.Utils.Security
 @{
     ViewData["Title"] = "Mi cuenta";
     var miId = Model.Usuario.Id;
@@ -13,8 +14,13 @@
             <span class="badge text-bg-secondary">@Model.Usuario.TipoUsuario</span>
         </div>
         <div class="d-flex flex-wrap align-items-start gap-2">
-            <a asp-controller="Mazo" asp-action="Create" class="btn btn-dark">+ Crear mazo</a>
-            <a asp-controller="Carta" asp-action="Create" class="btn btn-outline-dark">+ Crear carta</a>
+            <a asp-controller="MisCartas" asp-action="Index" class="btn btn-outline-dark">Mis cartas</a>
+            <a asp-controller="EditorMazo" asp-action="Index" class="btn btn-outline-dark">Mis mazos</a>
+            <a asp-controller="Juego" asp-action="Historial" class="btn btn-outline-dark">Mis partidas</a>
+                @if (User.IsInRole(HariaWebAuthentication.RolAdmin))
+            {
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-dark">Panel de Admin</a>
+            }
             <form asp-action="Salir" method="post" class="m-0">
                 <button type="submit" class="btn btn-outline-secondary">Cerrar sesión</button>
             </form>
@@ -47,7 +53,7 @@
                 }
                 else
                 {
-                    <p class="p-3 mb-0 text-body-secondary">Todavía no tienes mazos. <a asp-controller="Mazo" asp-action="Create">Crea el primero</a>.</p>
+                    <p class="p-3 mb-0 text-body-secondary">Todavía no tienes mazos. <a asp-controller="EditorMazo" asp-action="Crear">Crea el primero</a>.</p>
                 }
             </div>
         </section>
@@ -84,7 +90,7 @@
                 }
                 else
                 {
-                    <p class="p-3 mb-0 text-body-secondary">Todavía no has creado cartas. <a asp-controller="Carta" asp-action="Create">Crea la primera</a>.</p>
+                    <p class="p-3 mb-0 text-body-secondary">Todavía no has creado cartas. <a asp-controller="MisCartas" asp-action="Crear">Crea la primera</a>.</p>
                 }
             </div>
         </section>

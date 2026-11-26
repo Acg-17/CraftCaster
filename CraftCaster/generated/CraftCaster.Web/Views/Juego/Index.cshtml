@@ -34,7 +34,7 @@ else
     <h2>Crear partida</h2>
     @if (Model.MazoConElQueJuego is null)
     {
-        <p>Necesitas al menos un mazo para jugar. <a asp-controller="Mazo" asp-action="Create">Crear mazo</a></p>
+        <p>Necesitas al menos un mazo para jugar. <a asp-controller="EditorMazo" asp-action="Crear">Crear mazo</a></p>
     }
     else
     {

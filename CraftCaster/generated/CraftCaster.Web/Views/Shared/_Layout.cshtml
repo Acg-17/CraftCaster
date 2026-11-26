@@ -26,26 +26,16 @@
                 </button>
                 <div class="collapse navbar-collapse" id="mainNavigation">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a></li>
                         <li class="nav-item"><a class="nav-link" asp-controller="Explorar" asp-action="Index">Explorar</a></li>
                         @if (User.Identity?.IsAuthenticated == true)
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="MisCartas" asp-action="Index">Mis cartas</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="MisCartas" asp-action="Crear">Crear carta</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="EditorMazo" asp-action="Index">Mis mazos</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="EditorMazo" asp-action="Crear">Crear mazo</a></li>
                         }
-                        @* Menú según el rol (los roles salen de TipoUsuario, ver Utils/Security/manual) *@
                         @if (User.IsInRole(HariaWebAuthentication.RolCliente) || User.IsInRole(HariaWebAuthentication.RolAdmin))
                         {
                             <li class="nav-item"><a class="nav-link" asp-controller="Juego" asp-action="Index">Jugar</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Juego" asp-action="Historial">Mis partidas</a></li>
                         }
-                        @if (User.IsInRole(HariaWebAuthentication.RolAdmin))
-                        {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Panel de Admin</a></li>
-                        }
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Desarrolladores">Desarrolladores</a></li>
                     </ul>
                     <div class="d-flex align-items-lg-center gap-2">
                     @if (User.Identity?.IsAuthenticated == true)
@@ -58,7 +48,6 @@
                     }
                     else
                     {
-                        <a class="btn btn-outline-light btn-sm" asp-controller="Mazo" asp-action="Create">Crear mazo</a>
                         <a class="btn btn-light btn-sm" asp-controller="Cuenta" asp-action="Acceso">Iniciar sesión</a>
                     }
                     </div>

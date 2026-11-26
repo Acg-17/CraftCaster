@@ -22,7 +22,7 @@
                 </p>
                 <div class="d-flex flex-wrap gap-2">
                     <a asp-controller="Explorar" asp-action="Index" class="btn btn-primary">Explorar mazos</a>
-                    <a asp-controller="Mazo" asp-action="Create" class="btn btn-dark">+ Crear mazo</a>
+                    <a asp-controller="EditorMazo" asp-action="Crear" class="btn btn-dark">+ Crear mazo</a>
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <a asp-controller="Juego" asp-action="Index" class="btn btn-outline-dark">Jugar partida</a>
