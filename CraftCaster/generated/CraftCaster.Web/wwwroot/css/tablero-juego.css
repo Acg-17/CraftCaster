@@ -1,0 +1,497 @@
+/* Estilos del tablero de partida CraftCaster — mantiene la identidad visual limpia de wireframe-cartas.css */
+
+.cc-arena {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+}
+
+/* === Cabecera de partida === */
+.cc-match-bar {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    padding: 0.85rem 1.25rem;
+}
+
+/* === Panel de jugador (HUD: vida con corazón, maná, mazo y descarte) === */
+.cc-player-strip {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    padding: 0.9rem 1.15rem;
+    border: 2px solid transparent;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.cc-player-strip.cc-active-turn {
+    border-color: rgba(13, 110, 253, 0.35);
+    box-shadow: 0 6px 20px rgba(13, 110, 253, 0.1);
+}
+
+.cc-hero-target-box {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.45rem 0.8rem;
+    border-radius: 0.85rem;
+    border: 2px solid transparent;
+    transition: all 0.18s ease;
+}
+
+.cc-hero-heart {
+    position: relative;
+    width: 54px;
+    height: 50px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 3px 8px rgba(220, 53, 69, 0.22));
+}
+
+.cc-hero-heart-num {
+    position: absolute;
+    top: 11px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #ffffff;
+    line-height: 1;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.cc-hero-mana {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #f8f9fa;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #212529;
+}
+
+.cc-hero-mana-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #212529;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+}
+
+/* === Reverso de cartas (mano oculta del rival y mazo) === */
+.cc-rival-hand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    min-height: 76px;
+    padding: 0.25rem 0.5rem;
+    overflow-x: auto;
+}
+
+.cc-card-back {
+    position: relative;
+    width: 52px;
+    height: 73px;
+    flex-shrink: 0;
+    border-radius: 0.55rem;
+    background: linear-gradient(145deg, #0d6efd 0%, #0a58ca 65%, #1e293b 100%);
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -14px;
+    transition: transform 0.15s ease;
+}
+
+.cc-card-back:first-child {
+    margin-left: 0;
+}
+
+.cc-card-back::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 0.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.38);
+}
+
+.cc-card-back-emblem {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+/* === Pila de mazo (30 cartas iniciales) + descarte discreto === */
+.cc-piles-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.cc-deck-pile {
+    position: relative;
+    width: 58px;
+    height: 80px;
+    border-radius: 0.65rem;
+    background: linear-gradient(145deg, #0d6efd 0%, #0a58ca 70%, #1e293b 100%);
+    border: 2px solid #ffffff;
+    box-shadow:
+        3px 3px 0 #e2e8f0,
+        4px 4px 0 rgba(15, 23, 42, 0.12),
+        6px 6px 0 #cbd5e1,
+        0 6px 14px rgba(15, 23, 42, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+
+.cc-deck-pile.cc-deck-empty {
+    background: #f1f5f9;
+    border: 2px dashed #cbd5e1;
+    box-shadow: none;
+    color: #64748b;
+}
+
+.cc-deck-count {
+    font-weight: 800;
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.cc-deck-label {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.9;
+    margin-top: 2px;
+}
+
+.cc-discard-pill {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.65rem;
+    background: #f8f9fa;
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    color: #495057;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.cc-discard-pill:hover {
+    background: #eef2f6;
+    border-color: rgba(13, 110, 253, 0.35);
+    color: #212529;
+}
+
+.cc-discard-pill strong {
+    font-size: 0.95rem;
+    line-height: 1.1;
+}
+
+/* === Mesa central (dos mitades: Mesa del rival y Tu mesa) === */
+.cc-mesa-shell {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(13, 110, 253, 0.04), transparent 70%),
+        #ffffff;
+    border-radius: 1.15rem;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.cc-mesa-zone {
+    min-height: 245px;
+    border-radius: 0.9rem;
+    background: var(--bs-tertiary-bg, #f8f9fa);
+    border: 1.5px dashed rgba(15, 23, 42, 0.1);
+    padding: 0.85rem 1rem 1rem 1rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.cc-mesa-zone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #6c757d;
+}
+
+.cc-mesa-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-grow: 1;
+}
+
+.cc-mesa-empty {
+    margin: auto;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.88rem;
+    padding: 1.5rem 0.5rem;
+}
+
+.cc-mesa-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.cc-mesa-divider::before,
+.cc-mesa-divider::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+/* === Zona de mano del jugador === */
+.cc-hand-shell {
+    background: #ffffff;
+    border-radius: 1.15rem;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.07);
+    padding: 1rem 1.25rem 1.25rem 1.25rem;
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.cc-hand-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 1rem;
+    padding-top: 0.35rem;
+    min-height: 255px;
+}
+
+/* === Variante de carta TCG para tablero (proporción 5:7 idéntica a wireframe-cartas.css) === */
+.cc-card.cc-card-board {
+    width: 170px;
+    height: 238px;
+    padding: 20px 10px 8px 10px;
+    margin: 18px 0 0 0;
+    border: 2px solid rgba(15, 23, 42, 0.07);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+    cursor: default;
+}
+
+.cc-card.cc-card-board .cc-art-box {
+    height: 78px;
+    border-radius: 0.6rem;
+}
+
+.cc-card.cc-card-board .cc-rarity-divider {
+    margin: 6px 0 4px 0;
+    font-size: 0.64rem;
+}
+
+.cc-card.cc-card-board .cc-card-name {
+    font-size: 0.78rem;
+    line-height: 1.2;
+}
+
+.cc-card.cc-card-board .cc-card-desc {
+    font-size: 0.67rem;
+    line-height: 1.25;
+}
+
+.cc-card.cc-card-board .cc-icon-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 0.5rem;
+}
+
+.cc-card.cc-card-board .cc-card-top-left-group {
+    top: -13px;
+    left: 8px;
+    gap: 4px;
+}
+
+.cc-card.cc-card-board .cc-card-top-center {
+    top: -17px;
+    width: 36px;
+    height: 36px;
+}
+
+.cc-card.cc-card-board .cc-card-top-center .cc-mana-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 0.88rem;
+}
+
+.cc-card.cc-card-board .cc-card-top-center .cc-heart-wrap {
+    width: 38px;
+    height: 36px;
+}
+
+.cc-card.cc-card-board .cc-card-top-center .cc-heart-num {
+    font-size: 0.8rem;
+    top: 7px;
+}
+
+.cc-card.cc-card-board .cc-card-top-right {
+    top: -13px;
+    right: 8px;
+    min-width: 32px;
+    height: 28px;
+    padding: 0 6px;
+    font-size: 0.76rem;
+    border-radius: 0.5rem;
+}
+
+.cc-card-footer-tag {
+    margin-top: auto;
+    padding-top: 4px;
+    text-align: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+}
+
+/* === Estados interactivos de cartas y objetivos === */
+.cc-card-board.cc-playable {
+    border-color: rgba(13, 110, 253, 0.45);
+    box-shadow: 0 6px 18px rgba(13, 110, 253, 0.14);
+    cursor: pointer;
+}
+
+.cc-card-board.cc-playable:hover {
+    transform: translateY(-10px);
+    border-color: #0d6efd;
+    box-shadow: 0 12px 26px rgba(13, 110, 253, 0.24);
+}
+
+.cc-card-board.cc-unplayable {
+    opacity: 0.68;
+}
+
+.cc-card-board.cc-can-attack {
+    border-color: rgba(25, 135, 84, 0.65);
+    box-shadow: 0 0 0 3px rgba(25, 135, 84, 0.14), 0 6px 18px rgba(15, 23, 42, 0.1);
+    cursor: pointer;
+}
+
+.cc-card-board.cc-can-attack:hover {
+    transform: translateY(-6px);
+    border-color: #198754;
+    box-shadow: 0 0 0 4px rgba(25, 135, 84, 0.22), 0 10px 22px rgba(25, 135, 84, 0.2);
+}
+
+.cc-card-board.cc-selected-source {
+    transform: translateY(-10px) scale(1.03);
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.3), 0 14px 28px rgba(13, 110, 253, 0.26) !important;
+    z-index: 10;
+}
+
+.cc-valid-target {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.28), 0 8px 22px rgba(220, 53, 69, 0.22) !important;
+    cursor: crosshair !important;
+    animation: ccTargetPulse 1.3s infinite ease-in-out;
+}
+
+.cc-valid-target:hover {
+    transform: scale(1.04);
+    background-color: #fff5f5 !important;
+}
+
+.cc-target-blocked {
+    opacity: 0.58;
+    cursor: not-allowed !important;
+}
+
+@keyframes ccTargetPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.25), 0 6px 18px rgba(220, 53, 69, 0.18);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(220, 53, 69, 0.4), 0 8px 24px rgba(220, 53, 69, 0.28);
+    }
+}
+
+/* === Banner flotante de modo selección de objetivo === */
+.cc-targeting-banner {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 30;
+    background: #212529;
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 0.6rem 1.15rem;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+/* === Flecha SVG de apuntado === */
+#ccTargetArrowSvg {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 25;
+}
+
+.cc-heart-damaged path {
+    fill: #fff1f2;
+    stroke: #dc3545;
+}
+
+.cc-heart-damaged .cc-heart-num {
+    color: #b02a37;
+}
+
+@media (max-width: 767.98px) {
+    .cc-card.cc-card-board {
+        width: 148px;
+        height: 212px;
+        padding: 18px 8px 6px 8px;
+    }
+
+    .cc-card.cc-card-board .cc-art-box {
+        height: 64px;
+    }
+}

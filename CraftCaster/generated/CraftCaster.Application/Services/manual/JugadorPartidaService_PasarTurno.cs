@@ -15,8 +15,6 @@ public sealed partial class JugadorPartidaService
     {
         /*PROTECTED REGION ID(CraftCaster.Application.Services_JugadorPartida_pasarTurno) ENABLED START*/
         
-        const int manaMaximo = 10;
-
         // Comprobar que el jugador existe
         JugadorPartida jugador = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("No existe el jugador indicado.");
@@ -52,7 +50,7 @@ public sealed partial class JugadorPartidaService
         await _repository.SaveAsync(jugador);
 
         int turnosPreviosRival = partida.Turnos.Count(t => t.Jugador != null && t.Jugador.Id == rival.Id);
-        int manaTurno = Math.Min(manaMaximo, turnosPreviosRival + 1);
+        int manaTurno = turnosPreviosRival + 1;
 
         // Crear un nuevo turno para el rival
         Turno turno = new Turno

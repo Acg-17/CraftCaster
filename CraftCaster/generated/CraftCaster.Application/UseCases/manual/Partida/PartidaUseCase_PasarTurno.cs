@@ -61,7 +61,7 @@ public sealed partial class PartidaUseCase
                     ?? throw new ModelException("No se pudo determinar el siguiente jugador.");
 
                 int turnosPrevios = partida.Turnos.Count(t => t.Jugador != null && t.Jugador.Id == siguiente.Id);
-                int manaTurno = Math.Min(10, 1 + turnosPrevios);
+                int manaTurno = 1 + turnosPrevios;
 
                 // Crear un nuevo turno para el siguiente jugador
                 Turno turno = new Turno

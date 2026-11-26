@@ -29,9 +29,9 @@ public sealed partial class JugadorPartidaUseCase
             // 1. Establece activo en true
             jugador.Activo = true;
 
-            // 2. Regenera y aumenta el mana (maximo 10) segun los turnos jugados
+            // 2. Regenera y aumenta el mana (+1 cada turno sin tope) segun los turnos jugados
             int turnosPrevios = jugador.Partida?.Turnos?.Count(t => t.Jugador != null && t.Jugador.Id == jugador.Id) ?? 0;
-            jugador.Mana = Math.Min(10, 1 + turnosPrevios);
+            jugador.Mana = 1 + turnosPrevios;
 
             // 3. Reactiva el ataque para todas las criaturas en su zona de Campo
             Domain.Entities.ZonaPartida? zonaCampo = jugador.Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo);

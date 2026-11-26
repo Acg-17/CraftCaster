@@ -3,84 +3,155 @@
     ViewData["Title"] = "Sala de partidas";
 }
 
-<h1>Sala de partidas</h1>
-<p>
-    <a asp-action="Historial">Mis partidas (historial)</a>
-</p>
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+            <h1 class="h3 mb-1">Sala de partidas</h1>
+            <p class="text-body-secondary mb-0">Crea una partida o únete a una en espera con un mazo jugable de 30 cartas.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Historial" class="btn btn-outline-dark">Mis partidas</a>
+            <a asp-controller="EditorMazo" asp-action="Index" class="btn btn-outline-primary">Mis mazos</a>
+        </div>
+    </div>
+</div>
 
 <partial name="_Mensajes" />
 
 @if (Model.PartidaActiva is { } activa)
 {
-    <h2>Tu partida actual</h2>
-    <table class="table">
-        <tr><th>Partida</th><td>#@activa.Id</td></tr>
-        <tr><th>Estado</th><td>@activa.Estado</td></tr>
-        <tr><th>Eres</th><td>@(Model.SoyLocal ? "Anfitrión (jugador 1)" : "Visitante (jugador 2)")</td></tr>
-        <tr><th>Anfitrión</th><td>@activa.Usuario1Label (mazo: @activa.Mazo1Label)</td></tr>
-        <tr><th>Visitante</th><td>@(activa.Usuario2Label ?? "Esperando rival...") @if (activa.Mazo2Label is not null) { <text>(mazo: @activa.Mazo2Label)</text> }</td></tr>
-        <tr><th>Creada</th><td>@activa.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td></tr>
-    </table>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <h2 class="h5 fw-bold mb-0">Tu partida actual (#@activa.Id)</h2>
+                <span class="badge @(activa.Estado == CraftCaster.Domain.Enums.EstadoPartida.EnCurso ? "text-bg-success" : "text-bg-warning") px-3 py-2">
+                    @activa.Estado
+                </span>
+            </div>
 
-    <a asp-action="Tablero" asp-route-id="@activa.Id" class="btn btn-primary">Ir al tablero</a>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 bg-body-tertiary">
+                        <div class="small text-body-secondary">Tu rol</div>
+                        <div class="fw-semibold">@(Model.SoyLocal ? "Anfitrión (Jugador 1)" : "Visitante (Jugador 2)")</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 bg-body-tertiary">
+                        <div class="small text-body-secondary">Anfitrión</div>
+                        <div class="fw-semibold">@activa.Usuario1Label</div>
+                        <div class="small text-body-secondary">Mazo: @activa.Mazo1Label</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 bg-body-tertiary">
+                        <div class="small text-body-secondary">Visitante</div>
+                        <div class="fw-semibold">@(activa.Usuario2Label ?? "Esperando rival...")</div>
+                        @if (activa.Mazo2Label is not null)
+                        {
+                            <div class="small text-body-secondary">Mazo: @activa.Mazo2Label</div>
+                        }
+                    </div>
+                </div>
+            </div>
 
-    <form asp-action="Abandonar" method="post" class="d-inline"
-          onsubmit="return confirm('¿Seguro que quieres abandonar la partida? Si está en curso, perderás.');">
-        <button type="submit" class="btn btn-outline-danger">Abandonar partida</button>
-    </form>
+            <div class="d-flex flex-wrap gap-2">
+                <a asp-action="Tablero" asp-route-id="@activa.Id" class="btn btn-primary">Ir al tablero</a>
+                <form asp-action="Abandonar" method="post" class="d-inline"
+                      onsubmit="return confirm('¿Seguro que quieres abandonar la partida? Si está en curso, perderás.');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-danger">Abandonar partida</button>
+                </form>
+            </div>
+        </div>
+    </div>
 }
 else
 {
-    <h2>Crear partida</h2>
-    @if (Model.MazoConElQueJuego is null)
-    {
-        <p>Necesitas al menos un mazo para jugar. <a asp-controller="EditorMazo" asp-action="Crear">Crear mazo</a></p>
-    }
-    else
-    {
-        <p>Jugarás con el mazo <strong>@Model.MazoConElQueJuego</strong> (el primero jugable de tus mazos).</p>
-        <form asp-action="Crear" method="post">
-            <button type="submit" class="btn btn-primary">Crear partida</button>
-        </form>
-    }
-
-    <h2 class="mt-4">Partidas esperando rival</h2>
-    @if (Model.PartidasEnEspera.Any())
-    {
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Partida</th>
-                    <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].Anfitrion)</th>
-                    <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].Mazo)</th>
-                    <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].FechaInicio)</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var partida in Model.PartidasEnEspera)
-                {
-                    <tr>
-                        <td>#@partida.Id</td>
-                        <td>@partida.Anfitrion</td>
-                        <td>@partida.Mazo</td>
-                        <td>@partida.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-bold mb-2">Crear partida</h2>
+                    @if (!Model.TieneMazoJugable)
+                    {
+                        <div class="alert alert-warning border-0 mb-3">
+                            Necesitas un mazo <strong>jugable de 30 cartas</strong> para iniciar o unirte a una partida.
                             @if (Model.MazoConElQueJuego is not null)
                             {
-                                <form asp-action="Unirse" method="post">
-                                    <input type="hidden" name="PartidaId" value="@partida.Id" />
-                                    <button type="submit" class="btn btn-sm btn-success">Unirse</button>
-                                </form>
+                                <span>Tu mazo <strong>@Model.MazoConElQueJuego</strong> tiene @(Model.MazoNumCartas ?? 0)/30 cartas.</span>
                             }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <p>No hay partidas esperando rival. ¡Crea una!</p>
-    }
+                        </div>
+                        @if (Model.MazoConElQueJuego is null)
+                        {
+                            <a asp-controller="EditorMazo" asp-action="Crear" class="btn btn-primary">Crear mazo</a>
+                        }
+                        else
+                        {
+                            <a asp-controller="EditorMazo" asp-action="Index" class="btn btn-primary">Completar mazo (30 cartas)</a>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-body-secondary mb-3">
+                            Jugarás con tu mazo jugable <strong>@Model.MazoConElQueJuego</strong> (30 cartas). Al entrar el rival se reparten 4 cartas iniciales y se roba 1 por turno.
+                        </p>
+                        <form asp-action="Crear" method="post">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-primary">Crear partida</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h2 class="h5 fw-bold mb-3">Partidas esperando rival</h2>
+                    @if (Model.PartidasEnEspera.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Partida</th>
+                                        <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].Anfitrion)</th>
+                                        <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].Mazo)</th>
+                                        <th>@Html.DisplayNameFor(m => m.PartidasEnEspera[0].FechaInicio)</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var partida in Model.PartidasEnEspera)
+                                    {
+                                        <tr>
+                                            <td class="fw-semibold">#@partida.Id</td>
+                                            <td>@partida.Anfitrion</td>
+                                            <td>@partida.Mazo</td>
+                                            <td>@partida.FechaInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td class="text-end">
+                                                @if (Model.TieneMazoJugable)
+                                                {
+                                                    <form asp-action="Unirse" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="PartidaId" value="@partida.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-success">Unirse</button>
+                                                    </form>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-body-secondary mb-0">No hay partidas esperando rival en este momento. ¡Crea una!</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
 }

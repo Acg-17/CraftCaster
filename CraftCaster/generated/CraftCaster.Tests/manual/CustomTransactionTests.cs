@@ -430,6 +430,39 @@ public sealed class CustomTransactionTests
     }
 
     [Fact]
+    public async Task PasarTurno_Turno7YTurno30_AumentaManaSinTopeYRecuperaAlMaximo()
+    {
+        // Arrange: partida con dos jugadores vivos; comprobamos turno 7 (7 mana) y turno 30 (30 mana)
+        await using var db = await CraftCasterTestDb.CreateAsync();
+        PartidaEnJuego juego = await db.CrearPartidaEnJuegoAsync(cartasEnMazo: 30);
+        var useCase = new PartidaUseCase(db.UnitOfWork);
+
+        // Act & Assert: avanzamos hasta el turno 7 del jugador 1 (13 llamadas: J1#1, J2#1, ..., J1#7)
+        for (int i = 0; i < 13; i++)
+        {
+            await useCase.PasarTurnoAsync(juego.Partida.Id);
+            // Simulamos que el jugador activo gasta todo su mana en cada turno
+            var activo = db.Verify(s => s.Get<Partida>(juego.Partida.Id).Jugadores.Single(j => j.Activo).Id);
+            var entidadActivo = await db.UnitOfWork.JugadorPartidaRepository.ReadAsync(activo);
+            if (i < 12 && entidadActivo != null)
+            {
+                entidadActivo.Mana = 0;
+                await db.UnitOfWork.JugadorPartidaRepository.SaveAsync(entidadActivo);
+            }
+        }
+
+        Assert.Equal(7, db.Verify(s => s.Get<JugadorPartida>(juego.Jugador1.Id).Mana));
+
+        // Seguimos hasta el turno 30 del jugador 1 (23 rondas mas = 46 pasos)
+        for (int i = 0; i < 46; i++)
+        {
+            await useCase.PasarTurnoAsync(juego.Partida.Id);
+        }
+
+        Assert.Equal(30, db.Verify(s => s.Get<JugadorPartida>(juego.Jugador1.Id).Mana));
+    }
+
+    [Fact]
     public async Task PasarTurno_PartidaEnEspera_LanzaModelExceptionYNoCreaTurnos()
     {
         // Arrange

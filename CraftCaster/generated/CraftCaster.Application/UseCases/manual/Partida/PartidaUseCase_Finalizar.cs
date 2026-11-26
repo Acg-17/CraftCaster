@@ -46,13 +46,21 @@ public sealed partial class PartidaUseCase
             bool jugador1SinCartas = mazoJugador1 == null || mazoJugador1.Cartas == null || mazoJugador1.Cartas.Count == 0;
             bool jugador2SinCartas = mazoJugador2 == null || mazoJugador2.Cartas == null || mazoJugador2.Cartas.Count == 0;
 
-            // Caso jugador 1 Pierde
-            if (jugador1.Vida <= 0 || jugador1SinCartas)
+            // Prioridad 1: derrota por vida <= 0
+            if (jugador1.Vida <= 0)
             {
                 partida.Ganador = partida.Usuario2?.Id;
             }
-            // Caso jugador 2 Pierde
-            else if (jugador2.Vida <= 0 || jugador2SinCartas)
+            else if (jugador2.Vida <= 0)
+            {
+                partida.Ganador = partida.Usuario1.Id;
+            }
+            // Prioridad 2: derrota por mazo vacio (si ambos siguen vivos)
+            else if (jugador1SinCartas)
+            {
+                partida.Ganador = partida.Usuario2?.Id;
+            }
+            else if (jugador2SinCartas)
             {
                 partida.Ganador = partida.Usuario1.Id;
             }

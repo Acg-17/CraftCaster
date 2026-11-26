@@ -87,23 +87,33 @@ public sealed partial class UsuarioUseCase
             jugador2.Zonas.Add(zonaCampo);
             jugador2.Zonas.Add(zonaDescarte);
 
-            // 7. Instanciamos las cartas del mazo 2 en su zona Mazo
+            // 7. Instanciamos y barajamos las cartas del mazo 2 en su zona Mazo
+            var cartasMazo = new System.Collections.Generic.List<Carta>();
             foreach (var linea in mazo.Lineas)
             {
                 for (int i = 0; i < linea.Cantidad; i++)
                 {
-                    CartaPartida cartaPartida = new CartaPartida
-                    {
-                        Original = linea.Carta,
-                        Zona = zonaMazo,
-                        VidaActual = linea.Carta.Vida ?? 0,
-                        AtaqueActual = linea.Carta.Ataque ?? 0,
-                        PuedeAtacar = false
-                    };
-
-                    await _unitOfWork.CartaPartidaRepository.SaveAsync(cartaPartida);
-                    zonaMazo.Cartas.Add(cartaPartida);
+                    cartasMazo.Add(linea.Carta);
                 }
+            }
+            for (int i = cartasMazo.Count - 1; i > 0; i--)
+            {
+                int j = System.Random.Shared.Next(i + 1);
+                (cartasMazo[i], cartasMazo[j]) = (cartasMazo[j], cartasMazo[i]);
+            }
+            foreach (var cartaOriginal in cartasMazo)
+            {
+                CartaPartida cartaPartida = new CartaPartida
+                {
+                    Original = cartaOriginal,
+                    Zona = zonaMazo,
+                    VidaActual = cartaOriginal.Vida ?? 0,
+                    AtaqueActual = cartaOriginal.Ataque ?? 0,
+                    PuedeAtacar = false
+                };
+
+                await _unitOfWork.CartaPartidaRepository.SaveAsync(cartaPartida);
+                zonaMazo.Cartas.Add(cartaPartida);
             }
 
             await _unitOfWork.PartidaRepository.SaveAsync(partida);

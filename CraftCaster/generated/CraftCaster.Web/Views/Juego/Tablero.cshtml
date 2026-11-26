@@ -1,117 +1,391 @@
 @model CraftCaster.Web.ViewModels.TableroViewModel
 @{
     ViewData["Title"] = $"Partida #{Model.PartidaId}";
-    ViewData["PartidaId"] = Model.PartidaId;
     var esperandoRival = Model.Rival is null;
+    var criaturasRival = Model.Rival?.Campo.Count ?? 0;
 }
 
-<h1>Partida #@Model.PartidaId</h1>
-<p>
-    Estado: <strong>@Model.Estado</strong> · Turno nº @Model.NumTurno ·
+<link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/tablero-juego.css" asp-append-version="true" />
+
+<!-- Flecha dinámica de apuntado -->
+<svg id="ccTargetArrowSvg" class="d-none" aria-hidden="true">
+    <defs>
+        <marker id="ccArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#dc3545" />
+        </marker>
+    </defs>
+    <path id="ccTargetArrowPath" d="" fill="none" stroke="#dc3545" stroke-width="3.5" stroke-dasharray="8 6" stroke-linecap="round" marker-end="url(#ccArrowHead)" />
+</svg>
+
+<div class="cc-arena"
+     id="ccArena"
+     data-partida-id="@Model.PartidaId"
+     data-firma="@Model.FirmaEstado"
+     data-es-mi-turno="@(Model.EsMiTurno ? "true" : "false")"
+     data-criaturas-rival="@criaturasRival"
+     data-estado-url="@Url.Action("EstadoTablero", "Juego", new { id = Model.PartidaId })"
+     data-fin-url="@Url.Action("Fin", "Juego", new { id = Model.PartidaId })">
+
+    <!-- Cabecera compacta de la partida -->
+    <div class="cc-match-bar d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="fw-bold fs-5">Partida #@Model.PartidaId</span>
+            @if (esperandoRival)
+            {
+                <span class="badge text-bg-warning">Esperando rival</span>
+            }
+            else if (Model.EsMiTurno)
+            {
+                <span class="badge text-bg-primary px-3 py-2">Tu turno · Turno @Model.RondaActual</span>
+            }
+            else
+            {
+                <span class="badge text-bg-secondary px-3 py-2">Turno de @Model.NombreJugadorActivo · Turno @Model.RondaActual</span>
+            }
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Sala</a>
+            <form asp-action="Abandonar" method="post" class="m-0"
+                  onsubmit="return confirm('¿Seguro que quieres abandonar la partida? Si está en curso, perderás.');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-danger btn-sm">Abandonar</button>
+            </form>
+        </div>
+    </div>
+
+    <partial name="_Mensajes" />
+
+    <!-- Banner de modo apuntado (oculto hasta seleccionar criatura o instantáneo con objetivo) -->
+    <div id="ccTargetingBanner" class="cc-targeting-banner d-none" role="status">
+        <div class="small">
+            <strong id="ccTargetingTitle">Selecciona un objetivo</strong>
+            <span class="text-white-50 ms-2" id="ccTargetingHint"></span>
+        </div>
+        <button type="button" class="btn btn-sm btn-light" id="ccCancelTargeting">Cancelar (Esc)</button>
+    </div>
+
     @if (esperandoRival)
     {
-        <text>Esperando a que se una un rival...</text>
+        <div class="card border-0 shadow-sm text-center py-5 px-4">
+            <div class="card-body">
+                <div class="spinner-border text-primary mb-3" role="status" aria-hidden="true"></div>
+                <h2 class="h4 mb-2">Esperando a que se una un rival...</h2>
+                <p class="text-body-secondary mb-3">
+                    Tu mazo <strong>@Model.Yo.Mazo</strong> está listo con <strong>@Model.Yo.CartasEnMazo cartas</strong> barajadas.
+                    En cuanto otro jugador se una, se repartirán 4 cartas iniciales y comenzará el turno 1 automáticamente.
+                </p>
+                <a asp-action="Tablero" asp-route-id="@Model.PartidaId" class="btn btn-outline-primary btn-sm">Comprobar ahora</a>
+            </div>
+        </div>
     }
-    else if (Model.PartidaSinEmpezar)
+    else if (Model.Rival is { } rival)
     {
-        <text>La partida aún no ha empezado.</text>
-    }
-    else
-    {
-        <text>Turno de <strong>@Model.NombreJugadorActivo</strong>@(Model.EsMiTurno ? " (tú)" : "")</text>
-    }
-</p>
-<p>
-    <a asp-action="Tablero" asp-route-id="@Model.PartidaId">Actualizar tablero</a> ·
-    <a asp-action="Index">Volver a la sala</a>
-</p>
+        <!-- ===================== ZONA RIVAL ===================== -->
+        <section class="cc-player-strip @(!Model.EsMiTurno ? "cc-active-turn" : "")" aria-label="Zona del rival">
+            <div class="row g-3 align-items-center">
+                <!-- HUD del rival (objetivo clicable si se puede atacar al jugador enemigo) -->
+                <div class="col-12 col-lg-4">
+                    <div id="ccHeroRival"
+                         class="cc-hero-target-box"
+                         data-hero-target="rival"
+                         title="Jugador rival">
+                        <div class="cc-hero-heart" title="Vida del rival: @rival.Vida (sin máximo)">
+                            <svg viewBox="0 0 40 38" width="54" height="50" fill="#dc3545" stroke="#212529" stroke-width="2">
+                                <path d="M20 35 C20 35 4 24 4 13 C4 7 8.5 3 13.5 3 C16.8 3 19 4.8 20 7 C21 4.8 23.2 3 26.5 3 C31.5 3 36 7 36 13 C36 24 20 35 20 35 Z" />
+                            </svg>
+                            <span class="cc-hero-heart-num">@rival.Vida</span>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="fw-bold text-truncate">@rival.Nombre</div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                                <span class="cc-hero-mana" title="Maná del rival">
+                                    <span class="cc-hero-mana-dot">@rival.Mana</span>
+                                    <span>/ @rival.ManaMaximo maná</span>
+                                </span>
+                            </div>
+                            <div class="small text-danger fw-semibold mt-1 d-none" id="ccHeroRivalHint"></div>
+                        </div>
+                    </div>
+                </div>
 
-<partial name="_Mensajes" />
+                <!-- Cartas ocultas del rival en su mano -->
+                <div class="col-12 col-lg-5 text-center">
+                    <div class="small text-uppercase text-body-secondary fw-semibold mb-1">
+                        Mano rival · @rival.CartasEnMano @(rival.CartasEnMano == 1 ? "carta" : "cartas") ocultas
+                    </div>
+                    <div class="cc-rival-hand">
+                        @if (rival.CartasEnMano > 0)
+                        {
+                            @for (int i = 0; i < rival.CartasEnMano; i++)
+                            {
+                                <div class="cc-card-back" title="Carta oculta del rival">
+                                    <div class="cc-card-back-emblem">CC</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <span class="small text-body-secondary">Sin cartas en mano</span>
+                        }
+                    </div>
+                </div>
 
-@* ===================== RIVAL ===================== *@
-<h2>Rival: @(Model.Rival?.Nombre ?? "—")</h2>
-@if (Model.Rival is { } rival)
-{
-    <table class="table table-sm w-auto">
-        <tr><th>Vida</th><td>@rival.Vida</td></tr>
-        <tr><th>Maná</th><td>@rival.Mana</td></tr>
-        <tr><th>Mazo</th><td>@rival.Mazo (@rival.CartasEnMazo cartas)</td></tr>
-        <tr><th>Mano</th><td>@rival.CartasEnMano cartas (ocultas)</td></tr>
-    </table>
+                <!-- Mazo y descarte discreto del rival -->
+                <div class="col-12 col-lg-3 d-flex justify-content-lg-end justify-content-center">
+                    <div class="cc-piles-box">
+                        <button type="button"
+                                class="cc-discard-pill"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalDescarteRival"
+                                title="Ver cartas en el descarte rival">
+                            <span>Descarte</span>
+                            <strong>@rival.CartasEnDescarte</strong>
+                        </button>
+                        <div class="cc-deck-pile @(rival.CartasEnMazo == 0 ? "cc-deck-empty" : "")"
+                             title="Mazo rival (@rival.Mazo): @rival.CartasEnMazo cartas restantes (empieza con 30)">
+                            <span class="cc-deck-count">@rival.CartasEnMazo</span>
+                            <span class="cc-deck-label">Mazo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <h3 class="h5">Campo del rival</h3>
-    @if (rival.Campo.Any())
-    {
-        <ul>@foreach (var carta in rival.Campo) { <partial name="_CartaTablero" model="carta" /> }</ul>
-    }
-    else { <p>Sin cartas.</p> }
+        <!-- ===================== MESA (CAMPO DE BATALLA) ===================== -->
+        <section class="cc-mesa-shell" aria-label="Mesa de juego">
+            <!-- Mesa del rival -->
+            <div class="cc-mesa-zone">
+                <div class="cc-mesa-zone-header">
+                    <span>Mesa del rival (@rival.Campo.Count)</span>
+                    @if (rival.Campo.Count > 0)
+                    {
+                        <span class="text-body-secondary fw-normal" style="text-transform:none;letter-spacing:normal;">Protege al jugador rival frente a ataques de criaturas</span>
+                    }
+                    else
+                    {
+                        <span class="text-success fw-semibold" style="text-transform:none;letter-spacing:normal;">Despejada · Ataque directo disponible</span>
+                    }
+                </div>
+                <div class="cc-mesa-cards" id="ccMesaRival">
+                    @if (rival.Campo.Any())
+                    {
+                        foreach (var carta in rival.Campo)
+                        {
+                            var vd = new ViewDataDictionary(ViewData) { ["Zona"] = "CampoRival" };
+                            <partial name="_CartaTablero" model="carta" view-data="vd" />
+                        }
+                    }
+                    else
+                    {
+                        <div class="cc-mesa-empty">Sin criaturas rivales en la mesa.</div>
+                    }
+                </div>
+            </div>
 
-    <h3 class="h5">Descarte del rival</h3>
-    @if (rival.Descarte.Any())
-    {
-        <ul>@foreach (var carta in rival.Descarte) { <partial name="_CartaTablero" model="carta" /> }</ul>
-    }
-    else { <p>Sin cartas.</p> }
-}
+            <!-- Separador central de combate + botón de turno -->
+            <div class="cc-mesa-divider">
+                @if (Model.EsMiTurno)
+                {
+                    <form asp-action="PasarTurno" asp-route-id="@Model.PartidaId" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary fw-semibold px-4 shadow-sm">
+                            Terminar turno →
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <span class="badge text-bg-light border px-3 py-2 text-body-secondary">
+                        Esperando jugada de @rival.Nombre...
+                    </span>
+                }
+            </div>
 
-<hr />
+            <!-- Tu mesa -->
+            <div class="cc-mesa-zone">
+                <div class="cc-mesa-zone-header">
+                    <span>Tu mesa (@Model.Yo.Campo.Count)</span>
+                    <span class="text-body-secondary fw-normal" style="text-transform:none;letter-spacing:normal;">
+                        @(Model.EsMiTurno ? "Haz clic en una criatura lista para elegir objetivo" : "Las criaturas se preparan al inicio de tu turno")
+                    </span>
+                </div>
+                <div class="cc-mesa-cards" id="ccMesaPropia">
+                    @if (Model.Yo.Campo.Any())
+                    {
+                        foreach (var carta in Model.Yo.Campo)
+                        {
+                            var vd = new ViewDataDictionary(ViewData) { ["Zona"] = "CampoPropio" };
+                            <partial name="_CartaTablero" model="carta" view-data="vd" />
+                        }
+                    }
+                    else
+                    {
+                        <div class="cc-mesa-empty">Aún no tienes criaturas en la mesa. Lanza una criatura desde tu mano.</div>
+                    }
+                </div>
+            </div>
+        </section>
 
-@* ===================== YO ===================== *@
-<h2>Tú: @Model.Yo.Nombre (jugador @Model.Yo.NumJugador)</h2>
-<table class="table table-sm w-auto">
-    <tr><th>Vida</th><td>@Model.Yo.Vida</td></tr>
-    <tr><th>Maná</th><td>@Model.Yo.Mana</td></tr>
-    <tr><th>Mazo</th><td>@Model.Yo.Mazo (@Model.Yo.CartasEnMazo cartas)</td></tr>
-</table>
+        <!-- ===================== TU ZONA (HUD + MANO) ===================== -->
+        <section class="cc-player-strip @(Model.EsMiTurno ? "cc-active-turn" : "")" aria-label="Tu estado">
+            <div class="row g-3 align-items-center">
+                <div class="col-12 col-md-5">
+                    <div class="cc-hero-target-box">
+                        <div class="cc-hero-heart" title="Tu vida: @Model.Yo.Vida (sin máximo)">
+                            <svg viewBox="0 0 40 38" width="54" height="50" fill="#dc3545" stroke="#212529" stroke-width="2">
+                                <path d="M20 35 C20 35 4 24 4 13 C4 7 8.5 3 13.5 3 C16.8 3 19 4.8 20 7 C21 4.8 23.2 3 26.5 3 C31.5 3 36 7 36 13 C36 24 20 35 20 35 Z" />
+                            </svg>
+                            <span class="cc-hero-heart-num">@Model.Yo.Vida</span>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="fw-bold text-truncate">@Model.Yo.Nombre <span class="badge text-bg-light border ms-1">Tú</span></div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                                <span class="cc-hero-mana" title="Maná disponible / máximo de este turno (aumenta +1 cada turno sin límite)">
+                                    <span class="cc-hero-mana-dot">@Model.Yo.Mana</span>
+                                    <span>/ @Model.Yo.ManaMaximo maná</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-@* Acciones del turno *@
-<div class="mb-3">
-    @if (!esperandoRival && Model.PartidaSinEmpezar)
-    {
-        <form asp-action="PasarTurno" asp-route-id="@Model.PartidaId" method="post" class="d-inline">
-            <button type="submit" class="btn btn-success">Empezar partida</button>
+                <div class="col-12 col-md-4 text-md-center">
+                    <div class="small text-body-secondary">
+                        Se roba <strong>1 carta automáticamente</strong> cada turno y recuperas todo el maná (+1 por turno).
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3 d-flex justify-content-md-end justify-content-center">
+                    <div class="cc-piles-box">
+                        <button type="button"
+                                class="cc-discard-pill"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalDescartePropio"
+                                title="Ver tus cartas descartadas">
+                            <span>Descarte</span>
+                            <strong>@Model.Yo.CartasEnDescarte</strong>
+                        </button>
+                        <div class="cc-deck-pile @(Model.Yo.CartasEnMazo == 0 ? "cc-deck-empty" : "")"
+                             title="Tu mazo (@Model.Yo.Mazo): @Model.Yo.CartasEnMazo cartas restantes (empieza con 30)">
+                            <span class="cc-deck-count">@Model.Yo.CartasEnMazo</span>
+                            <span class="cc-deck-label">Mazo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tu mano -->
+        <section class="cc-hand-shell" aria-label="Tu mano">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 fw-bold text-uppercase text-body-secondary mb-0">
+                    Tu mano (@Model.Yo.CartasEnMano)
+                </h2>
+                <span class="small text-body-secondary">
+                    @(Model.EsMiTurno ? "Haz clic en una carta con maná suficiente para jugarla" : "Podrás jugar cartas cuando llegue tu turno")
+                </span>
+            </div>
+
+            <div class="cc-hand-cards" id="ccManoPropia">
+                @if (Model.Yo.Mano.Any())
+                {
+                    foreach (var carta in Model.Yo.Mano)
+                    {
+                        var vd = new ViewDataDictionary(ViewData) { ["Zona"] = "Mano" };
+                        <partial name="_CartaTablero" model="carta" view-data="vd" />
+                    }
+                }
+                else
+                {
+                    <div class="cc-mesa-empty">No tienes cartas en la mano.</div>
+                }
+            </div>
+        </section>
+
+        <!-- Formularios ocultos para lanzar cartas y atacar con objetivo -->
+        <form id="formLanzarCarta" asp-action="Lanzar" asp-route-id="@Model.PartidaId" method="post" class="d-none">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Lanzar.CartaPartidaId" id="hidLanzarCartaId" />
+            <input type="hidden" name="Lanzar.ObjetivoCartaId" id="hidLanzarObjetivoCartaId" />
+            <input type="hidden" name="Lanzar.ObjetivoJugador" id="hidLanzarObjetivoJugador" value="false" />
         </form>
-    }
-    @if (Model.EsMiTurno)
-    {
-        <form asp-action="Robar" asp-route-id="@Model.PartidaId" method="post" class="d-inline">
-            <button type="submit" class="btn btn-outline-primary">Robar carta</button>
+
+        <form id="formAtacarCriatura" asp-action="Atacar" asp-route-id="@Model.PartidaId" method="post" class="d-none">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="Atacar.AtacanteId" id="hidAtacarAtacanteId" />
+            <input type="hidden" name="Atacar.ObjetivoCartaId" id="hidAtacarObjetivoCartaId" />
+            <input type="hidden" name="Atacar.ObjetivoJugador" id="hidAtacarObjetivoJugador" value="false" />
         </form>
-        <form asp-action="PasarTurno" asp-route-id="@Model.PartidaId" method="post" class="d-inline">
-            <button type="submit" class="btn btn-warning">Terminar turno</button>
-        </form>
+
+        <!-- Modales discretos de Descarte -->
+        <div class="modal fade" id="modalDescartePropio" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h3 class="modal-title h6 fw-bold">Tu descarte (@Model.Yo.CartasEnDescarte)</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (Model.Yo.Descarte.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var c in Model.Yo.Descarte)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@c.Nombre</strong>
+                                            <div class="small text-body-secondary">@c.Tipo · @c.Rareza · @c.Descripcion</div>
+                                        </div>
+                                        <span class="badge text-bg-dark rounded-pill">@c.CosteMana</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-body-secondary mb-0">Aún no hay cartas en tu descarte.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalDescarteRival" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h3 class="modal-title h6 fw-bold">Descarte de @rival.Nombre (@rival.CartasEnDescarte)</h3>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        @if (rival.Descarte.Any())
+                        {
+                            <ul class="list-group list-group-flush">
+                                @foreach (var c in rival.Descarte)
+                                {
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>@c.Nombre</strong>
+                                            <div class="small text-body-secondary">@c.Tipo · @c.Rareza · @c.Descripcion</div>
+                                        </div>
+                                        <span class="badge text-bg-dark rounded-pill">@c.CosteMana</span>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-body-secondary mb-0">Aún no hay cartas en el descarte rival.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
     }
-    <form asp-action="Abandonar" method="post" class="d-inline"
-          onsubmit="return confirm('¿Seguro que quieres abandonar la partida? Si está en curso, perderás.');">
-        <button type="submit" class="btn btn-outline-danger">Abandonar</button>
-    </form>
 </div>
 
-<h3 class="h5">Tu mano (@Model.Yo.CartasEnMano)</h3>
-@if (Model.Yo.Mano.Any())
-{
-    <ul>@foreach (var carta in Model.Yo.Mano) { <partial name="_CartaTablero" model="carta" /> }</ul>
-}
-else { <p>Sin cartas.</p> }
-
-<h3 class="h5">Tu campo</h3>
-@if (Model.Yo.Campo.Any())
-{
-    <ul>@foreach (var carta in Model.Yo.Campo) { <partial name="_CartaTablero" model="carta" /> }</ul>
-}
-else { <p>Sin cartas.</p> }
-
-<h3 class="h5">Tu descarte</h3>
-@if (Model.Yo.Descarte.Any())
-{
-    <ul>@foreach (var carta in Model.Yo.Descarte) { <partial name="_CartaTablero" model="carta" /> }</ul>
-}
-else { <p>Sin cartas.</p> }
-
 @section Scripts {
-    @if (!Model.EsMiTurno)
-    {
-        @* Mientras juega el rival (o se espera a que entre) se recarga el tablero cada 5 segundos *@
-        <script>setTimeout(function () { window.location.reload(); }, 5000);</script>
-    }
+    <script src="~/js/tablero-juego.js" asp-append-version="true"></script>
 }

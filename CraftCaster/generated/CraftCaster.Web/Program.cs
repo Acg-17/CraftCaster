@@ -4,6 +4,7 @@ builder.Configuration.Sources.Insert(0, new Microsoft.Extensions.Configuration.J
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<CraftCaster.Web.Services.MotorPartidaService>();
 // HARIA-WEB: LOCALIZATION SERVICES
 CraftCaster.Web.Utils.Localization.HariaWebLocalization.AddHariaWebLocalization(builder.Services, builder.Configuration);
 // HARIA-WEB: USER SESSION SERVICES
