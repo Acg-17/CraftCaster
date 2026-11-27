@@ -41,9 +41,30 @@ public sealed class ExplorarController : Controller
         }
 
         // Cada criterio usa su ReadFilter del modelo; los resultados se cruzan por id
-        var mazos = string.IsNullOrWhiteSpace(filtro.Nombre)
-            ? await _mazoService.ObtenerMazosPublicosAsync()
-            : await _mazoService.ObtenerMazosPorNombreAsync(filtro.Nombre.Trim());
+        var termino = filtro.Nombre?.Trim();
+        IReadOnlyList<CraftCaster.Domain.Entities.Mazo> mazos;
+        if (string.IsNullOrWhiteSpace(termino))
+        {
+            mazos = await _mazoService.ObtenerMazosPublicosAsync();
+        }
+        else if (termino.StartsWith('@'))
+        {
+            var nombreUsuario = termino.TrimStart('@').Trim();
+            var encontrados = new List<CraftCaster.Domain.Entities.Mazo>();
+            if (!string.IsNullOrWhiteSpace(nombreUsuario))
+            {
+                await using var uowUser = _unitOfWorkFactory.Create();
+                var usuarios = await new UsuarioService(uowUser).ObtenerUsuarioPorEmailONombreAsync(nombreUsuario);
+                var publicos = await _mazoService.ObtenerMazosPublicosAsync();
+                var idsUsuarios = usuarios.Select(u => u.Id).ToHashSet();
+                encontrados = publicos.Where(m => m.Usuario is not null && idsUsuarios.Contains(m.Usuario.Id)).ToList();
+            }
+            mazos = encontrados;
+        }
+        else
+        {
+            mazos = await _mazoService.ObtenerMazosPorNombreAsync(termino);
+        }
 
         var resultado = mazos.AsEnumerable();
 

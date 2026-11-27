@@ -13,6 +13,7 @@ package "CraftCaster" {
   enum EstadoCuenta {
     Activa
     Suspendida
+    Reportada
   }
 
   enum EstadoMazo {

@@ -7,7 +7,7 @@ ConceptualModel CraftCaster {
 
     Enumeration EstadoCuenta
     {
-        (Activa, 1), (Suspendida, 2)
+        (Activa, 1), (Suspendida, 2), (Reportada, 3)
     };
 
     Enumeration EstadoMazo
