@@ -147,9 +147,7 @@
                                     }
                                     else if (estaReportada)
                                     {
-                                        <a asp-controller="Explorar" asp-action="Index" asp-route-Nombre="@("@" + usuario.NombreUsuario)"
-                                           class="badge text-bg-warning text-dark text-decoration-underline"
-                                           title="Ver mazos públicos de @@@usuario.NombreUsuario en Explorar">Reportada</a>
+                                        <span class="badge text-bg-warning text-dark">Reportada</span>
                                     }
                                     else
                                     {
@@ -253,8 +251,8 @@
                     <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
                         <div>
                             <a asp-controller="Explorar" asp-action="Index" asp-route-Nombre="@("@" + reportado.NombreUsuario)"
-                               class="badge text-bg-warning text-dark text-decoration-underline me-2"
-                               title="Ver mazos públicos de @@@reportado.NombreUsuario en Explorar">Reportada · A revisar</a>
+                               class="badge text-bg-warning text-dark text-decoration-none me-2"
+                               title="Explorar mazos del usuario">Reportada</a>
                             <span class="fw-semibold">@reportado.NombreUsuario</span>
                             <span class="text-body-secondary small ms-2">@reportado.Email</span>
                         </div>
