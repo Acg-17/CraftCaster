@@ -13,6 +13,7 @@
             tipoObjetivo = (int)b.TipoObjetivo,
             objetivo = b.Objetivo
         }));
+    var descripcionInicialJson = JsonSerializer.Serialize(Model.Descripcion ?? string.Empty);
 }
 
 <link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
@@ -21,13 +22,12 @@
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
 
-    <!-- Cabecera integrada con la identidad de Inicio y Explorar -->
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                 <div>
                     <h1 class="h3 mb-1">@(esEdicion ? "Editar carta" : "Creador de cartas")</h1>
-                    <p class="text-body-secondary mb-0">Monta tu Criatura (máx. 2 habilidades) o Hechizo (máx. 3 efectos). El coste se equilibra automáticamente.</p>
+                    <p class="text-body-secondary mb-0">Monta tu Criatura (máx. 2 habilidades) o Hechizo (máx. 3 efectos) y añade descripciones personalizadas.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge text-bg-light border px-3 py-2" id="badgeBalance">Equilibrada (0/10 maná)</span>
@@ -44,7 +44,7 @@
             <div class="row g-2 align-items-end">
                 <div class="col-12 col-md-4">
                     <label asp-for="Nombre" class="form-label small fw-semibold">Nombre</label>
-                    <input asp-for="Nombre" class="form-control" id="inpNombre" placeholder="Ej. Descarte final" />
+                    <input asp-for="Nombre" class="form-control" id="inpNombre" placeholder="Ej. Gato Pescador" />
                     <span asp-validation-for="Nombre" class="text-danger small"></span>
                 </div>
                 <div class="col-6 col-md-3">
@@ -68,14 +68,12 @@
         </div>
     </div>
 
-    <!-- Campos sincronizados por el ensamblador Scratch -->
     <input type="hidden" asp-for="Tipo" id="hidTipo" />
     <input type="hidden" asp-for="Ataque" id="hidAtaque" />
     <input type="hidden" asp-for="Vida" id="hidVida" />
     <input type="hidden" asp-for="Descripcion" id="hidDescripcion" />
     <div id="hiddenBloques"></div>
 
-    <!-- 3 columnas limpias con cards sin outline -->
     <div class="row g-3">
         <!-- Columna 1: Bloques disponibles -->
         <div class="col-lg-4">
@@ -96,7 +94,7 @@
                     </div>
 
                     <div class="small text-uppercase text-body-secondary fw-semibold mb-2">Habilidades</div>
-                    <div class="d-flex flex-column gap-2">
+                    <div class="d-flex flex-column gap-2 mb-4">
                         <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="2">Daño instantáneo</div>
                         <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="3">Sumar vida</div>
                         <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="4">Robar carta</div>
@@ -105,6 +103,18 @@
                         <div class="scratch-block block-palette" id="paletaDefensa" draggable="true" data-kind="efecto" data-value="7">
                             <span>Daño al defender</span>
                             <span class="small text-body-secondary ms-auto">Solo criatura</span>
+                        </div>
+                    </div>
+
+                    <div class="small text-uppercase text-body-secondary fw-semibold mb-2">Descripción personalizada</div>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="scratch-block block-palette" draggable="true" data-kind="desc" data-value="1">
+                            <span>Descripción corta</span>
+                            <span class="small text-body-secondary ms-auto">1 línea · 30 car.</span>
+                        </div>
+                        <div class="scratch-block block-palette" draggable="true" data-kind="desc" data-value="2">
+                            <span>Descripción larga</span>
+                            <span class="small text-body-secondary ms-auto">2 líneas · 60 car.</span>
                         </div>
                     </div>
                 </div>
@@ -116,9 +126,10 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
                             <h2 class="h6 fw-semibold mb-0">Ensamblador de lógica</h2>
-                            <span class="badge text-bg-light border" id="contadorHabilidades">0 / 2</span>
+                            <span class="badge text-bg-light border" id="contadorHabilidades">0 / 2 hab.</span>
+                            <span class="badge text-bg-light border" id="contadorDesc">0 / 2 lín. texto</span>
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiar">Limpiar</button>
                     </div>
@@ -134,7 +145,7 @@
                             <input asp-for="EsPublica" class="form-check-input" id="inpPublica" />
                             <label asp-for="EsPublica" class="form-check-label small">Compartir con la comunidad</label>
                         </div>
-                        <span class="small text-body-secondary">Arrastra o haz clic en un bloque</span>
+                        <span class="small text-body-secondary">Usa ↑ / ↓ para intercalar descripciones</span>
                     </div>
                 </div>
             </div>
@@ -197,6 +208,10 @@
                 }
             }
 
+            function escaparHtml(str) {
+                return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            }
+
             const EVENTOS = {
                 1: 'Al entrar',
                 2: 'Al atacar',
@@ -228,13 +243,33 @@
                 4: { etiqueta: 'LEGENDARIO', descuento: -4 }
             };
 
-            // Hidratar estado desde el modelo (sirve tanto para Crear como para Editar)
+            // Hidratar items (habilidades + descripciones personalizadas intercaladas)
             const bloquesIniciales = @Html.Raw(bloquesInicialesJson);
+            const descInicial = @Html.Raw(descripcionInicialJson);
+            const itemsIniciales = [];
+            const habsValidas = bloquesIniciales.filter(b => EFECTOS[b.tipoHabilidad]);
+            let habCursor = 0;
+
+            if (descInicial && descInicial.includes('"')) {
+                const lineasGuardadas = descInicial.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                lineasGuardadas.forEach(linea => {
+                    if (linea.startsWith('"') && linea.endsWith('"') && linea.length >= 2) {
+                        const texto = linea.slice(1, -1);
+                        itemsIniciales.push({ kind: 'desc', lineas: texto.length > 30 ? 2 : 1, texto });
+                    } else if (!linea.startsWith('Criatura ') && !linea.startsWith('Hechizo') && habCursor < habsValidas.length) {
+                        itemsIniciales.push({ kind: 'hab', ...habsValidas[habCursor++] });
+                    }
+                });
+            }
+            while (habCursor < habsValidas.length) {
+                itemsIniciales.push({ kind: 'hab', ...habsValidas[habCursor++] });
+            }
+
             let estado = {
                 tipo: @((int)Model.Tipo),
                 ataque: @(Model.Ataque > 0 ? Model.Ataque : 1),
                 vida: @(Model.Vida > 0 ? Model.Vida : 1),
-                bloques: bloquesIniciales.filter(b => EFECTOS[b.tipoHabilidad])
+                items: itemsIniciales
             };
 
             let mostrandoVida = false;
@@ -247,8 +282,22 @@
             const inpImagen = document.getElementById('inpImagen');
             const avisoLimite = document.getElementById('avisoLimite');
 
-            function maxBloquesActual() {
+            function obtenerHabilidades() {
+                return estado.items.filter(x => x.kind === 'hab');
+            }
+
+            function maxHabilidadesActual() {
                 return estado.tipo === 1 ? 2 : 3;
+            }
+
+            function maxLineasDescActual() {
+                const numHabs = obtenerHabilidades().length;
+                if (estado.tipo === 1) return 2; // Criatura: máx. 2 líneas de descripción (2 cortas o 1 larga)
+                return Math.max(0, 4 - numHabs); // Hechizo: 3 ef -> 1 lín, 2 ef -> 2 lín, 1 ef -> 3 lín
+            }
+
+            function lineasDescUsadas() {
+                return estado.items.filter(x => x.kind === 'desc').reduce((acc, d) => acc + d.lineas, 0);
             }
 
             function objetivosPermitidos(tipoHabilidad) {
@@ -258,12 +307,13 @@
 
             function calcularMana() {
                 let total = 0;
+                const habs = obtenerHabilidades();
 
                 if (estado.tipo === 1) {
                     total += (Math.max(1, estado.ataque) * 0.6) + (Math.max(1, estado.vida) * 0.5);
                 }
 
-                estado.bloques.forEach(b => {
+                habs.forEach(b => {
                     const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
                     const repetible = estado.tipo === 1 && !ef.cuandoFijo && (b.tipoEstado === 2 || b.tipoEstado === 3 || b.tipoEstado === 4);
 
@@ -279,8 +329,8 @@
                     total += ef.costeUnit * cant * multCuando * multObj;
                 });
 
-                if (estado.bloques.length === 2) total += 0.5;
-                else if (estado.bloques.length >= 3) total += 1.5;
+                if (habs.length === 2) total += 0.5;
+                else if (habs.length >= 3) total += 1.5;
 
                 const rar = RAREZAS[parseInt(inpRareza.value, 10)] || RAREZAS[1];
                 total += rar.descuento;
@@ -289,42 +339,52 @@
             }
 
             function generarTextoPlano() {
-                const partes = [];
+                const lineas = [];
                 if (estado.tipo === 1) {
-                    partes.push(`Criatura ${estado.ataque}/${estado.vida}.`);
+                    lineas.push(`Criatura ${estado.ataque}/${estado.vida}.`);
                 } else {
-                    partes.push('Hechizo. Al entrar:');
+                    lineas.push('Hechizo. Al entrar:');
                 }
-                estado.bloques.forEach(b => {
-                    const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
-                    const cuando = estado.tipo === 1
-                        ? (ef.cuandoFijo || EVENTOS[b.tipoEstado] || 'Al entrar') + ': '
-                        : '';
-                    if (b.tipoHabilidad === 4) partes.push(`${cuando}Robar ${b.cantidad} carta(s).`);
-                    else if (b.tipoHabilidad === 5) partes.push(`${cuando}Rival descarta ${b.cantidad} carta(s).`);
-                    else if (b.tipoHabilidad === 6) partes.push(`${cuando}Descartar 1 carta (${OBJETIVOS[b.tipoObjetivo] || 'Enemigo'}).`);
-                    else if (b.tipoHabilidad === 7) partes.push(`${cuando}Devuelve ${b.cantidad} de daño al atacante.`);
-                    else partes.push(`${cuando}${ef.nombre} ${b.cantidad} a ${OBJETIVOS[b.tipoObjetivo] || 'Enemigo'}.`);
+
+                estado.items.forEach(item => {
+                    if (item.kind === 'desc') {
+                        const limpio = (item.texto || '').replace(/"/g, '').trim();
+                        if (limpio) lineas.push(`"${limpio}"`);
+                    } else {
+                        const ef = EFECTOS[item.tipoHabilidad] || EFECTOS[2];
+                        const cuando = estado.tipo === 1
+                            ? (ef.cuandoFijo || EVENTOS[item.tipoEstado] || 'Al entrar') + ': '
+                            : '';
+                        if (item.tipoHabilidad === 4) lineas.push(`${cuando}Robar ${item.cantidad} carta(s).`);
+                        else if (item.tipoHabilidad === 5) lineas.push(`${cuando}Rival descarta ${item.cantidad} carta(s).`);
+                        else if (item.tipoHabilidad === 6) lineas.push(`${cuando}Descartar 1 carta (${OBJETIVOS[item.tipoObjetivo] || 'Enemigo'}).`);
+                        else if (item.tipoHabilidad === 7) lineas.push(`${cuando}Devuelve ${item.cantidad} de daño al atacante.`);
+                        else lineas.push(`${cuando}${ef.nombre} ${item.cantidad} a ${OBJETIVOS[item.tipoObjetivo] || 'Enemigo'}.`);
+                    }
                 });
-                return partes.join(' ');
+                return lineas.join('\n');
             }
 
-            // Vista previa estructurada por lineas con negritas e iconos vectoriales inline
             function generarHtmlPreview() {
                 const lineas = [];
                 if (estado.tipo === 1) {
                     lineas.push(`<div class="cc-line text-dark"><span>Criatura</span><strong>${estado.ataque}/${estado.vida}</strong></div>`);
-                    estado.bloques.forEach(b => {
-                        const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
-                        const cuando = ef.cuandoFijo || EVENTOS[b.tipoEstado] || 'Al entrar';
-                        lineas.push(lineaEfectoHtml(b, `<span class="fw-semibold text-dark">${cuando}:</span>`));
-                    });
                 } else {
                     lineas.push(`<div class="cc-line text-dark"><span>Hechizo ·</span><strong>Al entrar</strong></div>`);
-                    estado.bloques.forEach(b => {
-                        lineas.push(lineaEfectoHtml(b, ''));
-                    });
                 }
+
+                estado.items.forEach(item => {
+                    if (item.kind === 'desc') {
+                        const texto = (item.texto || '').trim() || 'Escribe tu descripción...';
+                        lineas.push(`<div class="cc-line fst-italic text-body-secondary">${escaparHtml(texto)}</div>`);
+                    } else {
+                        const ef = EFECTOS[item.tipoHabilidad] || EFECTOS[2];
+                        const prefijo = estado.tipo === 1
+                            ? `<span class="fw-semibold text-dark">${ef.cuandoFijo || EVENTOS[item.tipoEstado] || 'Al entrar'}:</span>`
+                            : '';
+                        lineas.push(lineaEfectoHtml(item, prefijo));
+                    }
+                });
                 return lineas.join('');
             }
 
@@ -346,10 +406,16 @@
                 avisoLimite.classList.toggle('d-none', !msg);
             }
 
+            function recortarDescripcionesExcedentes() {
+                while (lineasDescUsadas() > maxLineasDescActual()) {
+                    const idxDesc = estado.items.findLastIndex(x => x.kind === 'desc');
+                    if (idxDesc === -1) break;
+                    estado.items.splice(idxDesc, 1);
+                }
+            }
+
             function renderPila() {
                 pila.innerHTML = '';
-
-                // Daño al defender solo disponible en Criaturas
                 document.getElementById('paletaDefensa').classList.toggle('d-none', estado.tipo === 2);
 
                 const hat = document.createElement('div');
@@ -378,35 +444,48 @@
                     });
                 }
 
-                estado.bloques.forEach((b, idx) => {
-                    const ef = EFECTOS[b.tipoHabilidad] || EFECTOS[2];
-                    const permitidos = objetivosPermitidos(b.tipoHabilidad);
-                    if (!permitidos.includes(b.tipoObjetivo)) b.tipoObjetivo = permitidos[0];
-                    if (ef.cantidadFija !== null) b.cantidad = ef.cantidadFija;
-                    if (estado.tipo === 2 || ef.cuandoFijo) b.tipoEstado = 1;
+                estado.items.forEach((item, idx) => {
+                    const botonesOrden = `
+                        <span class="ms-auto d-inline-flex gap-1">
+                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-move="-1" data-idx="${idx}" title="Subir" ${idx === 0 ? 'disabled' : ''}>↑</button>
+                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-move="1" data-idx="${idx}" title="Bajar" ${idx === estado.items.length - 1 ? 'disabled' : ''}>↓</button>
+                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-remove="${idx}" title="Quitar">x</button>
+                        </span>`;
+
+                    if (item.kind === 'desc') {
+                        const maxCar = item.lineas === 2 ? 60 : 30;
+                        const descDiv = document.createElement('div');
+                        descDiv.className = 'scratch-block block-stack block-when w-100';
+                        descDiv.innerHTML = `
+                            <span class="small text-body-secondary">${item.lineas === 2 ? 'Desc. larga:' : 'Descripción:'}</span>
+                            <input type="text" maxlength="${maxCar}" value="${escaparHtml(item.texto)}" placeholder="Ej. Le gusta el salmón" class="scratch-pill flex-grow-1" style="min-width: 140px;" data-desc-idx="${idx}" />
+                            <span class="small text-body-secondary" data-desc-count="${idx}">${(item.texto || '').length}/${maxCar}</span>
+                            ${botonesOrden}
+                        `;
+                        pila.appendChild(descDiv);
+                        return;
+                    }
+
+                    const ef = EFECTOS[item.tipoHabilidad] || EFECTOS[2];
+                    const permitidos = objetivosPermitidos(item.tipoHabilidad);
+                    if (!permitidos.includes(item.tipoObjetivo)) item.tipoObjetivo = permitidos[0];
+                    if (ef.cantidadFija !== null) item.cantidad = ef.cantidadFija;
+                    if (estado.tipo === 2 || ef.cuandoFijo) item.tipoEstado = 1;
 
                     const whenDiv = document.createElement('div');
                     whenDiv.className = 'scratch-block block-stack block-when';
                     if (ef.cuandoFijo) {
-                        whenDiv.innerHTML = `
-                            <span class="small text-body-secondary">Cuándo:</span>
-                            <span>${ef.cuandoFijo}</span>
-                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-1 text-decoration-none" data-remove="${idx}" title="Quitar bloque">x</button>
-                        `;
+                        whenDiv.innerHTML = `<span class="small text-body-secondary">Cuándo:</span><span>${ef.cuandoFijo}</span>${botonesOrden}`;
                     } else if (estado.tipo === 1) {
                         whenDiv.innerHTML = `
                             <span class="small text-body-secondary">Cuándo:</span>
                             <select class="scratch-pill" data-field="tipoEstado" data-idx="${idx}">
-                                ${Object.entries(EVENTOS).map(([k, v]) => `<option value="${k}" ${Number(k) === b.tipoEstado ? 'selected' : ''}>${v}</option>`).join('')}
+                                ${Object.entries(EVENTOS).map(([k, v]) => `<option value="${k}" ${Number(k) === item.tipoEstado ? 'selected' : ''}>${v}</option>`).join('')}
                             </select>
-                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-1 text-decoration-none" data-remove="${idx}" title="Quitar bloque">x</button>
+                            ${botonesOrden}
                         `;
                     } else {
-                        whenDiv.innerHTML = `
-                            <span class="small text-body-secondary">Cuándo:</span>
-                            <span>Al entrar (instantáneo)</span>
-                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-1 text-decoration-none" data-remove="${idx}" title="Quitar bloque">x</button>
-                        `;
+                        whenDiv.innerHTML = `<span class="small text-body-secondary">Cuándo:</span><span>Al entrar (instantáneo)</span>${botonesOrden}`;
                     }
                     pila.appendChild(whenDiv);
 
@@ -415,25 +494,21 @@
 
                     const cantidadHtml = ef.cantidadFija !== null
                         ? `<span class="badge text-bg-light border">1</span>`
-                        : `<input type="number" min="1" max="99" value="${b.cantidad}" class="scratch-pill input-number" data-field="cantidad" data-idx="${idx}" />`;
+                        : `<input type="number" min="1" max="99" value="${item.cantidad}" class="scratch-pill input-number" data-field="cantidad" data-idx="${idx}" />`;
 
                     let objetivoHtml = '';
                     if (permitidos.length > 1) {
                         objetivoHtml = `<span class="small text-body-secondary">a</span>
                             <select class="scratch-pill" data-field="tipoObjetivo" data-idx="${idx}">
-                                ${permitidos.map(k => `<option value="${k}" ${k === b.tipoObjetivo ? 'selected' : ''}>${OBJETIVOS[k]}</option>`).join('')}
+                                ${permitidos.map(k => `<option value="${k}" ${k === item.tipoObjetivo ? 'selected' : ''}>${OBJETIVOS[k]}</option>`).join('')}
                             </select>`;
-                    } else if (b.tipoHabilidad === 7) {
+                    } else if (item.tipoHabilidad === 7) {
                         objetivoHtml = `<span class="small text-body-secondary">al atacante</span>`;
-                    } else if (b.tipoHabilidad === 3) {
+                    } else if (item.tipoHabilidad === 3) {
                         objetivoHtml = `<span class="small text-body-secondary">a Jugador</span>`;
                     }
 
-                    efDiv.innerHTML = `
-                        <span>${ef.nombre}</span>
-                        ${cantidadHtml}
-                        ${objetivoHtml}
-                    `;
+                    efDiv.innerHTML = `<span>${ef.nombre}</span>${cantidadHtml}${objetivoHtml}`;
                     pila.appendChild(efDiv);
                 });
 
@@ -441,9 +516,34 @@
                     el.addEventListener('change', onCampoBloqueChange);
                     el.addEventListener('input', onCampoBloqueChange);
                 });
+                pila.querySelectorAll('[data-desc-idx]').forEach(el => {
+                    el.addEventListener('input', e => {
+                        const idx = Number(e.target.dataset.descIdx);
+                        // Limpiar comillas dobles para no romper el formato de guardado
+                        const val = e.target.value.replace(/"/g, '');
+                        if (val !== e.target.value) e.target.value = val;
+                        estado.items[idx].texto = val;
+                        const maxCar = estado.items[idx].lineas === 2 ? 60 : 30;
+                        const counter = pila.querySelector(`[data-desc-count="${idx}"]`);
+                        if (counter) counter.textContent = `${val.length}/${maxCar}`;
+                        sincronizarTodo();
+                    });
+                });
+                pila.querySelectorAll('[data-move]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = Number(btn.dataset.idx);
+                        const dir = Number(btn.dataset.move);
+                        const target = idx + dir;
+                        if (target < 0 || target >= estado.items.length) return;
+                        const tmp = estado.items[idx];
+                        estado.items[idx] = estado.items[target];
+                        estado.items[target] = tmp;
+                        renderPila();
+                    });
+                });
                 pila.querySelectorAll('[data-remove]').forEach(btn => {
                     btn.addEventListener('click', () => {
-                        estado.bloques.splice(Number(btn.dataset.remove), 1);
+                        estado.items.splice(Number(btn.dataset.remove), 1);
                         mostrarAvisoLimite('');
                         renderPila();
                     });
@@ -455,7 +555,7 @@
             function onCampoBloqueChange(e) {
                 const idx = Number(e.target.dataset.idx);
                 const field = e.target.dataset.field;
-                estado.bloques[idx][field] = Math.max(1, parseInt(e.target.value, 10) || 1);
+                estado.items[idx][field] = Math.max(1, parseInt(e.target.value, 10) || 1);
                 sincronizarTodo();
             }
 
@@ -464,8 +564,11 @@
                 const textoPlano = generarTextoPlano();
                 const rar = RAREZAS[parseInt(inpRareza.value, 10)] || RAREZAS[1];
                 const esRota = mana > 10;
+                const habs = obtenerHabilidades();
 
-                document.getElementById('contadorHabilidades').textContent = `${estado.bloques.length} / ${maxBloquesActual()}`;
+                document.getElementById('contadorHabilidades').textContent = `${habs.length} / ${maxHabilidadesActual()} hab.`;
+                document.getElementById('contadorDesc').textContent = `${lineasDescUsadas()} / ${maxLineasDescActual()} lín. texto`;
+
                 const badgeBalance = document.getElementById('badgeBalance');
                 badgeBalance.textContent = esRota ? `Demasiado rota (${mana}/10 maná)` : `Equilibrada (${mana}/10 maná)`;
                 badgeBalance.className = esRota
@@ -481,7 +584,7 @@
                 document.getElementById('hidDescripcion').value = textoPlano;
 
                 const hiddenBloques = document.getElementById('hiddenBloques');
-                hiddenBloques.innerHTML = estado.bloques.map((b, i) => `
+                hiddenBloques.innerHTML = habs.map((b, i) => `
                     <input type="hidden" name="Bloques[${i}].TipoEstado" value="${estado.tipo === 2 ? 1 : b.tipoEstado}" />
                     <input type="hidden" name="Bloques[${i}].TipoHabilidad" value="${b.tipoHabilidad}" />
                     <input type="hidden" name="Bloques[${i}].Cantidad" value="${b.cantidad}" />
@@ -497,7 +600,7 @@
 
                 const iconsLeft = document.getElementById('prevIconsLeft');
                 iconsLeft.innerHTML = '';
-                estado.bloques.slice(0, 2).forEach(b => {
+                habs.slice(0, 2).forEach(b => {
                     const div = document.createElement('div');
                     div.className = 'cc-icon-badge';
                     div.title = (EFECTOS[b.tipoHabilidad] || { nombre: '' }).nombre;
@@ -509,8 +612,8 @@
                 if (estado.tipo === 1) {
                     iconRight.innerHTML = `${iconoSvg(1, 17)}<span>${estado.ataque}</span>`;
                     iconRight.classList.remove('d-none');
-                } else if (estado.bloques.length >= 3) {
-                    iconRight.innerHTML = iconoSvg(estado.bloques[2].tipoHabilidad, 17);
+                } else if (habs.length >= 3) {
+                    iconRight.innerHTML = iconoSvg(habs[2].tipoHabilidad, 17);
                     iconRight.classList.remove('d-none');
                 } else {
                     iconRight.classList.add('d-none');
@@ -559,16 +662,18 @@
                     if (val === 1) {
                         estado.ataque = Math.max(1, estado.ataque);
                         estado.vida = Math.max(1, estado.vida);
-                        if (estado.bloques.length > 2) estado.bloques = estado.bloques.slice(0, 2);
+                        let contHabs = 0;
+                        estado.items = estado.items.filter(x => x.kind !== 'hab' || ++contHabs <= 2);
                     } else {
                         mostrandoVida = false;
-                        estado.bloques = estado.bloques
-                            .filter(b => b.tipoHabilidad !== 7)
-                            .map(b => ({ ...b, tipoEstado: 1 }));
+                        estado.items = estado.items
+                            .filter(x => !(x.kind === 'hab' && x.tipoHabilidad === 7))
+                            .map(x => x.kind === 'hab' ? { ...x, tipoEstado: 1 } : x);
                     }
+                    recortarDescripcionesExcedentes();
                 } else if (kind === 'efecto') {
                     if (estado.tipo === 2 && val === 7) return;
-                    if (estado.bloques.length >= maxBloquesActual()) {
+                    if (obtenerHabilidades().length >= maxHabilidadesActual()) {
                         mostrarAvisoLimite(estado.tipo === 1
                             ? 'Una criatura puede tener como máximo 2 habilidades.'
                             : 'Un hechizo puede tener como máximo 3 efectos.');
@@ -576,13 +681,25 @@
                     }
                     const ef = EFECTOS[val] || EFECTOS[2];
                     const permitidos = objetivosPermitidos(val);
-                    estado.bloques.push({
+                    estado.items.push({
+                        kind: 'hab',
                         tipoEstado: 1,
                         tipoHabilidad: val,
                         cantidad: ef.cantidadFija ?? 1,
                         tipoObjetivo: permitidos[0],
                         objetivo: 1
                     });
+                    recortarDescripcionesExcedentes();
+                } else if (kind === 'desc') {
+                    const lineasNuevas = val === 2 ? 2 : 1;
+                    const disponibles = maxLineasDescActual() - lineasDescUsadas();
+                    if (lineasNuevas > disponibles) {
+                        mostrarAvisoLimite(disponibles <= 0
+                            ? 'No quedan líneas libres de descripción en esta carta.'
+                            : 'Solo queda 1 línea libre: añade una Descripción corta (1 línea).');
+                        return;
+                    }
+                    estado.items.push({ kind: 'desc', lineas: lineasNuevas, texto: '' });
                 }
                 renderPila();
             }
@@ -609,7 +726,7 @@
             });
 
             document.getElementById('btnLimpiar').addEventListener('click', () => {
-                estado.bloques = [];
+                estado.items = [];
                 mostrarAvisoLimite('');
                 renderPila();
             });
