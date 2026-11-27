@@ -138,10 +138,46 @@ public sealed class MisCartasController : Controller
         return View(cartas);
     }
 
-    // GET /MisCartas/Crear -> Creador de cartas con bloques de eventos/efectos y vista previa
+    // GET /MisCartas/Crear -> Creador de cartas con bloques de eventos/efectos y vista previa (acepta plantillaId opcional)
     [HttpGet]
-    public IActionResult Crear()
+    public async Task<IActionResult> Crear(int? plantillaId = null)
     {
+        if (plantillaId is int pid && pid > 0)
+        {
+            await using var uow = _unitOfWorkFactory.Create();
+            var cartaService = new CartaService(uow);
+            var original = await cartaService.ReadOIDAsync(pid);
+            if (original is not null)
+            {
+                var bloques = (original.Estados ?? Enumerable.Empty<CraftCaster.Domain.Entities.Estado>())
+                    .SelectMany(e => (e.Habilidades ?? Enumerable.Empty<CraftCaster.Domain.Entities.Habilidad>())
+                        .Select(h => new BloqueEventoInput
+                        {
+                            TipoEstado = e.Tipo,
+                            TipoHabilidad = h.Tipo,
+                            Cantidad = h.Cantidad,
+                            TipoObjetivo = h.TipoObjetivo,
+                            Objetivo = h.Objetivo,
+                        }))
+                    .ToList();
+
+                ViewBag.PlantillaId = original.Id;
+                return View(new CreadorCartaViewModel
+                {
+                    Id = 0,
+                    Nombre = original.Nombre,
+                    Rareza = original.Rareza,
+                    CosteMana = original.CosteMana,
+                    Tipo = original.Tipo,
+                    Ataque = original.Ataque ?? 1,
+                    Vida = original.Vida ?? 1,
+                    Descripcion = original.Descripcion,
+                    ImagenUrlActual = BuscarImagenCarta(original.Id),
+                    Bloques = bloques,
+                });
+            }
+        }
+
         var model = new CreadorCartaViewModel
         {
             Bloques = new List<BloqueEventoInput> { new() },
@@ -149,10 +185,10 @@ public sealed class MisCartasController : Controller
         return View(model);
     }
 
-    // POST /MisCartas/Crear -> Carta.new customized + Estado.new + Habilidad.new + Carta.addEstado + Carta.compartir
+    // POST /MisCartas/Crear -> Carta.new customized + Estado.new + Habilidad.new + Carta.addEstado
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Crear(CreadorCartaViewModel model)
+    public async Task<IActionResult> Crear(CreadorCartaViewModel model, int? plantillaId = null)
     {
         var usuarioId = UsuarioActualId();
         if (usuarioId is null) return RedirectToAction("Acceso", "Cuenta");
@@ -230,7 +266,10 @@ public sealed class MisCartasController : Controller
             // 1. Crear carta usando la operación customized (Carta.new customized)
             int ataque = model.Tipo == TipoCarta.Criatura ? model.Ataque : 0;
             int vida = model.Tipo == TipoCarta.Criatura ? model.Vida : 0;
-            byte tieneImagen = model.ImagenArchivo is { Length: > 0 } ? (byte)1 : (byte)0;
+            string? rutaImagenPlantilla = (model.ImagenArchivo is null or { Length: 0 } && plantillaId is int pidImg && pidImg > 0)
+                ? BuscarRutaFisicaImagenCarta(pidImg)
+                : null;
+            byte tieneImagen = (model.ImagenArchivo is { Length: > 0 } || rutaImagenPlantilla is not null) ? (byte)1 : (byte)0;
 
             var carta = await cartaService.NewAsync(
                 model.Nombre.Trim(),
@@ -273,10 +312,16 @@ public sealed class MisCartasController : Controller
 
             await uow.CommitAsync();
 
-            // 4. Guardar fichero de imagen si se subió (atributo type="file")
+            // 4. Guardar fichero de imagen si se subió o copiar el de la plantilla
             if (model.ImagenArchivo is { Length: > 0 })
             {
                 await GuardarImagenCartaAsync(carta.Id, model.ImagenArchivo);
+            }
+            else if (rutaImagenPlantilla is not null && System.IO.File.Exists(rutaImagenPlantilla))
+            {
+                var ext = Path.GetExtension(rutaImagenPlantilla);
+                var destino = Path.Combine(Path.GetDirectoryName(rutaImagenPlantilla)!, $"carta_{carta.Id}{ext}");
+                System.IO.File.Copy(rutaImagenPlantilla, destino, overwrite: true);
             }
 
             TempData["Exito"] = $"Carta \"{carta.Nombre}\" creada correctamente.";
@@ -302,18 +347,18 @@ public sealed class MisCartasController : Controller
         if (carta is null) return NotFound();
 
         var usuarioId = UsuarioActualId();
-        bool esPropia = (carta.Usuario is not null && carta.Usuario.Id == usuarioId)
-            || User.IsInRole(HariaWebAuthentication.RolAdmin);
+        bool esAutor = carta.Usuario is not null && carta.Usuario.Id == usuarioId;
+        bool esAdmin = User.IsInRole(HariaWebAuthentication.RolAdmin);
 
         bool enMazoDelUsuario = false;
-        if (!carta.EsPublica && !esPropia && usuarioId is int uid)
+        if (!carta.EsPublica && !esAutor && !esAdmin && usuarioId is int uid)
         {
             var mazoService = new MazoService(uow);
             var misMazos = await mazoService.ObtenerMazosUsuarioAsync(uid);
             enMazoDelUsuario = misMazos.Any(m => m.Lineas is not null && m.Lineas.Any(l => l.Carta?.Id == carta.Id));
         }
 
-        if (!carta.EsPublica && !esPropia && !enMazoDelUsuario) return Forbid();
+        if (!carta.EsPublica && !esAutor && !esAdmin && !enMazoDelUsuario) return Forbid();
 
         // Asegurar carga de usuario, estados y habilidades dentro de la sesión activa
         _ = carta.Usuario?.NombreUsuario;
@@ -323,7 +368,7 @@ public sealed class MisCartasController : Controller
         {
             Carta = carta,
             ImagenUrl = BuscarImagenCarta(carta.Id),
-            EsPropia = esPropia,
+            EsPropia = esAutor,
         });
     }
 
@@ -637,11 +682,16 @@ public sealed class MisCartasController : Controller
         (ownerId is not null && ownerId == UsuarioActualId())
         || User.IsInRole(HariaWebAuthentication.RolAdmin);
 
-    private string? BuscarImagenCarta(int cartaId)
+    private string? BuscarRutaFisicaImagenCarta(int cartaId)
     {
         var dir = Path.Combine(_env.WebRootPath, "uploads", "cartas");
         if (!Directory.Exists(dir)) return null;
-        var file = Directory.GetFiles(dir, $"carta_{cartaId}.*").FirstOrDefault();
+        return Directory.GetFiles(dir, $"carta_{cartaId}.*").FirstOrDefault();
+    }
+
+    private string? BuscarImagenCarta(int cartaId)
+    {
+        var file = BuscarRutaFisicaImagenCarta(cartaId);
         return file is null ? null : $"/uploads/cartas/{Path.GetFileName(file)}";
     }
 

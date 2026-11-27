@@ -21,6 +21,10 @@
 <form asp-action="@(esEdicion ? "Editar" : "Crear")" asp-route-id="@(esEdicion ? Model.Id : (int?)null)" method="post" enctype="multipart/form-data" id="formCreador">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
+    @if (ViewBag.PlantillaId is int plantillaId)
+    {
+        <input type="hidden" name="plantillaId" value="@plantillaId" />
+    }
 
     <div class="card border-0 shadow-sm mb-3">
         <div class="card-body p-4">
