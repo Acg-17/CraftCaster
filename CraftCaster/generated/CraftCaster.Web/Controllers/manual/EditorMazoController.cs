@@ -200,7 +200,7 @@ public sealed class EditorMazoController : Controller
     // POST /EditorMazo/AnadirCarta -> valida cuotas de rareza + LineaMazo.new + Mazo.addLinea + Mazo.calcularEstadisticas
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AnadirCarta(int mazoId, int cartaId, string? buscar)
+    public async Task<IActionResult> AnadirCarta(int mazoId, int cartaId, string? buscar, TipoCarta? tipo, Rareza? rareza, int? mana)
     {
         await using var uow = _unitOfWorkFactory.Create();
         var mazoService = new MazoService(uow);
@@ -238,22 +238,22 @@ public sealed class EditorMazoController : Controller
         if (leg + epi + esp + com > 30)
         {
             TempData["Error"] = "El mazo ya tiene 30 cartas (máximo permitido).";
-            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
         }
         if (leg > 2)
         {
             TempData["Error"] = "Máximo 2 cartas Legendarias por mazo.";
-            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
         }
         if (leg + epi > 6)
         {
             TempData["Error"] = "Límite de calidad superado: máximo 6 cartas entre Épicas y Legendarias.";
-            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
         }
         if (leg + epi + esp > 14)
         {
             TempData["Error"] = "Límite de calidad superado: máximo 14 cartas entre Especiales, Épicas y Legendarias.";
-            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+            return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
         }
 
         try
@@ -281,13 +281,13 @@ public sealed class EditorMazoController : Controller
             TempData["Error"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+        return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
     }
 
     // POST /EditorMazo/QuitarCarta -> LineaMazo.destroy (si cantidad == 1) + Mazo.calcularEstadisticas
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> QuitarCarta(int mazoId, int lineaId, string? buscar)
+    public async Task<IActionResult> QuitarCarta(int mazoId, int lineaId, string? buscar, TipoCarta? tipo, Rareza? rareza, int? mana)
     {
         await using var uow = _unitOfWorkFactory.Create();
         var mazoService = new MazoService(uow);
@@ -298,7 +298,7 @@ public sealed class EditorMazoController : Controller
         if (!PuedeGestionar(mazo.Usuario?.Id)) return Forbid();
 
         var linea = mazo.Lineas?.FirstOrDefault(l => l.Id == lineaId);
-        if (linea is null) return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+        if (linea is null) return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
 
         try
         {
@@ -325,7 +325,7 @@ public sealed class EditorMazoController : Controller
             TempData["Error"] = ex.Message;
         }
 
-        return RedirectToAction(nameof(Editar), new { id = mazoId, buscar });
+        return RedirectToAction(nameof(Editar), new { id = mazoId, buscar, tipo, rareza, mana });
     }
 
     // POST /EditorMazo/Vaciar -> elimina todas las LineaMazo del mazo + Mazo.calcularEstadisticas
