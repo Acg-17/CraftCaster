@@ -23,22 +23,80 @@ public sealed class MisCartasController : Controller
         _env = env;
     }
 
-    // GET /MisCartas -> Lista y filtra las cartas del usuario usando los ReadFilter de HARIA
+    // GET /MisCartas -> Lista y filtra las cartas propias + cartas de todos tus mazos (incluyendo mazos copiados)
     [HttpGet]
-    public async Task<IActionResult> Index(string? buscar = null, TipoCarta? tipo = null, Rareza? rareza = null, int? mana = null)
+    public async Task<IActionResult> Index(string? buscar = null, TipoCarta? tipo = null, Rareza? rareza = null, int? mana = null, string? origen = null)
     {
         var usuarioId = UsuarioActualId();
         if (usuarioId is null) return RedirectToAction("Acceso", "Cuenta");
 
         await using var uow = _unitOfWorkFactory.Create();
         var cartaService = new CartaService(uow);
+        var mazoService = new MazoService(uow);
+
         var propias = await cartaService.ObtenerCartasUsuarioAsync(usuarioId.Value);
-        var idsValidos = propias.Select(c => c.Id).ToHashSet();
+        var misMazos = await mazoService.ObtenerMazosUsuarioAsync(usuarioId.Value);
+
+        // Combinar cartas creadas por el usuario + cartas presentes en cualquiera de sus mazos (sin duplicados)
+        var coleccion = new Dictionary<int, CraftCaster.Domain.Entities.Carta>();
+        foreach (var c in propias)
+        {
+            coleccion[c.Id] = c;
+        }
+        foreach (var mazo in misMazos)
+        {
+            if (mazo.Lineas is null) continue;
+            foreach (var linea in mazo.Lineas)
+            {
+                if (linea.Carta is not null && !coleccion.ContainsKey(linea.Carta.Id))
+                {
+                    coleccion[linea.Carta.Id] = linea.Carta;
+                }
+            }
+        }
+
+        // Asegurar carga de usuario/autor para filtros y visualización
+        foreach (var c in coleccion.Values)
+        {
+            _ = c.Usuario?.NombreUsuario;
+        }
+
+        var idsValidos = coleccion.Keys.ToHashSet();
+
+        if (string.Equals(origen, "propias", StringComparison.OrdinalIgnoreCase))
+        {
+            idsValidos.IntersectWith(coleccion.Values.Where(c => c.Usuario?.Id == usuarioId.Value).Select(c => c.Id));
+        }
+        else if (string.Equals(origen, "externas", StringComparison.OrdinalIgnoreCase))
+        {
+            idsValidos.IntersectWith(coleccion.Values.Where(c => c.Usuario?.Id != usuarioId.Value).Select(c => c.Id));
+        }
 
         if (!string.IsNullOrWhiteSpace(buscar))
         {
-            var porNombre = await cartaService.ObtenerCartaPorNombreAsync(buscar.Trim());
-            idsValidos.IntersectWith(porNombre.Select(c => c.Id));
+            var termino = buscar.Trim();
+            if (termino.StartsWith('@'))
+            {
+                var autorBuscado = termino.TrimStart('@').Trim();
+                if (!string.IsNullOrEmpty(autorBuscado))
+                {
+                    var porAutor = coleccion.Values
+                        .Where(c => c.Usuario?.NombreUsuario is not null
+                            && c.Usuario.NombreUsuario.Contains(autorBuscado, StringComparison.OrdinalIgnoreCase))
+                        .Select(c => c.Id);
+                    idsValidos.IntersectWith(porAutor);
+                }
+            }
+            else
+            {
+                var porNombre = (await cartaService.ObtenerCartaPorNombreAsync(termino)).Select(c => c.Id).ToHashSet();
+                var porAutor = coleccion.Values
+                    .Where(c => c.Usuario?.NombreUsuario is not null
+                        && c.Usuario.NombreUsuario.Contains(termino, StringComparison.OrdinalIgnoreCase))
+                    .Select(c => c.Id);
+                porNombre.UnionWith(porAutor);
+                idsValidos.IntersectWith(porNombre);
+            }
         }
         if (tipo is TipoCarta tipoFiltro)
         {
@@ -56,7 +114,12 @@ public sealed class MisCartasController : Controller
             idsValidos.IntersectWith(porMana.Select(c => c.Id));
         }
 
-        var cartas = propias.Where(c => idsValidos.Contains(c.Id)).ToList();
+        var cartas = coleccion.Values
+            .Where(c => idsValidos.Contains(c.Id))
+            .OrderByDescending(c => c.Usuario?.Id == usuarioId.Value)
+            .ThenBy(c => c.CosteMana)
+            .ThenBy(c => c.Nombre)
+            .ToList();
 
         // Asegurar carga de estados y habilidades para mostrar iconos y lineas en Mis Cartas
         foreach (var c in cartas)
@@ -65,10 +128,13 @@ public sealed class MisCartasController : Controller
         }
 
         ViewBag.Imagenes = cartas.ToDictionary(c => c.Id, c => BuscarImagenCarta(c.Id));
+        ViewBag.Autores = cartas.ToDictionary(c => c.Id, c => c.Usuario?.NombreUsuario ?? "Usuario");
+        ViewBag.UsuarioActualId = usuarioId.Value;
         ViewBag.Buscar = buscar;
         ViewBag.Tipo = tipo;
         ViewBag.Rareza = rareza;
         ViewBag.Mana = mana;
+        ViewBag.Origen = origen;
         return View(cartas);
     }
 
@@ -239,9 +305,18 @@ public sealed class MisCartasController : Controller
         bool esPropia = (carta.Usuario is not null && carta.Usuario.Id == usuarioId)
             || User.IsInRole(HariaWebAuthentication.RolAdmin);
 
-        if (!carta.EsPublica && !esPropia) return Forbid();
+        bool enMazoDelUsuario = false;
+        if (!carta.EsPublica && !esPropia && usuarioId is int uid)
+        {
+            var mazoService = new MazoService(uow);
+            var misMazos = await mazoService.ObtenerMazosUsuarioAsync(uid);
+            enMazoDelUsuario = misMazos.Any(m => m.Lineas is not null && m.Lineas.Any(l => l.Carta?.Id == carta.Id));
+        }
 
-        // Asegurar carga de estados y habilidades dentro de la sesión activa
+        if (!carta.EsPublica && !esPropia && !enMazoDelUsuario) return Forbid();
+
+        // Asegurar carga de usuario, estados y habilidades dentro de la sesión activa
+        _ = carta.Usuario?.NombreUsuario;
         _ = carta.Estados?.Select(e => e.Habilidades?.Count).ToList();
 
         return View(new DetalleCartaViewModel
@@ -329,7 +404,7 @@ public sealed class MisCartasController : Controller
                 model.Tipo,
                 model.Descripcion.Trim(),
                 imagenFlag,
-                model.EsPublica,
+                carta.EsPublica,
                 carta.Usuario!.Id);
 
             // Actualizar ataque y vida si es Criatura

@@ -36,12 +36,35 @@
                     <span class="badge text-bg-light border">@Model.Mazo.EstadoMazo</span>
                     <span class="badge @(Model.Mazo.EsPublico ? "text-bg-primary" : "text-bg-secondary")">@(Model.Mazo.EsPublico ? "Público" : "Privado")</span>
                 </div>
-                <dl class="row mb-0 small text-md-end" style="min-width: 190px;">
-                    <dt class="col-6 col-md-7 text-body-secondary">Cartas</dt><dd class="col-6 col-md-5 mb-1">@Model.Mazo.NumCartas / 30</dd>
-                    <dt class="col-6 col-md-7 text-body-secondary">Coste medio</dt><dd class="col-6 col-md-5 mb-1">@Model.Mazo.CosteMedio.ToString("0.0")</dd>
-                    <dt class="col-6 col-md-7 text-body-secondary">Valoración</dt>
-                    <dd class="col-6 col-md-5 mb-0 text-warning">@for (var i = 1; i <= 5; i++) { @(i <= estrellas ? "★" : "☆") }</dd>
-                </dl>
+                <div class="d-flex flex-column align-items-md-end gap-2" style="min-width: 220px;">
+                    <dl class="row mb-0 small text-md-end w-100">
+                        <dt class="col-6 col-md-7 text-body-secondary">Cartas</dt><dd class="col-6 col-md-5 mb-1">@Model.Mazo.NumCartas / 30</dd>
+                        <dt class="col-6 col-md-7 text-body-secondary">Coste medio</dt><dd class="col-6 col-md-5 mb-1">@Model.Mazo.CosteMedio.ToString("0.0")</dd>
+                        <dt class="col-6 col-md-7 text-body-secondary">Valoración</dt>
+                        <dd class="col-6 col-md-5 mb-0 text-warning">@for (var i = 1; i <= 5; i++) { @(i <= estrellas ? "★" : "☆") }</dd>
+                    </dl>
+                    @if (Model.PuedeValorar)
+                    {
+                        <form asp-action="Valorar" asp-route-id="@Model.Mazo.Id" method="post" class="d-flex align-items-center gap-1 pt-2 border-top w-100 justify-content-md-end">
+                            @Html.AntiForgeryToken()
+                            <select asp-for="Valorar.Valoracion" class="form-select form-select-sm" style="max-width: 135px;" aria-label="Tu valoración">
+                                <option value="">Valorar...</option>
+                                <option value="5">★★★★★ (5)</option>
+                                <option value="4">★★★★☆ (4)</option>
+                                <option value="3">★★★☆☆ (3)</option>
+                                <option value="2">★★☆☆☆ (2)</option>
+                                <option value="1">★☆☆☆☆ (1)</option>
+                            </select>
+                            <button type="submit" class="btn btn-dark btn-sm">Valorar</button>
+                        </form>
+                    }
+                    else if (!Model.EsPropio)
+                    {
+                        <span class="small text-body-secondary pt-1 border-top w-100 text-md-end">
+                            <a asp-controller="Cuenta" asp-action="Acceso" asp-route-returnUrl="@Context.Request.Path">Inicia sesión</a> para valorar
+                        </span>
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -74,7 +97,16 @@
 <div class="row g-4">
     <div class="col-lg-8">
         <section class="card border-0 shadow-sm">
-            <div class="card-header bg-body p-3"><h2 class="h5 mb-0">Cartas del mazo</h2></div>
+            <div class="card-header bg-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <h2 class="h5 mb-0">Cartas del mazo</h2>
+                @if (Model.PuedeValorar)
+                {
+                    <form asp-action="Copiar" asp-route-id="@Model.Mazo.Id" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary btn-sm">Copiar a mis mazos</button>
+                    </form>
+                }
+            </div>
             <div class="card-body p-0">
                 @if (Model.Cartas.Any())
                 {
@@ -132,35 +164,6 @@
         {
             <section class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <h2 class="h5">Valorar este mazo</h2>
-                    <form asp-action="Valorar" asp-route-id="@Model.Mazo.Id" method="post" class="d-flex gap-2">
-                        @Html.AntiForgeryToken()
-                        <select asp-for="Valorar.Valoracion" class="form-select" aria-label="Tu valoración">
-                            <option value="">Elige...</option>
-                            <option value="5">★★★★★ (5)</option>
-                            <option value="4">★★★★☆ (4)</option>
-                            <option value="3">★★★☆☆ (3)</option>
-                            <option value="2">★★☆☆☆ (2)</option>
-                            <option value="1">★☆☆☆☆ (1)</option>
-                        </select>
-                        <button type="submit" class="btn btn-dark">Valorar</button>
-                    </form>
-                </div>
-            </section>
-
-            <section class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h2 class="h6 fw-semibold mb-2">Copiar a mis mazos</h2>
-                    <p class="small text-body-secondary mb-3">Guarda una copia editable de este mazo en tu colección manteniendo el crédito de @@@Model.Mazo.UsuarioLabel.</p>
-                    <form asp-action="Copiar" asp-route-id="@Model.Mazo.Id" method="post" class="m-0">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="btn btn-primary w-100">Copiar a mis mazos</button>
-                    </form>
-                </div>
-            </section>
-
-            <section class="card border-0 shadow-sm">
-                <div class="card-body">
                     <h2 class="h6 fw-semibold mb-2">Reportar mazo</h2>
                     <form asp-action="Reportar" asp-route-id="@Model.Mazo.Id" method="post" class="d-flex flex-column gap-2"
                           onsubmit="return confirm('¿Seguro que quieres reportar este mazo para revisión del administrador?');">
@@ -174,10 +177,6 @@
                     </form>
                 </div>
             </section>
-        }
-        else if (!Model.EsPropio)
-        {
-            <p class="small text-body-secondary mb-0"><a asp-controller="Cuenta" asp-action="Acceso" asp-route-returnUrl="@Context.Request.Path">Inicia sesión</a> para valorar este mazo.</p>
         }
 
         <div class="d-flex gap-2">
