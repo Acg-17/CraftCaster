@@ -23,6 +23,7 @@ public sealed class CuentaController : Controller
     private readonly MazoService _mazoService;
     private readonly PartidaService _partidaService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
+    private readonly IWebHostEnvironment _env;
     private readonly ILogger<CuentaController> _logger;
 
     public CuentaController(
@@ -31,6 +32,7 @@ public sealed class CuentaController : Controller
         MazoService mazoService,
         PartidaService partidaService,
         IUnitOfWorkFactory unitOfWorkFactory,
+        IWebHostEnvironment env,
         ILogger<CuentaController> logger)
     {
         _usuarioService = usuarioService;
@@ -38,6 +40,7 @@ public sealed class CuentaController : Controller
         _mazoService = mazoService;
         _partidaService = partidaService;
         _unitOfWorkFactory = unitOfWorkFactory;
+        _env = env;
         _logger = logger;
     }
 
@@ -216,6 +219,8 @@ public sealed class CuentaController : Controller
         var mazos = await _mazoService.ObtenerMazosUsuarioAsync(usuario.Id);
         var partidas = await _partidaService.ObtenerPartidasUsuarioAsync(usuario.Id);
 
+        ViewBag.FotoPerfilUrl = BuscarFotoPerfil(usuario.Id);
+
         return View(new MiCuentaViewModel
         {
             Usuario = UsuarioAssembler.ToViewModel(usuario),
@@ -223,6 +228,55 @@ public sealed class CuentaController : Controller
             Mazos = mazos.Select(MazoAssembler.ToViewModel).OrderBy(m => m.Nombre).ToList(),
             Partidas = partidas.Select(PartidaAssembler.ToViewModel).OrderByDescending(p => p.FechaInicio).ToList(),
         });
+    }
+
+    // POST /Cuenta/SubirFotoPerfil -> Actualiza Usuario.FotoPerfil en BD y guarda la imagen
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubirFotoPerfil(IFormFile? fotoArchivo)
+    {
+        var usuarioId = UsuarioActualId();
+        if (usuarioId is null) return RedirectToAction(nameof(Acceso));
+
+        if (fotoArchivo is not { Length: > 0 })
+        {
+            TempData["Error"] = "Selecciona una imagen para tu foto de perfil.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        var usuario = await unitOfWork.UsuarioRepository.ReadAsync(usuarioId.Value);
+        if (usuario is null) return RedirectToAction(nameof(Acceso));
+
+        await unitOfWork.BeginTransactionAsync("MVC.Cuenta.SubirFotoPerfil");
+        usuario.FotoPerfil = 1;
+        await unitOfWork.UsuarioRepository.SaveAsync(usuario);
+        await unitOfWork.CommitAsync();
+
+        var ext = Path.GetExtension(fotoArchivo.FileName).ToLowerInvariant();
+        if (ext is not (".png" or ".jpg" or ".jpeg" or ".webp" or ".gif")) ext = ".png";
+        var dir = Path.Combine(_env.WebRootPath, "uploads", "perfiles");
+        Directory.CreateDirectory(dir);
+        foreach (var antiguo in Directory.GetFiles(dir, $"usuario_{usuario.Id}.*"))
+        {
+            System.IO.File.Delete(antiguo);
+        }
+        var destino = Path.Combine(dir, $"usuario_{usuario.Id}{ext}");
+        await using (var stream = new FileStream(destino, FileMode.Create))
+        {
+            await fotoArchivo.CopyToAsync(stream);
+        }
+
+        TempData["Exito"] = "Foto de perfil actualizada.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private string? BuscarFotoPerfil(int usuarioId)
+    {
+        var dir = Path.Combine(_env.WebRootPath, "uploads", "perfiles");
+        if (!Directory.Exists(dir)) return null;
+        var file = Directory.GetFiles(dir, $"usuario_{usuarioId}.*").FirstOrDefault();
+        return file is null ? null : $"/uploads/perfiles/{Path.GetFileName(file)}";
     }
 
     // POST /Cuenta/Salir

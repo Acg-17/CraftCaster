@@ -1,17 +1,35 @@
 @using CraftCaster.Web.Utils.Security
 @inject CraftCaster.Application.Services.UsuarioService UsuarioService
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 @{
     var usuarioSesion = Context.Session.GetUser<UsuarioViewModel>();
     var nombreMostrar = usuarioSesion?.NombreUsuario;
-    if (string.IsNullOrWhiteSpace(nombreMostrar) && User.Identity?.IsAuthenticated == true && int.TryParse(User.Identity?.Name, out var uid))
+    int? uidActual = User.Identity?.IsAuthenticated == true && int.TryParse(User.Identity?.Name, out var parsedUid)
+        ? parsedUid
+        : usuarioSesion?.Id;
+    if (string.IsNullOrWhiteSpace(nombreMostrar) && uidActual is int uidLookup)
     {
-        var usuarioDb = await UsuarioService.ReadOIDAsync(uid);
+        var usuarioDb = await UsuarioService.ReadOIDAsync(uidLookup);
         nombreMostrar = usuarioDb?.NombreUsuario;
     }
     if (string.IsNullOrWhiteSpace(nombreMostrar))
     {
         nombreMostrar = User.Identity?.Name;
     }
+    string? fotoNavbarUrl = null;
+    if (uidActual is int uidFoto)
+    {
+        var dirPerfiles = System.IO.Path.Combine(Env.WebRootPath, "uploads", "perfiles");
+        if (System.IO.Directory.Exists(dirPerfiles))
+        {
+            var archivoFoto = System.IO.Directory.GetFiles(dirPerfiles, $"usuario_{uidFoto}.*").FirstOrDefault();
+            if (archivoFoto is not null)
+            {
+                fotoNavbarUrl = $"/uploads/perfiles/{System.IO.Path.GetFileName(archivoFoto)}";
+            }
+        }
+    }
+    var inicialNavbar = !string.IsNullOrWhiteSpace(nombreMostrar) ? nombreMostrar.Substring(0, 1).ToUpperInvariant() : "U";
 }
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name" data-bs-theme="light">
@@ -48,7 +66,19 @@
                     <div class="d-flex align-items-lg-center gap-2">
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <a class="btn btn-light btn-sm" asp-controller="Cuenta" asp-action="Index">Cuenta (@nombreMostrar)</a>
+                        <a class="btn btn-light btn-sm d-inline-flex align-items-center gap-2" asp-controller="Cuenta" asp-action="Index">
+                            <span class="rounded-circle overflow-hidden bg-dark text-white d-inline-flex align-items-center justify-content-center" style="width: 22px; height: 22px; font-size: 0.72rem; font-weight: 700;">
+                                @if (!string.IsNullOrEmpty(fotoNavbarUrl))
+                                {
+                                    <img src="@fotoNavbarUrl" alt="@nombreMostrar" class="w-100 h-100 object-fit-cover" />
+                                }
+                                else
+                                {
+                                    @inicialNavbar
+                                }
+                            </span>
+                            <span>@nombreMostrar</span>
+                        </a>
                         <form asp-controller="Cuenta" asp-action="Salir" method="post" class="m-0">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-outline-light btn-sm">Cerrar sesión</button>

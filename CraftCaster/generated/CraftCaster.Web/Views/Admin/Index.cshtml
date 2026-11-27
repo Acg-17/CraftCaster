@@ -50,12 +50,8 @@
     <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="small text-body-secondary">Reportadas / Suspendidas</div>
-                <div class="d-flex align-items-baseline gap-3 mt-1">
-                    <span class="h4 mb-0 text-warning">@Model.UsuariosReportados <span class="small fw-normal text-body-secondary">rep.</span></span>
-                    <span class="h4 mb-0 text-danger">@Model.UsuariosSuspendidos <span class="small fw-normal text-body-secondary">susp.</span></span>
-                </div>
-                <div class="small text-body-secondary">@Model.ReportesMazos.Count reporte(s) de mazos</div>
+                <div class="small text-body-secondary">Suspendidas / Reportadas</div>
+                <div class="h3 mb-0 text-danger">@Model.UsuariosSuspendidos</div>
             </div>
         </div>
     </div>
@@ -126,7 +122,6 @@
                         {
                             var esActual = usuario.Id == Model.UsuarioActualId;
                             var estaSuspendida = usuario.EstadoCuenta == EstadoCuenta.Suspendida;
-                            var numReportes = Model.ReportesPorUsuario.TryGetValue(usuario.Id, out var rCount) ? rCount : 0;
                             <tr>
                                 <td class="ps-3">@usuario.Id</td>
                                 <td>
@@ -141,18 +136,7 @@
                                     <span class="badge @(usuario.TipoUsuario == TipoUsuario.Admin ? "text-bg-dark" : "text-bg-secondary")">@usuario.TipoUsuario</span>
                                 </td>
                                 <td>
-                                    @if (estaSuspendida)
-                                    {
-                                        <span class="badge text-bg-danger">Suspendida</span>
-                                    }
-                                    else if (numReportes > 0)
-                                    {
-                                        <a href="#reportes-mazos" class="badge text-bg-warning text-dark text-decoration-none" title="Ver mazos reportados">Reportado (@numReportes)</a>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge text-bg-success">Activa</span>
-                                    }
+                                    <span class="badge @(estaSuspendida ? "text-bg-danger" : "text-bg-success")">@usuario.EstadoCuenta</span>
                                 </td>
                                 <td class="text-end text-nowrap pe-3">
                                     @if (!esActual)
@@ -203,68 +187,15 @@
     </div>
 </section>
 
-<section id="reportes-mazos" class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0">Reportes pendientes</h2>
-        <span class="badge text-bg-warning text-dark">@Model.ReportesMazos.Count</span>
-    </div>
-    <div class="card-body p-0">
-        @if (Model.ReportesMazos.Any())
-        {
-            <ul class="list-group list-group-flush">
-                @foreach (var rep in Model.ReportesMazos)
-                {
-                    <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
-                        <div>
-                            <div class="fw-semibold">
-                                @if (rep.MazoId > 0)
-                                {
-                                    <span>Mazo: <a asp-controller="Explorar" asp-action="Detalle" asp-route-id="@rep.MazoId">@rep.MazoNombre</a></span>
-                                }
-                                else
-                                {
-                                    <span>@rep.MazoNombre</span>
-                                }
-                                <span class="badge text-bg-warning text-dark ms-1">@rep.Motivo</span>
-                            </div>
-                            <div class="small text-body-secondary">
-                                Cuenta: <strong>@rep.AutorNombre</strong> · Reportado por @rep.ReportadoPor · @rep.Fecha.ToString("dd/MM/yyyy HH:mm")
-                            </div>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <form asp-action="DesestimarReporte" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="reporteId" value="@rep.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Desestimar</button>
-                            </form>
-                            <form asp-action="CambiarEstado" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@rep.AutorId" />
-                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Suspendida" />
-                                <button type="submit" class="btn btn-sm btn-danger">Suspender cuenta</button>
-                            </form>
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-        else
-        {
-            <p class="p-3 mb-0 text-body-secondary">No hay reportes pendientes de revisión.</p>
-        }
-    </div>
-</section>
-
 <section class="card border-0 shadow-sm">
     <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0">Cuentas a moderar</h2>
-        <span class="badge text-bg-dark">@(Model.UsuariosSuspendidosLista.Count + Model.UsuariosReportadosLista.Count)</span>
+        <h2 class="h5 mb-0">Cuentas suspendidas y reportes</h2>
+        <span class="badge text-bg-danger">@Model.UsuariosSuspendidosLista.Count</span>
     </div>
     <div class="card-body p-0">
-        @if (Model.UsuariosSuspendidosLista.Any() || Model.UsuariosReportadosLista.Any())
+        @if (Model.UsuariosSuspendidosLista.Any())
         {
             <ul class="list-group list-group-flush">
-                @* Prioridad 1: cuentas suspendidas *@
                 @foreach (var suspendido in Model.UsuariosSuspendidosLista)
                 {
                     <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
@@ -284,37 +215,11 @@
                         </div>
                     </li>
                 }
-                @* Prioridad 2: cuentas a revisar (reportadas, pero aún activas) *@
-                @foreach (var reportado in Model.UsuariosReportadosLista)
-                {
-                    var totalRep = Model.ReportesPorUsuario.TryGetValue(reportado.Id, out var c) ? c : 1;
-                    <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
-                        <div>
-                            <span class="badge text-bg-warning text-dark me-2">A revisar (@totalRep)</span>
-                            <span class="fw-semibold">@reportado.NombreUsuario</span>
-                            <span class="text-body-secondary small ms-2">@reportado.Email</span>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <form asp-action="LimpiarReportesUsuario" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="autorId" value="@reportado.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Marcar revisada</button>
-                            </form>
-                            <form asp-action="CambiarEstado" method="post" class="m-0">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@reportado.Id" />
-                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Suspendida" />
-                                <button type="submit" class="btn btn-sm btn-danger">Suspender</button>
-                            </form>
-                            <a asp-controller="Usuario" asp-action="Details" asp-route-id="@reportado.Id" class="btn btn-sm btn-outline-secondary">Ver ficha</a>
-                        </div>
-                    </li>
-                }
             </ul>
         }
         else
         {
-            <p class="p-3 mb-0 text-body-secondary">No hay cuentas suspendidas ni cuentas pendientes de revisión.</p>
+            <p class="p-3 mb-0 text-body-secondary">No hay cuentas suspendidas ni reportes pendientes.</p>
         }
     </div>
 </section>

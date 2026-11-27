@@ -3,15 +3,51 @@
 @{
     ViewData["Title"] = "Mi cuenta";
     var miId = Model.Usuario.Id;
+    var fotoPerfilUrl = ViewBag.FotoPerfilUrl as string;
+    var inicial = !string.IsNullOrWhiteSpace(Model.Usuario.NombreUsuario)
+        ? Model.Usuario.NombreUsuario.Substring(0, 1).ToUpperInvariant()
+        : "U";
+}
+
+@if (TempData["Exito"] is string exito)
+{
+    <div class="alert alert-success border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @exito
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-danger border-0 shadow-sm alert-dismissible fade show" role="alert">
+        @error
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
 }
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between gap-3">
-        <div>
-            <h1 class="h3 mb-1">@Model.Usuario.NombreUsuario</h1>
-            <p class="text-body-secondary mb-2">@Model.Usuario.Email</p>
-            <span class="badge @(Model.Usuario.EstadoCuenta == CraftCaster.Domain.Enums.EstadoCuenta.Activa ? "text-bg-success" : "text-bg-danger")">Cuenta @Model.Usuario.EstadoCuenta</span>
-            <span class="badge text-bg-secondary">@Model.Usuario.TipoUsuario</span>
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle overflow-hidden bg-dark text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 68px; height: 68px; font-size: 1.5rem; font-weight: 700;">
+                @if (!string.IsNullOrEmpty(fotoPerfilUrl))
+                {
+                    <img src="@fotoPerfilUrl" alt="@Model.Usuario.NombreUsuario" class="w-100 h-100 object-fit-cover" />
+                }
+                else
+                {
+                    <span>@inicial</span>
+                }
+            </div>
+            <div>
+                <h1 class="h3 mb-1">@Model.Usuario.NombreUsuario</h1>
+                <p class="text-body-secondary mb-2">@Model.Usuario.Email</p>
+                <span class="badge @(Model.Usuario.EstadoCuenta == CraftCaster.Domain.Enums.EstadoCuenta.Activa ? "text-bg-success" : "text-bg-danger")">Cuenta @Model.Usuario.EstadoCuenta</span>
+                <span class="badge text-bg-secondary">@Model.Usuario.TipoUsuario</span>
+                <form asp-action="SubirFotoPerfil" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2 mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="file" name="fotoArchivo" accept="image/*" class="form-control form-control-sm" style="max-width: 220px;" />
+                    <button type="submit" class="btn btn-sm btn-outline-dark text-nowrap">Subir foto</button>
+                </form>
+            </div>
         </div>
         <div class="d-flex flex-wrap align-items-start gap-2">
             @if (User.IsInRole(HariaWebAuthentication.RolAdmin))

@@ -188,6 +188,25 @@ public sealed class MotorPartidaService
                 var carta = await uowEf.CartaPartidaRepository.ReadAsync(cartaPartidaId);
                 if (carta is not null)
                 {
+                    // Registrar acción de lanzar carta en el turno actual (entidad Accion en BD)
+                    var turnoActual = partida.Turnos.OrderByDescending(t => t.NumTurno).FirstOrDefault();
+                    if (turnoActual is not null && turnoActual.Jugador?.Id == jugador.Id)
+                    {
+                        var accionLanzar = new Accion
+                        {
+                            Name = TipoAccion.Lanzar,
+                            Turno = turnoActual,
+                            Origen = carta,
+                        };
+                        if (objetivoCartaId is int objId)
+                        {
+                            var cartaObj = await uowEf.CartaPartidaRepository.ReadAsync(objId);
+                            if (cartaObj is not null) accionLanzar.Objetivo.Add(cartaObj);
+                        }
+                        await uowEf.AccionRepository.SaveAsync(accionLanzar);
+                        turnoActual.Acciones.Add(accionLanzar);
+                    }
+
                     var habilidades = ObtenerHabilidadesDeEntrada(carta.Original);
                     foreach (var hab in habilidades)
                     {
