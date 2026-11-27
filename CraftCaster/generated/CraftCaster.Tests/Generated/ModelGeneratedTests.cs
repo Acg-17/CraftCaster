@@ -360,8 +360,10 @@ public sealed class ModelGeneratedTests
     [Trait("Category", "Database")]
     public async Task Generated_Crud_And_Associations_Should_Work_Against_Database()
     {
+        var tempDbPath = Path.Combine(Path.GetTempPath(), $"CraftCaster_ModelGeneratedTests_{Guid.NewGuid():N}.db");
         var cfg = CreateNHibernateConfiguration();
-        new SchemaUpdate(cfg).Execute(false, true);
+        cfg.SetProperty(NHibernate.Cfg.Environment.ConnectionString, $"Data Source={tempDbPath};Version=3;");
+        new SchemaExport(cfg).Create(false, true);
         using var loggerFactory = LoggerFactory.Create(logging => logging.SetMinimumLevel(LogLevel.Warning));
         using var unitOfWorkFactory = new UnitOfWorkFactory(cfg, loggerFactory);
 
@@ -586,18 +588,18 @@ public sealed class ModelGeneratedTests
             sampleAccion.Origen = null;
             sampleAccion.Objetivo.Clear();
             await accionService.ModifierAccionDefaultAsync(sampleAccion);
-            await lineaMazoService.DestroyAsync(sampleLineaMazo.Id);
-            await habilidadService.DestroyAsync(sampleHabilidad.Id);
-            await estadoService.DestroyAsync(sampleEstado.Id);
-            await accionService.DestroyAsync(sampleAccion.Id);
-            await cartaPartidaService.DestroyAsync(sampleCartaPartida.Id);
-            await cartaService.DestroyAsync(sampleCarta.Id);
-            await zonaPartidaService.DestroyAsync(sampleZonaPartida.Id);
-            await turnoService.DestroyAsync(sampleTurno.Id);
-            await jugadorPartidaService.DestroyAsync(sampleJugadorPartida.Id);
-            await partidaService.DestroyAsync(samplePartida.Id);
-            await mazoService.DestroyAsync(sampleMazo.Id);
-            await usuarioService.DestroyAsync(sampleUsuario.Id);
+            await new LineaMazoService(unitOfWorkFactory).DestroyAsync(sampleLineaMazo.Id);
+            await new HabilidadService(unitOfWorkFactory).DestroyAsync(sampleHabilidad.Id);
+            await new EstadoService(unitOfWorkFactory).DestroyAsync(sampleEstado.Id);
+            await new AccionService(unitOfWorkFactory).DestroyAsync(sampleAccion.Id);
+            await new CartaPartidaService(unitOfWorkFactory).DestroyAsync(sampleCartaPartida.Id);
+            await new CartaService(unitOfWorkFactory).DestroyAsync(sampleCarta.Id);
+            await new ZonaPartidaService(unitOfWorkFactory).DestroyAsync(sampleZonaPartida.Id);
+            await new TurnoService(unitOfWorkFactory).DestroyAsync(sampleTurno.Id);
+            await new JugadorPartidaService(unitOfWorkFactory).DestroyAsync(sampleJugadorPartida.Id);
+            await new PartidaService(unitOfWorkFactory).DestroyAsync(samplePartida.Id);
+            await new MazoService(unitOfWorkFactory).DestroyAsync(sampleMazo.Id);
+            await new UsuarioService(unitOfWorkFactory).DestroyAsync(sampleUsuario.Id);
 
             Ensure((await usuarioService.ReadAllAsync()).Count == 0, "Usuario seed cleanup completed.");
             Ensure((await mazoService.ReadAllAsync()).Count == 0, "Mazo seed cleanup completed.");
