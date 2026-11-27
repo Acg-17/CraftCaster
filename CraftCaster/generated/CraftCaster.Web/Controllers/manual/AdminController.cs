@@ -96,6 +96,12 @@ public sealed class AdminController : Controller
                 .OrderBy(u => u.NombreUsuario)
                 .Select(UsuarioAssembler.ToViewModel)
                 .ToList(),
+            UsuariosReportadosLista = todosUsuarios
+                .Where(u => u.EstadoCuenta == EstadoCuenta.Activa && reportesPorUsuario.ContainsKey(u.Id))
+                .OrderByDescending(u => reportesPorUsuario[u.Id])
+                .ThenBy(u => u.NombreUsuario)
+                .Select(UsuarioAssembler.ToViewModel)
+                .ToList(),
             ReportesMazos = reportes,
             ReportesPorUsuario = reportesPorUsuario,
         };
@@ -144,7 +150,7 @@ public sealed class AdminController : Controller
         return RedirectToAction(nameof(Index));
     }
 
-    // POST /Admin/Reportar
+    // POST /Admin/Reportar -> Marca una cuenta en estado Reportado (a revisar, sin suspenderla)
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Reportar(int id)
@@ -155,27 +161,36 @@ public sealed class AdminController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        await using var unitOfWork = _unitOfWorkFactory.Create();
-        var service = new UsuarioService(unitOfWork);
-        try
+        var usuario = await _usuarioService.ReadOIDAsync(id);
+        if (usuario is null)
         {
-            await unitOfWork.BeginTransactionAsync("MVC.Admin.Reportar");
-            await service.ReportarUsuarioAsync(id);
-            await unitOfWork.CommitAsync();
-            TempData["Mensaje"] = "Usuario reportado y cuenta suspendida.";
-        }
-        catch (ModelException error)
-        {
-            await unitOfWork.RollbackAsync();
-            TempData["Error"] = error.Message;
-        }
-        catch (Exception error) when (error is not OperationCanceledException)
-        {
-            await unitOfWork.RollbackAsync();
-            _logger.LogError(error, "No se pudo reportar al usuario {Id}.", id);
-            TempData["Error"] = "No se pudo procesar el reporte del usuario.";
+            TempData["Error"] = "No se encontró el usuario indicado.";
+            return RedirectToAction(nameof(Index));
         }
 
+        var adminActual = UsuarioActualId() is int adminId ? await _usuarioService.ReadOIDAsync(adminId) : null;
+        CraftCaster.Web.Services.ReporteMazoStore.Agregar(new CraftCaster.Web.Services.ReporteMazoItem
+        {
+            AutorId = usuario.Id,
+            AutorNombre = usuario.NombreUsuario,
+            MazoId = 0,
+            MazoNombre = "Cuenta marcada para revisión",
+            Motivo = "Revisión manual de moderación",
+            ReportadoPor = adminActual?.NombreUsuario ?? "Admin",
+            Fecha = DateTime.Now,
+        });
+
+        TempData["Mensaje"] = $"Cuenta \"{usuario.NombreUsuario}\" marcada como reportada (a revisar).";
+        return RedirectToAction(nameof(Index));
+    }
+
+    // POST /Admin/LimpiarReportesUsuario
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult LimpiarReportesUsuario(int autorId)
+    {
+        CraftCaster.Web.Services.ReporteMazoStore.EliminarPorAutor(autorId);
+        TempData["Mensaje"] = "Reportes de la cuenta limpiados correctamente.";
         return RedirectToAction(nameof(Index));
     }
 

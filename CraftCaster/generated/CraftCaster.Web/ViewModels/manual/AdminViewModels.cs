@@ -22,6 +22,7 @@ public sealed class AdminPanelViewModel
 
     public List<UsuarioViewModel> Usuarios { get; set; } = new();
     public List<UsuarioViewModel> UsuariosSuspendidosLista { get; set; } = new();
+    public List<UsuarioViewModel> UsuariosReportadosLista { get; set; } = new();
     public List<ReporteMazoItem> ReportesMazos { get; set; } = new();
     public Dictionary<int, int> ReportesPorUsuario { get; set; } = new();
 }
