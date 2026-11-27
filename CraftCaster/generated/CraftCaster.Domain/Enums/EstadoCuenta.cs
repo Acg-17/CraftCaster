@@ -4,4 +4,5 @@ public enum EstadoCuenta
 {
     Activa = 1,
     Suspendida = 2,
+    Reportada = 3,
 }

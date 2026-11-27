@@ -75,6 +75,7 @@ public sealed class AdminController : Controller
             FiltroTipo = tipo,
             TotalUsuarios = todosUsuarios.Count,
             UsuariosActivos = todosUsuarios.Count(u => u.EstadoCuenta == EstadoCuenta.Activa),
+            UsuariosReportados = todosUsuarios.Count(u => u.EstadoCuenta == EstadoCuenta.Reportada),
             UsuariosSuspendidos = todosUsuarios.Count(u => u.EstadoCuenta == EstadoCuenta.Suspendida),
             TotalAdmins = todosUsuarios.Count(u => u.TipoUsuario == TipoUsuario.Admin),
             TotalMazos = mazos.Count,
@@ -87,6 +88,11 @@ public sealed class AdminController : Controller
                 .ToList(),
             UsuariosSuspendidosLista = todosUsuarios
                 .Where(u => u.EstadoCuenta == EstadoCuenta.Suspendida)
+                .OrderBy(u => u.NombreUsuario)
+                .Select(UsuarioAssembler.ToViewModel)
+                .ToList(),
+            UsuariosReportadosLista = todosUsuarios
+                .Where(u => u.EstadoCuenta == EstadoCuenta.Reportada)
                 .OrderBy(u => u.NombreUsuario)
                 .Select(UsuarioAssembler.ToViewModel)
                 .ToList(),
@@ -150,7 +156,7 @@ public sealed class AdminController : Controller
             await unitOfWork.BeginTransactionAsync("MVC.Admin.Reportar");
             await service.ReportarUsuarioAsync(id);
             await unitOfWork.CommitAsync();
-            TempData["Mensaje"] = "Usuario reportado y enviado a cuentas suspendidas.";
+            TempData["Mensaje"] = "Usuario marcado como reportado (a revisar).";
         }
         catch (ModelException error)
         {

@@ -10,6 +10,7 @@ public sealed class AdminPanelViewModel
 
     public int TotalUsuarios { get; set; }
     public int UsuariosActivos { get; set; }
+    public int UsuariosReportados { get; set; }
     public int UsuariosSuspendidos { get; set; }
     public int TotalAdmins { get; set; }
     public int TotalMazos { get; set; }
@@ -20,4 +21,5 @@ public sealed class AdminPanelViewModel
 
     public List<UsuarioViewModel> Usuarios { get; set; } = new();
     public List<UsuarioViewModel> UsuariosSuspendidosLista { get; set; } = new();
+    public List<UsuarioViewModel> UsuariosReportadosLista { get; set; } = new();
 }

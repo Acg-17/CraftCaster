@@ -17,7 +17,7 @@ public sealed partial class UsuarioService
         Usuario usuario = await _repository.ReadAsync(p_oid)
             ?? throw new ModelException("No existe el usuario indicado.");
 
-        usuario.EstadoCuenta = EstadoCuenta.Suspendida;
+        usuario.EstadoCuenta = EstadoCuenta.Reportada;
         await _repository.SaveAsync(usuario);
         /*PROTECTED REGION END*/
     }

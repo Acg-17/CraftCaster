@@ -50,8 +50,11 @@
     <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="small text-body-secondary">Suspendidas / Reportadas</div>
-                <div class="h3 mb-0 text-danger">@Model.UsuariosSuspendidos</div>
+                <div class="small text-body-secondary">Reportadas / Suspendidas</div>
+                <div class="d-flex align-items-baseline gap-3 mt-1">
+                    <span class="h4 mb-0 text-warning">@Model.UsuariosReportados <span class="small fw-normal text-body-secondary">rep.</span></span>
+                    <span class="h4 mb-0 text-danger">@Model.UsuariosSuspendidos <span class="small fw-normal text-body-secondary">susp.</span></span>
+                </div>
             </div>
         </div>
     </div>
@@ -78,6 +81,7 @@
                 <select id="estado" name="estado" class="form-select">
                     <option value="">Todos</option>
                     <option value="@((int)EstadoCuenta.Activa)" selected="@(Model.FiltroEstado == EstadoCuenta.Activa)">Activa</option>
+                    <option value="@((int)EstadoCuenta.Reportada)" selected="@(Model.FiltroEstado == EstadoCuenta.Reportada)">Reportada</option>
                     <option value="@((int)EstadoCuenta.Suspendida)" selected="@(Model.FiltroEstado == EstadoCuenta.Suspendida)">Suspendida</option>
                 </select>
             </div>
@@ -122,6 +126,7 @@
                         {
                             var esActual = usuario.Id == Model.UsuarioActualId;
                             var estaSuspendida = usuario.EstadoCuenta == EstadoCuenta.Suspendida;
+                            var estaReportada = usuario.EstadoCuenta == EstadoCuenta.Reportada;
                             <tr>
                                 <td class="ps-3">@usuario.Id</td>
                                 <td>
@@ -136,7 +141,18 @@
                                     <span class="badge @(usuario.TipoUsuario == TipoUsuario.Admin ? "text-bg-dark" : "text-bg-secondary")">@usuario.TipoUsuario</span>
                                 </td>
                                 <td>
-                                    <span class="badge @(estaSuspendida ? "text-bg-danger" : "text-bg-success")">@usuario.EstadoCuenta</span>
+                                    @if (estaSuspendida)
+                                    {
+                                        <span class="badge text-bg-danger">Suspendida</span>
+                                    }
+                                    else if (estaReportada)
+                                    {
+                                        <span class="badge text-bg-warning text-dark">Reportada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-success">Activa</span>
+                                    }
                                 </td>
                                 <td class="text-end text-nowrap pe-3">
                                     @if (!esActual)
@@ -189,11 +205,11 @@
 
 <section class="card border-0 shadow-sm">
     <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0">Cuentas suspendidas y reportes</h2>
-        <span class="badge text-bg-danger">@Model.UsuariosSuspendidosLista.Count</span>
+        <h2 class="h5 mb-0">Cuentas a moderar</h2>
+        <span class="badge text-bg-dark">@(Model.UsuariosSuspendidosLista.Count + Model.UsuariosReportadosLista.Count)</span>
     </div>
     <div class="card-body p-0">
-        @if (Model.UsuariosSuspendidosLista.Any())
+        @if (Model.UsuariosSuspendidosLista.Any() || Model.UsuariosReportadosLista.Any())
         {
             <ul class="list-group list-group-flush">
                 @foreach (var suspendido in Model.UsuariosSuspendidosLista)
@@ -215,11 +231,36 @@
                         </div>
                     </li>
                 }
+                @foreach (var reportado in Model.UsuariosReportadosLista)
+                {
+                    <li class="list-group-item d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                        <div>
+                            <span class="badge text-bg-warning text-dark me-2">Reportada · A revisar</span>
+                            <span class="fw-semibold">@reportado.NombreUsuario</span>
+                            <span class="text-body-secondary small ms-2">@reportado.Email</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form asp-action="CambiarEstado" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@reportado.Id" />
+                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Activa" />
+                                <button type="submit" class="btn btn-sm btn-outline-success">Marcar activa</button>
+                            </form>
+                            <form asp-action="CambiarEstado" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@reportado.Id" />
+                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Suspendida" />
+                                <button type="submit" class="btn btn-sm btn-danger">Suspender</button>
+                            </form>
+                            <a asp-controller="Usuario" asp-action="Details" asp-route-id="@reportado.Id" class="btn btn-sm btn-outline-secondary">Ver ficha</a>
+                        </div>
+                    </li>
+                }
             </ul>
         }
         else
         {
-            <p class="p-3 mb-0 text-body-secondary">No hay cuentas suspendidas ni reportes pendientes.</p>
+            <p class="p-3 mb-0 text-body-secondary">No hay cuentas suspendidas ni cuentas reportadas pendientes de revisión.</p>
         }
     </div>
 </section>

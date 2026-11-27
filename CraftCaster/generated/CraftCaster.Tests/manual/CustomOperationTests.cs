@@ -75,7 +75,7 @@ public sealed class CustomOperationTests
         await service.ReportarUsuarioAsync(usuario.Id);
 
         // Assert
-        Assert.Equal(EstadoCuenta.Suspendida, db.Verify(s => s.Get<Usuario>(usuario.Id).EstadoCuenta));
+        Assert.Equal(EstadoCuenta.Reportada, db.Verify(s => s.Get<Usuario>(usuario.Id).EstadoCuenta));
     }
 
     [Fact]

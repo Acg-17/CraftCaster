@@ -96,12 +96,18 @@
 
     <main class="container flex-grow-1 py-4 py-lg-5">
         @{
-            var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString();
+            var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+            var accionActual = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+            var esPantallaCrudAdmin = controladorActual is "Usuario" or "Partida" or "Carta" or "Mazo"
+                or "Estado" or "Habilidad" or "LineaMazo" or "Turno" or "Accion"
+                or "JugadorPartida" or "ZonaPartida" or "CartaPartida"
+                || (string.Equals(controladorActual, "Home", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(accionActual, "Entidades", StringComparison.OrdinalIgnoreCase));
         }
-        @if (User.IsInRole(HariaWebAuthentication.RolAdmin) && !string.Equals(controladorActual, "Admin", StringComparison.OrdinalIgnoreCase))
+        @if (User.IsInRole(HariaWebAuthentication.RolAdmin) && esPantallaCrudAdmin)
         {
             <div class="d-flex justify-content-between align-items-center bg-body rounded-3 shadow-sm px-3 py-2 mb-4">
-                <span class="small text-body-secondary">Sesión de administrador</span>
+                <span class="small text-body-secondary">Administración CRUD</span>
                 <a asp-controller="Admin" asp-action="Index" class="btn btn-dark btn-sm">Volver al Panel de Admin</a>
             </div>
         }

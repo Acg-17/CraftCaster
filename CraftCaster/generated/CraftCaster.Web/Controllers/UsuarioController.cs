@@ -169,8 +169,19 @@ public partial class UsuarioController : Controller
     /*PROTECTED REGION ID(UsuarioController_DeleteConfirmed_POST_body) START*/
 
         if (!ModelState.IsValid) return View("Delete", new CraftCaster.Web.ViewModels.UsuarioViewModel());
-        await _usuarioService.DestroyAsync(id);
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            await _usuarioService.DestroyAsync(id);
+            TempData["Mensaje"] = "Usuario eliminado correctamente.";
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            _logger.LogWarning(error, "No se pudo eliminar el usuario {Id} por relaciones existentes.", id);
+            TempData["Error"] = "No se puede eliminar este usuario porque tiene cartas, mazos o partidas asociadas. Puedes suspender su cuenta en su lugar.";
+        }
+        return User.IsInRole(CraftCaster.Web.Utils.Security.HariaWebAuthentication.RolAdmin)
+            ? RedirectToAction("Index", "Admin")
+            : RedirectToAction(nameof(Index));
     /*PROTECTED REGION END*/
     }
 
