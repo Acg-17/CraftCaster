@@ -93,9 +93,9 @@ public sealed class EditorMazoController : Controller
         }
     }
 
-    // GET /EditorMazo/Editar/5 -> Colección, cartas del mazo, recuento 30/30, cuotas y curva de maná
+    // GET /EditorMazo/Editar/5 -> Colección (filtrada con ReadFilter de Carta), cartas del mazo, 30/30 y curva de maná
     [HttpGet]
-    public async Task<IActionResult> Editar(int id, string? buscar)
+    public async Task<IActionResult> Editar(int id, string? buscar = null, TipoCarta? tipo = null, Rareza? rareza = null, int? mana = null)
     {
         var usuarioId = UsuarioActualId();
         if (usuarioId is null) return RedirectToAction("Acceso", "Cuenta");
@@ -117,7 +117,7 @@ public sealed class EditorMazoController : Controller
         // Colección disponible: cartas propias + cartas públicas de la comunidad
         var propias = await cartaService.ObtenerCartasUsuarioAsync(usuarioId.Value);
         var todas = await cartaService.ReadAllAsync();
-        var coleccion = propias
+        var coleccionBase = propias
             .Concat(todas.Where(c => c.EsPublica))
             .GroupBy(c => c.Id)
             .Select(g => g.First())
@@ -125,14 +125,30 @@ public sealed class EditorMazoController : Controller
             .ThenBy(c => c.Nombre)
             .ToList();
 
+        // Aplicar los ReadFilter modelados en HARIA sobre Carta
+        var idsValidos = coleccionBase.Select(c => c.Id).ToHashSet();
         if (!string.IsNullOrWhiteSpace(buscar))
         {
-            var texto = buscar.Trim();
-            coleccion = coleccion
-                .Where(c => c.Nombre.Contains(texto, StringComparison.OrdinalIgnoreCase)
-                         || c.Descripcion.Contains(texto, StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            var porNombre = await cartaService.ObtenerCartaPorNombreAsync(buscar.Trim());
+            idsValidos.IntersectWith(porNombre.Select(c => c.Id));
         }
+        if (tipo is TipoCarta tipoFiltro)
+        {
+            var porTipo = await cartaService.ObtenerCartaPorTipoAsync(tipoFiltro);
+            idsValidos.IntersectWith(porTipo.Select(c => c.Id));
+        }
+        if (rareza is Rareza rarezaFiltro)
+        {
+            var porRareza = await cartaService.ObtenerCartaPorRarezaAsync(rarezaFiltro);
+            idsValidos.IntersectWith(porRareza.Select(c => c.Id));
+        }
+        if (mana is int manaFiltro && manaFiltro >= 0)
+        {
+            var porMana = await cartaService.ObtenerCartaPorCosteManaAsync(manaFiltro);
+            idsValidos.IntersectWith(porMana.Select(c => c.Id));
+        }
+
+        var coleccion = coleccionBase.Where(c => idsValidos.Contains(c.Id)).ToList();
 
         // Cargar estados y habilidades para mostrar iconos y texto rico en la colección
         foreach (var c in coleccion)
@@ -166,6 +182,9 @@ public sealed class EditorMazoController : Controller
             Coleccion = coleccion,
             ImagenesCartas = coleccion.ToDictionary(c => c.Id, c => BuscarImagenCarta(c.Id)),
             Buscar = buscar,
+            FiltroTipo = tipo,
+            FiltroRareza = rareza,
+            FiltroMana = mana,
             CurvaMana = curva,
             TotalCartas = totalCartas,
             MaxCurva = Math.Max(1, curva.Values.Max()),

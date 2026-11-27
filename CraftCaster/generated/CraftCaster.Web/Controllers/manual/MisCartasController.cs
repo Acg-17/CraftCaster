@@ -23,16 +23,40 @@ public sealed class MisCartasController : Controller
         _env = env;
     }
 
-    // GET /MisCartas -> Lista las cartas del usuario logueado (ReadFilter ObtenerCartasUsuario)
+    // GET /MisCartas -> Lista y filtra las cartas del usuario usando los ReadFilter de HARIA
     [HttpGet]
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? buscar = null, TipoCarta? tipo = null, Rareza? rareza = null, int? mana = null)
     {
         var usuarioId = UsuarioActualId();
         if (usuarioId is null) return RedirectToAction("Acceso", "Cuenta");
 
         await using var uow = _unitOfWorkFactory.Create();
         var cartaService = new CartaService(uow);
-        var cartas = await cartaService.ObtenerCartasUsuarioAsync(usuarioId.Value);
+        var propias = await cartaService.ObtenerCartasUsuarioAsync(usuarioId.Value);
+        var idsValidos = propias.Select(c => c.Id).ToHashSet();
+
+        if (!string.IsNullOrWhiteSpace(buscar))
+        {
+            var porNombre = await cartaService.ObtenerCartaPorNombreAsync(buscar.Trim());
+            idsValidos.IntersectWith(porNombre.Select(c => c.Id));
+        }
+        if (tipo is TipoCarta tipoFiltro)
+        {
+            var porTipo = await cartaService.ObtenerCartaPorTipoAsync(tipoFiltro);
+            idsValidos.IntersectWith(porTipo.Select(c => c.Id));
+        }
+        if (rareza is Rareza rarezaFiltro)
+        {
+            var porRareza = await cartaService.ObtenerCartaPorRarezaAsync(rarezaFiltro);
+            idsValidos.IntersectWith(porRareza.Select(c => c.Id));
+        }
+        if (mana is int manaFiltro && manaFiltro >= 0)
+        {
+            var porMana = await cartaService.ObtenerCartaPorCosteManaAsync(manaFiltro);
+            idsValidos.IntersectWith(porMana.Select(c => c.Id));
+        }
+
+        var cartas = propias.Where(c => idsValidos.Contains(c.Id)).ToList();
 
         // Asegurar carga de estados y habilidades para mostrar iconos y lineas en Mis Cartas
         foreach (var c in cartas)
@@ -41,6 +65,10 @@ public sealed class MisCartasController : Controller
         }
 
         ViewBag.Imagenes = cartas.ToDictionary(c => c.Id, c => BuscarImagenCarta(c.Id));
+        ViewBag.Buscar = buscar;
+        ViewBag.Tipo = tipo;
+        ViewBag.Rareza = rareza;
+        ViewBag.Mana = mana;
         return View(cartas);
     }
 

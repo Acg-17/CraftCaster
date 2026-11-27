@@ -156,6 +156,119 @@ public sealed class ExplorarController : Controller
         return RedirectToAction(nameof(Detalle), new { id });
     }
 
+    // POST /Explorar/Copiar/5 -> Copia un mazo público a Mis Mazos conservando "(por @creador)" en el nombre
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Copiar(int id)
+    {
+        var usuarioId = UsuarioActualId();
+        if (usuarioId is null) return RedirectToAction("Acceso", "Cuenta");
+
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        var mazoService = new MazoService(unitOfWork);
+        var lineaService = new LineaMazoService(unitOfWork);
+
+        try
+        {
+            await unitOfWork.BeginTransactionAsync("MVC.Explorar.Copiar");
+
+            var original = await mazoService.ReadOIDAsync(id);
+            if (original is null || (!original.EsPublico && original.Usuario?.Id != usuarioId.Value))
+            {
+                await unitOfWork.RollbackAsync();
+                return NotFound();
+            }
+
+            var creador = original.Usuario?.NombreUsuario;
+            var sufijo = !string.IsNullOrWhiteSpace(creador) && !original.Nombre.Contains($"(por @{creador})", StringComparison.OrdinalIgnoreCase)
+                ? $" (por @{creador})"
+                : string.Empty;
+            var nombreCopia = $"{original.Nombre}{sufijo}";
+            if (nombreCopia.Length > 60) nombreCopia = nombreCopia[..60];
+
+            var copia = await mazoService.NewCustomizedAsync(nombreCopia, false, original.Imagen, usuarioId.Value);
+
+            var lineasOriginales = original.Lineas?.Where(l => l.Carta is not null).ToList() ?? new();
+            var nuevasLineasIds = new List<int>();
+            foreach (var linea in lineasOriginales)
+            {
+                var nuevaLinea = await lineaService.NewAsync(linea.Cantidad, copia.Id, linea.Carta.Id);
+                nuevasLineasIds.Add(nuevaLinea.Id);
+            }
+
+            if (nuevasLineasIds.Count > 0)
+            {
+                await mazoService.AddLineaAsync(copia.Id, nuevasLineasIds);
+            }
+
+            await mazoService.CalcularEstadisticasAsync(copia.Id);
+            await unitOfWork.CommitAsync();
+
+            TempData["Exito"] = $"Mazo \"{nombreCopia}\" copiado a tus mazos. Ya puedes editarlo o jugar con él.";
+            return RedirectToAction("Editar", "EditorMazo", new { id = copia.Id });
+        }
+        catch (ModelException error)
+        {
+            await unitOfWork.RollbackAsync();
+            TempData["Error"] = error.Message;
+            return RedirectToAction(nameof(Detalle), new { id });
+        }
+    }
+
+    // POST /Explorar/Reportar/5 -> Invoca Usuario.reportarUsuario para enviarlo al Panel de Admin
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reportar(int id, string? motivo)
+    {
+        var usuarioId = UsuarioActualId();
+        if (usuarioId is null) return RedirectToAction("Acceso", "Cuenta");
+
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        var mazoService = new MazoService(unitOfWork);
+        var usuarioService = new UsuarioService(unitOfWork);
+
+        try
+        {
+            await unitOfWork.BeginTransactionAsync("MVC.Explorar.Reportar");
+
+            var mazo = await mazoService.ReadOIDAsync(id);
+            if (mazo is null || !mazo.EsPublico || mazo.Usuario is null)
+            {
+                await unitOfWork.RollbackAsync();
+                return NotFound();
+            }
+
+            if (mazo.Usuario.Id == usuarioId.Value)
+            {
+                await unitOfWork.RollbackAsync();
+                TempData["Error"] = "No puedes reportar tu propio mazo.";
+                return RedirectToAction(nameof(Detalle), new { id });
+            }
+
+            if (mazo.Usuario.TipoUsuario == CraftCaster.Domain.Enums.TipoUsuario.Admin)
+            {
+                await unitOfWork.RollbackAsync();
+                TempData["Error"] = "No se puede reportar una cuenta de administrador.";
+                return RedirectToAction(nameof(Detalle), new { id });
+            }
+
+            await usuarioService.ReportarUsuarioAsync(mazo.Usuario.Id);
+            await unitOfWork.CommitAsync();
+
+            var motivoTexto = string.IsNullOrWhiteSpace(motivo) ? "Contenido inadecuado" : motivo.Trim();
+            TempData["Mensaje"] = $"Reporte enviado ({motivoTexto}). La cuenta del autor ha quedado marcada para revisión en el Panel de Admin.";
+        }
+        catch (ModelException error)
+        {
+            await unitOfWork.RollbackAsync();
+            TempData["Error"] = error.Message;
+        }
+
+        return RedirectToAction(nameof(Detalle), new { id });
+    }
+
     private static List<MazoViewModel> Ordenar(IEnumerable<MazoViewModel> mazos, string? orden) => orden switch
     {
         "coste-asc" => mazos.OrderBy(m => m.CosteMedio).ThenBy(m => m.Nombre).ToList(),

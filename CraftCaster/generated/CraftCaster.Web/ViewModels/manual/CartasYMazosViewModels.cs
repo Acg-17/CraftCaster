@@ -85,6 +85,9 @@ public sealed class EditorMazoViewModel
     public List<Carta> Coleccion { get; init; } = new();
     public Dictionary<int, string?> ImagenesCartas { get; init; } = new();
     public string? Buscar { get; init; }
+    public TipoCarta? FiltroTipo { get; init; }
+    public Rareza? FiltroRareza { get; init; }
+    public int? FiltroMana { get; init; }
     public Dictionary<int, int> CurvaMana { get; init; } = new();
     public int TotalCartas { get; init; }
     public int MaxCurva { get; init; }

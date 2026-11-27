@@ -94,6 +94,7 @@
                 <div class="card-body">
                     <h2 class="h5">Valorar este mazo</h2>
                     <form asp-action="Valorar" asp-route-id="@Model.Mazo.Id" method="post" class="d-flex gap-2">
+                        @Html.AntiForgeryToken()
                         <select asp-for="Valorar.Valoracion" class="form-select" aria-label="Tu valoración">
                             <option value="">Elige...</option>
                             <option value="5">★★★★★ (5)</option>
@@ -103,6 +104,33 @@
                             <option value="1">★☆☆☆☆ (1)</option>
                         </select>
                         <button type="submit" class="btn btn-dark">Valorar</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-2">Copiar a mis mazos</h2>
+                    <p class="small text-body-secondary mb-3">Guarda una copia editable de este mazo en tu colección manteniendo el crédito de @@@Model.Mazo.UsuarioLabel.</p>
+                    <form asp-action="Copiar" asp-route-id="@Model.Mazo.Id" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-primary w-100">Copiar a mis mazos</button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h6 fw-semibold mb-2">Reportar mazo</h2>
+                    <form asp-action="Reportar" asp-route-id="@Model.Mazo.Id" method="post" class="d-flex flex-column gap-2"
+                          onsubmit="return confirm('¿Seguro que quieres reportar este mazo para revisión del administrador?');">
+                        @Html.AntiForgeryToken()
+                        <select name="motivo" class="form-select form-select-sm" aria-label="Motivo del reporte">
+                            <option value="Contenido ofensivo o inapropiado">Contenido ofensivo o inapropiado</option>
+                            <option value="Spam o plagio">Spam o plagio</option>
+                            <option value="Nombre o descripción violenta">Nombre o descripción violenta</option>
+                        </select>
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Enviar reporte</button>
                     </form>
                 </div>
             </section>

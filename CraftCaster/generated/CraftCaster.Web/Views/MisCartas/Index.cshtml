@@ -7,15 +7,55 @@
 
 <link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-3">
     <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
         <div>
             <h1 class="h3 mb-1">Mis cartas</h1>
-            <p class="text-body-secondary mb-0">Gestiona tus cartas creadas: consulta el detalle, edita en el creador, comparte o elimina.</p>
+            <p class="text-body-secondary mb-0">Gestiona tus cartas creadas: filtra, consulta el detalle, edita en el creador, comparte o elimina.</p>
         </div>
         <a class="btn btn-dark" asp-action="Crear">+ Crear carta</a>
     </div>
 </div>
+
+<!-- Barra de filtros usando los ReadFilter de Carta (Nombre, Tipo, Rareza, Maná) -->
+<form asp-action="Index" method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small fw-semibold mb-1">Nombre</label>
+                <input type="text" name="buscar" value="@ViewBag.Buscar" class="form-control" placeholder="Buscar por nombre..." />
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold mb-1">Tipo</label>
+                <select name="tipo" class="form-select">
+                    <option value="">Todos</option>
+                    @foreach (TipoCarta t in Enum.GetValues<TipoCarta>())
+                    {
+                        <option value="@((int)t)" selected="@(ViewBag.Tipo is TipoCarta selT && selT == t)">@t</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold mb-1">Rareza</label>
+                <select name="rareza" class="form-select">
+                    <option value="">Todas</option>
+                    @foreach (Rareza r in Enum.GetValues<Rareza>())
+                    {
+                        <option value="@((int)r)" selected="@(ViewBag.Rareza is Rareza selR && selR == r)">@r</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label class="form-label small fw-semibold mb-1">Maná exacto</label>
+                <input type="number" name="mana" value="@ViewBag.Mana" min="0" max="10" class="form-control" placeholder="Cualquiera" />
+            </div>
+            <div class="col-6 col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-primary flex-fill">Filtrar</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+            </div>
+        </div>
+    </div>
+</form>
 
 @if (TempData["Exito"] is string exito)
 {
