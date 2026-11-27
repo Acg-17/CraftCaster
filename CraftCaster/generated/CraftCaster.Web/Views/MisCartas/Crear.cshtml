@@ -108,11 +108,11 @@
 
                     <div class="small text-uppercase text-body-secondary fw-semibold mb-2">Descripción personalizada</div>
                     <div class="d-flex flex-column gap-2">
-                        <div class="scratch-block block-palette" draggable="true" data-kind="desc" data-value="1">
+                        <div class="scratch-block block-palette" id="paletaDescCorta" draggable="true" data-kind="desc" data-value="1">
                             <span>Descripción corta</span>
                             <span class="small text-body-secondary ms-auto">1 línea · 30 car.</span>
                         </div>
-                        <div class="scratch-block block-palette" draggable="true" data-kind="desc" data-value="2">
+                        <div class="scratch-block block-palette" id="paletaDescLarga" draggable="true" data-kind="desc" data-value="2">
                             <span>Descripción larga</span>
                             <span class="small text-body-secondary ms-auto">2 líneas · 60 car.</span>
                         </div>
@@ -145,7 +145,7 @@
                             <input asp-for="EsPublica" class="form-check-input" id="inpPublica" />
                             <label asp-for="EsPublica" class="form-check-label small">Compartir con la comunidad</label>
                         </div>
-                        <span class="small text-body-secondary">Usa ↑ / ↓ para intercalar descripciones</span>
+                        <span class="small text-body-secondary">Arrastra los bloques para reordenarlos</span>
                     </div>
                 </div>
             </div>
@@ -292,8 +292,36 @@
 
             function maxLineasDescActual() {
                 const numHabs = obtenerHabilidades().length;
-                if (estado.tipo === 1) return 2; // Criatura: máx. 2 líneas de descripción (2 cortas o 1 larga)
-                return Math.max(0, 4 - numHabs); // Hechizo: 3 ef -> 1 lín, 2 ef -> 2 lín, 1 ef -> 3 lín
+                return Math.max(0, 4 - numHabs); // 4 líneas en total: 0 hab -> 4, 1 hab -> 3, 2 hab -> 2, 3 hab -> 1
+            }
+
+            function partirEnLineas(texto, maxPorLinea, maxLineas) {
+                const limpio = (texto || '').trim();
+                if (!limpio) return [];
+                const resultado = [];
+                let restante = limpio;
+
+                while (restante.length > 0 && resultado.length < maxLineas) {
+                    if (restante.length <= maxPorLinea) {
+                        resultado.push(restante);
+                        break;
+                    }
+                    if (resultado.length === maxLineas - 1) {
+                        resultado.push(restante.slice(0, maxPorLinea).trimEnd());
+                        break;
+                    }
+                    // Buscar el último espacio hasta el carácter maxPorLinea (30)
+                    const corte = restante.lastIndexOf(' ', maxPorLinea);
+                    if (corte > 0) {
+                        resultado.push(restante.slice(0, corte).trimEnd());
+                        restante = restante.slice(corte + 1).trimStart();
+                    } else {
+                        // Palabra larga sin espacios: partir exactamente en el carácter 30
+                        resultado.push(restante.slice(0, maxPorLinea));
+                        restante = restante.slice(maxPorLinea);
+                    }
+                }
+                return resultado;
             }
 
             function lineasDescUsadas() {
@@ -375,8 +403,15 @@
 
                 estado.items.forEach(item => {
                     if (item.kind === 'desc') {
-                        const texto = (item.texto || '').trim() || 'Escribe tu descripción...';
-                        lineas.push(`<div class="cc-line fst-italic text-body-secondary">${escaparHtml(texto)}</div>`);
+                        const texto = (item.texto || '').trim();
+                        if (!texto) {
+                            lineas.push(`<div class="cc-line fst-italic text-body-secondary">Escribe tu descripción...</div>`);
+                        } else {
+                            const sublineas = partirEnLineas(texto, 30, item.lineas);
+                            sublineas.forEach(sl => {
+                                lineas.push(`<div class="cc-line fst-italic text-body-secondary">${escaparHtml(sl)}</div>`);
+                            });
+                        }
                     } else {
                         const ef = EFECTOS[item.tipoHabilidad] || EFECTOS[2];
                         const prefijo = estado.tipo === 1
@@ -408,10 +443,25 @@
 
             function recortarDescripcionesExcedentes() {
                 while (lineasDescUsadas() > maxLineasDescActual()) {
+                    const exceso = lineasDescUsadas() - maxLineasDescActual();
                     const idxDesc = estado.items.findLastIndex(x => x.kind === 'desc');
                     if (idxDesc === -1) break;
-                    estado.items.splice(idxDesc, 1);
+                    if (exceso === 1 && estado.items[idxDesc].lineas === 2) {
+                        estado.items[idxDesc].lineas = 1;
+                        estado.items[idxDesc].texto = (estado.items[idxDesc].texto || '').slice(0, 30);
+                    } else {
+                        estado.items.splice(idxDesc, 1);
+                    }
                 }
+            }
+
+            const GRIP_SVG = `<span class="scratch-drag-handle" title="Arrastra para reordenar"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><circle cx="5" cy="3.5" r="1.25"/><circle cx="11" cy="3.5" r="1.25"/><circle cx="5" cy="8" r="1.25"/><circle cx="11" cy="8" r="1.25"/><circle cx="5" cy="12.5" r="1.25"/><circle cx="11" cy="12.5" r="1.25"/></svg></span>`;
+            let dragSourceIdx = null;
+
+            function limpiarIndicadoresDrop() {
+                pila.querySelectorAll('.scratch-item-group').forEach(g => {
+                    g.classList.remove('drop-before', 'drop-after', 'is-dragging');
+                });
             }
 
             function renderPila() {
@@ -445,71 +495,136 @@
                 }
 
                 estado.items.forEach((item, idx) => {
-                    const botonesOrden = `
-                        <span class="ms-auto d-inline-flex gap-1">
-                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-move="-1" data-idx="${idx}" title="Subir" ${idx === 0 ? 'disabled' : ''}>↑</button>
-                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-move="1" data-idx="${idx}" title="Bajar" ${idx === estado.items.length - 1 ? 'disabled' : ''}>↓</button>
-                            <button type="button" class="btn btn-sm btn-link text-secondary p-0 text-decoration-none" data-remove="${idx}" title="Quitar">x</button>
-                        </span>`;
+                    const group = document.createElement('div');
+                    group.className = 'scratch-item-group';
+                    group.setAttribute('draggable', 'true');
+                    group.dataset.itemIdx = String(idx);
+
+                    const botonQuitar = `<button type="button" class="btn btn-sm btn-link text-secondary p-0 ms-auto text-decoration-none" data-remove="${idx}" title="Quitar">x</button>`;
 
                     if (item.kind === 'desc') {
                         const maxCar = item.lineas === 2 ? 60 : 30;
                         const descDiv = document.createElement('div');
                         descDiv.className = 'scratch-block block-stack block-when w-100';
                         descDiv.innerHTML = `
+                            ${GRIP_SVG}
                             <span class="small text-body-secondary">${item.lineas === 2 ? 'Desc. larga:' : 'Descripción:'}</span>
-                            <input type="text" maxlength="${maxCar}" value="${escaparHtml(item.texto)}" placeholder="Ej. Le gusta el salmón" class="scratch-pill flex-grow-1" style="min-width: 140px;" data-desc-idx="${idx}" />
+                            <input type="text" maxlength="${maxCar}" value="${escaparHtml(item.texto)}" placeholder="Ej. Le gusta el salmón" class="scratch-pill flex-grow-1" style="min-width: 120px;" data-desc-idx="${idx}" />
                             <span class="small text-body-secondary" data-desc-count="${idx}">${(item.texto || '').length}/${maxCar}</span>
-                            ${botonesOrden}
+                            ${botonQuitar}
                         `;
-                        pila.appendChild(descDiv);
-                        return;
-                    }
-
-                    const ef = EFECTOS[item.tipoHabilidad] || EFECTOS[2];
-                    const permitidos = objetivosPermitidos(item.tipoHabilidad);
-                    if (!permitidos.includes(item.tipoObjetivo)) item.tipoObjetivo = permitidos[0];
-                    if (ef.cantidadFija !== null) item.cantidad = ef.cantidadFija;
-                    if (estado.tipo === 2 || ef.cuandoFijo) item.tipoEstado = 1;
-
-                    const whenDiv = document.createElement('div');
-                    whenDiv.className = 'scratch-block block-stack block-when';
-                    if (ef.cuandoFijo) {
-                        whenDiv.innerHTML = `<span class="small text-body-secondary">Cuándo:</span><span>${ef.cuandoFijo}</span>${botonesOrden}`;
-                    } else if (estado.tipo === 1) {
-                        whenDiv.innerHTML = `
-                            <span class="small text-body-secondary">Cuándo:</span>
-                            <select class="scratch-pill" data-field="tipoEstado" data-idx="${idx}">
-                                ${Object.entries(EVENTOS).map(([k, v]) => `<option value="${k}" ${Number(k) === item.tipoEstado ? 'selected' : ''}>${v}</option>`).join('')}
-                            </select>
-                            ${botonesOrden}
-                        `;
+                        group.appendChild(descDiv);
                     } else {
-                        whenDiv.innerHTML = `<span class="small text-body-secondary">Cuándo:</span><span>Al entrar (instantáneo)</span>${botonesOrden}`;
+                        const ef = EFECTOS[item.tipoHabilidad] || EFECTOS[2];
+                        const permitidos = objetivosPermitidos(item.tipoHabilidad);
+                        if (!permitidos.includes(item.tipoObjetivo)) item.tipoObjetivo = permitidos[0];
+                        if (ef.cantidadFija !== null) item.cantidad = ef.cantidadFija;
+                        if (estado.tipo === 2 || ef.cuandoFijo) item.tipoEstado = 1;
+
+                        const whenDiv = document.createElement('div');
+                        whenDiv.className = 'scratch-block block-stack block-when w-100';
+                        if (ef.cuandoFijo) {
+                            whenDiv.innerHTML = `${GRIP_SVG}<span class="small text-body-secondary">Cuándo:</span><span>${ef.cuandoFijo}</span>${botonQuitar}`;
+                        } else if (estado.tipo === 1) {
+                            whenDiv.innerHTML = `
+                                ${GRIP_SVG}
+                                <span class="small text-body-secondary">Cuándo:</span>
+                                <select class="scratch-pill" data-field="tipoEstado" data-idx="${idx}">
+                                    ${Object.entries(EVENTOS).map(([k, v]) => `<option value="${k}" ${Number(k) === item.tipoEstado ? 'selected' : ''}>${v}</option>`).join('')}
+                                </select>
+                                ${botonQuitar}
+                            `;
+                        } else {
+                            whenDiv.innerHTML = `${GRIP_SVG}<span class="small text-body-secondary">Cuándo:</span><span>Al entrar (instantáneo)</span>${botonQuitar}`;
+                        }
+                        group.appendChild(whenDiv);
+
+                        const efDiv = document.createElement('div');
+                        efDiv.className = 'scratch-block block-stack block-effect-child';
+
+                        const cantidadHtml = ef.cantidadFija !== null
+                            ? `<span class="badge text-bg-light border">1</span>`
+                            : `<input type="number" min="1" max="99" value="${item.cantidad}" class="scratch-pill input-number" data-field="cantidad" data-idx="${idx}" />`;
+
+                        let objetivoHtml = '';
+                        if (permitidos.length > 1) {
+                            objetivoHtml = `<span class="small text-body-secondary">a</span>
+                                <select class="scratch-pill" data-field="tipoObjetivo" data-idx="${idx}">
+                                    ${permitidos.map(k => `<option value="${k}" ${k === item.tipoObjetivo ? 'selected' : ''}>${OBJETIVOS[k]}</option>`).join('')}
+                                </select>`;
+                        } else if (item.tipoHabilidad === 7) {
+                            objetivoHtml = `<span class="small text-body-secondary">al atacante</span>`;
+                        } else if (item.tipoHabilidad === 3) {
+                            objetivoHtml = `<span class="small text-body-secondary">a Jugador</span>`;
+                        }
+
+                        efDiv.innerHTML = `<span>${ef.nombre}</span>${cantidadHtml}${objetivoHtml}`;
+                        group.appendChild(efDiv);
                     }
-                    pila.appendChild(whenDiv);
 
-                    const efDiv = document.createElement('div');
-                    efDiv.className = 'scratch-block block-stack block-effect-child';
+                    // Permitir escribir/seleccionar en inputs y selects sin activar drag accidental
+                    group.querySelectorAll('input, select, button').forEach(ctrl => {
+                        ctrl.addEventListener('mousedown', () => group.setAttribute('draggable', 'false'));
+                        ctrl.addEventListener('mouseup', () => group.setAttribute('draggable', 'true'));
+                        ctrl.addEventListener('blur', () => group.setAttribute('draggable', 'true'));
+                    });
 
-                    const cantidadHtml = ef.cantidadFija !== null
-                        ? `<span class="badge text-bg-light border">1</span>`
-                        : `<input type="number" min="1" max="99" value="${item.cantidad}" class="scratch-pill input-number" data-field="cantidad" data-idx="${idx}" />`;
+                    // Eventos HTML5 Drag & Drop para reordenar o soltar desde la paleta
+                    group.addEventListener('dragstart', e => {
+                        dragSourceIdx = idx;
+                        group.classList.add('is-dragging');
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', JSON.stringify({ kind: 'reorder', fromIdx: idx }));
+                    });
 
-                    let objetivoHtml = '';
-                    if (permitidos.length > 1) {
-                        objetivoHtml = `<span class="small text-body-secondary">a</span>
-                            <select class="scratch-pill" data-field="tipoObjetivo" data-idx="${idx}">
-                                ${permitidos.map(k => `<option value="${k}" ${k === item.tipoObjetivo ? 'selected' : ''}>${OBJETIVOS[k]}</option>`).join('')}
-                            </select>`;
-                    } else if (item.tipoHabilidad === 7) {
-                        objetivoHtml = `<span class="small text-body-secondary">al atacante</span>`;
-                    } else if (item.tipoHabilidad === 3) {
-                        objetivoHtml = `<span class="small text-body-secondary">a Jugador</span>`;
-                    }
+                    group.addEventListener('dragend', () => {
+                        dragSourceIdx = null;
+                        limpiarIndicadoresDrop();
+                    });
 
-                    efDiv.innerHTML = `<span>${ef.nombre}</span>${cantidadHtml}${objetivoHtml}`;
-                    pila.appendChild(efDiv);
+                    group.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const rect = group.getBoundingClientRect();
+                        const enMitadSuperior = e.clientY < rect.top + rect.height / 2;
+                        pila.querySelectorAll('.scratch-item-group').forEach(g => {
+                            if (g !== group) g.classList.remove('drop-before', 'drop-after');
+                        });
+                        group.classList.toggle('drop-before', enMitadSuperior);
+                        group.classList.toggle('drop-after', !enMitadSuperior);
+                    });
+
+                    group.addEventListener('dragleave', e => {
+                        if (!group.contains(e.relatedTarget)) {
+                            group.classList.remove('drop-before', 'drop-after');
+                        }
+                    });
+
+                    group.addEventListener('drop', e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dropzone.classList.remove('drag-over');
+                        const rect = group.getBoundingClientRect();
+                        const enMitadSuperior = e.clientY < rect.top + rect.height / 2;
+                        const targetPos = enMitadSuperior ? idx : idx + 1;
+                        limpiarIndicadoresDrop();
+
+                        try {
+                            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                            if (data.kind === 'reorder') {
+                                const fromIdx = Number(data.fromIdx);
+                                if (Number.isNaN(fromIdx) || fromIdx === targetPos || fromIdx + 1 === targetPos) return;
+                                const [movido] = estado.items.splice(fromIdx, 1);
+                                const insertPos = fromIdx < targetPos ? targetPos - 1 : targetPos;
+                                estado.items.splice(insertPos, 0, movido);
+                                renderPila();
+                            } else {
+                                aplicarBloque(data.kind, data.value, targetPos);
+                            }
+                        } catch { }
+                    });
+
+                    pila.appendChild(group);
                 });
 
                 pila.querySelectorAll('[data-field]').forEach(el => {
@@ -519,7 +634,6 @@
                 pila.querySelectorAll('[data-desc-idx]').forEach(el => {
                     el.addEventListener('input', e => {
                         const idx = Number(e.target.dataset.descIdx);
-                        // Limpiar comillas dobles para no romper el formato de guardado
                         const val = e.target.value.replace(/"/g, '');
                         if (val !== e.target.value) e.target.value = val;
                         estado.items[idx].texto = val;
@@ -527,18 +641,6 @@
                         const counter = pila.querySelector(`[data-desc-count="${idx}"]`);
                         if (counter) counter.textContent = `${val.length}/${maxCar}`;
                         sincronizarTodo();
-                    });
-                });
-                pila.querySelectorAll('[data-move]').forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        const idx = Number(btn.dataset.idx);
-                        const dir = Number(btn.dataset.move);
-                        const target = idx + dir;
-                        if (target < 0 || target >= estado.items.length) return;
-                        const tmp = estado.items[idx];
-                        estado.items[idx] = estado.items[target];
-                        estado.items[target] = tmp;
-                        renderPila();
                     });
                 });
                 pila.querySelectorAll('[data-remove]').forEach(btn => {
@@ -566,8 +668,13 @@
                 const esRota = mana > 10;
                 const habs = obtenerHabilidades();
 
+                const descMax = maxLineasDescActual();
+                const descUsadas = lineasDescUsadas();
+                const descLibres = descMax - descUsadas;
                 document.getElementById('contadorHabilidades').textContent = `${habs.length} / ${maxHabilidadesActual()} hab.`;
-                document.getElementById('contadorDesc').textContent = `${lineasDescUsadas()} / ${maxLineasDescActual()} lín. texto`;
+                document.getElementById('contadorDesc').textContent = `${descUsadas} / ${descMax} lín. texto`;
+                document.getElementById('paletaDescCorta').classList.toggle('is-disabled', descLibres < 1);
+                document.getElementById('paletaDescLarga').classList.toggle('is-disabled', descLibres < 2);
 
                 const badgeBalance = document.getElementById('badgeBalance');
                 badgeBalance.textContent = esRota ? `Demasiado rota (${mana}/10 maná)` : `Equilibrada (${mana}/10 maná)`;
@@ -653,7 +760,7 @@
                 }
             });
 
-            function aplicarBloque(kind, value) {
+            function aplicarBloque(kind, value, insertAt) {
                 const val = Number(value);
                 mostrarAvisoLimite('');
 
@@ -681,14 +788,19 @@
                     }
                     const ef = EFECTOS[val] || EFECTOS[2];
                     const permitidos = objetivosPermitidos(val);
-                    estado.items.push({
+                    const nuevoHab = {
                         kind: 'hab',
                         tipoEstado: 1,
                         tipoHabilidad: val,
                         cantidad: ef.cantidadFija ?? 1,
                         tipoObjetivo: permitidos[0],
                         objetivo: 1
-                    });
+                    };
+                    if (typeof insertAt === 'number' && insertAt >= 0 && insertAt <= estado.items.length) {
+                        estado.items.splice(insertAt, 0, nuevoHab);
+                    } else {
+                        estado.items.push(nuevoHab);
+                    }
                     recortarDescripcionesExcedentes();
                 } else if (kind === 'desc') {
                     const lineasNuevas = val === 2 ? 2 : 1;
@@ -699,7 +811,12 @@
                             : 'Solo queda 1 línea libre: añade una Descripción corta (1 línea).');
                         return;
                     }
-                    estado.items.push({ kind: 'desc', lineas: lineasNuevas, texto: '' });
+                    const nuevaDesc = { kind: 'desc', lineas: lineasNuevas, texto: '' };
+                    if (typeof insertAt === 'number' && insertAt >= 0 && insertAt <= estado.items.length) {
+                        estado.items.splice(insertAt, 0, nuevaDesc);
+                    } else {
+                        estado.items.push(nuevaDesc);
+                    }
                 }
                 renderPila();
             }
@@ -719,9 +836,19 @@
             dropzone.addEventListener('drop', e => {
                 e.preventDefault();
                 dropzone.classList.remove('drag-over');
+                limpiarIndicadoresDrop();
                 try {
                     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                    aplicarBloque(data.kind, data.value);
+                    if (data.kind === 'reorder') {
+                        const fromIdx = Number(data.fromIdx);
+                        if (!Number.isNaN(fromIdx) && fromIdx >= 0 && fromIdx < estado.items.length) {
+                            const [movido] = estado.items.splice(fromIdx, 1);
+                            estado.items.push(movido);
+                            renderPila();
+                        }
+                    } else {
+                        aplicarBloque(data.kind, data.value);
+                    }
                 } catch { }
             });
 

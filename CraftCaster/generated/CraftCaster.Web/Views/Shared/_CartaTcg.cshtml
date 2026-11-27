@@ -107,14 +107,69 @@
     <!-- Nombre -->
     <div class="fw-semibold text-center small text-truncate mb-1">@Model.Nombre</div>
 
-    <!-- Descripción estructurada por líneas con negritas, iconos vectoriales y descripciones personalizadas -->
+    <!-- Descripción estructurada por líneas con negritas, iconos vectoriales y descripciones personalizadas intercaladas -->
     @{
-        var lineasDescPersonalizada = (Model.Descripcion ?? string.Empty)
+        List<string> PartirEnLineas(string texto, int maxPorLinea = 30, int maxLineas = 2)
+        {
+            var limpio = (texto ?? string.Empty).Trim();
+            var res = new List<string>();
+            if (string.IsNullOrEmpty(limpio)) return res;
+
+            var restante = limpio;
+            while (restante.Length > 0 && res.Count < maxLineas)
+            {
+                if (restante.Length <= maxPorLinea)
+                {
+                    res.Add(restante);
+                    break;
+                }
+                if (res.Count == maxLineas - 1)
+                {
+                    res.Add(restante[..maxPorLinea].TrimEnd());
+                    break;
+                }
+                int corte = restante.LastIndexOf(' ', maxPorLinea);
+                if (corte > 0)
+                {
+                    res.Add(restante[..corte].TrimEnd());
+                    restante = restante[(corte + 1)..].TrimStart();
+                }
+                else
+                {
+                    res.Add(restante[..maxPorLinea]);
+                    restante = restante[maxPorLinea..];
+                }
+            }
+            return res;
+        }
+
+        // Reconstruir secuencia intercalada (habilidades + descripciones entrecomilladas) en el mismo orden
+        var elementosOrdenados = new List<(bool EsDesc, string Texto, (TipoEstado Estado, CraftCaster.Domain.Entities.Habilidad Hab)? HabItem)>();
+        var lineasGuardadas = (Model.Descripcion ?? string.Empty)
             .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
             .Select(l => l.Trim())
-            .Where(l => l.Length >= 2 && l.StartsWith('"') && l.EndsWith('"'))
-            .Select(l => l[1..^1])
             .ToList();
+
+        int habCursor = 0;
+        bool tieneFormatoPersonalizado = lineasGuardadas.Any(l => l.Length >= 2 && l.StartsWith('"') && l.EndsWith('"'));
+        if (tieneFormatoPersonalizado)
+        {
+            foreach (var linea in lineasGuardadas)
+            {
+                if (linea.Length >= 2 && linea.StartsWith('"') && linea.EndsWith('"'))
+                {
+                    elementosOrdenados.Add((true, linea[1..^1], null));
+                }
+                else if (!linea.StartsWith("Criatura ") && !linea.StartsWith("Hechizo") && habCursor < habilidades.Count)
+                {
+                    elementosOrdenados.Add((false, string.Empty, habilidades[habCursor++]));
+                }
+            }
+        }
+        while (habCursor < habilidades.Count)
+        {
+            elementosOrdenados.Add((false, string.Empty, habilidades[habCursor++]));
+        }
     }
     <div class="cc-card-desc text-body-secondary text-center">
         @if (esCriatura)
@@ -123,42 +178,6 @@
                 <span>Criatura</span>
                 <strong>@(Model.Ataque ?? 0)/@(Model.Vida ?? 0)</strong>
             </div>
-            @if (habilidades.Count == 0 && lineasDescPersonalizada.Count == 0 && !string.IsNullOrWhiteSpace(Model.Descripcion))
-            {
-                <div class="cc-line">@Model.Descripcion</div>
-            }
-            @foreach (var item in habilidades)
-            {
-                <div class="cc-line">
-                    <span class="fw-semibold text-dark">@TextoCuando(item.Estado, item.Hab.Tipo):</span>
-                    <span class="cc-inline-ico">@Html.Raw(IconoSvg(item.Hab.Tipo, 13))</span>
-                    <strong class="text-dark">@item.Hab.Cantidad</strong>
-                    @if (item.Hab.Tipo == TipoHabilidad.Robar)
-                    {
-                        <span>carta(s)</span>
-                    }
-                    else if (item.Hab.Tipo == TipoHabilidad.Descartar)
-                    {
-                        <span>mano rival</span>
-                    }
-                    else if (item.Hab.Tipo == TipoHabilidad.Destruir)
-                    {
-                        <span>carta (@TextoObjetivo(item.Hab.TipoObjetivo))</span>
-                    }
-                    else if (item.Hab.Tipo == TipoHabilidad.Defensa)
-                    {
-                        <span>al atacante</span>
-                    }
-                    else
-                    {
-                        <span>a @TextoObjetivo(item.Hab.TipoObjetivo)</span>
-                    }
-                </div>
-            }
-            @foreach (var textoCustom in lineasDescPersonalizada)
-            {
-                <div class="cc-line fst-italic">@textoCustom</div>
-            }
         }
         else
         {
@@ -166,13 +185,32 @@
                 <span>Hechizo ·</span>
                 <strong>Al entrar</strong>
             </div>
-            @if (habilidades.Count == 0 && lineasDescPersonalizada.Count == 0 && !string.IsNullOrWhiteSpace(Model.Descripcion))
+        }
+
+        @if (elementosOrdenados.Count == 0 && !string.IsNullOrWhiteSpace(Model.Descripcion))
+        {
+            foreach (var sub in PartirEnLineas(Model.Descripcion, 30, 3))
             {
-                <div class="cc-line">@Model.Descripcion</div>
+                <div class="cc-line">@sub</div>
             }
-            @foreach (var item in habilidades)
+        }
+
+        @foreach (var elem in elementosOrdenados)
+        {
+            if (elem.EsDesc)
+            {
+                foreach (var sub in PartirEnLineas(elem.Texto, 30, 2))
+                {
+                    <div class="cc-line fst-italic">@sub</div>
+                }
+            }
+            else if (elem.HabItem is { } item)
             {
                 <div class="cc-line">
+                    @if (esCriatura)
+                    {
+                        <span class="fw-semibold text-dark">@TextoCuando(item.Estado, item.Hab.Tipo):</span>
+                    }
                     <span class="cc-inline-ico">@Html.Raw(IconoSvg(item.Hab.Tipo, 13))</span>
                     <strong class="text-dark">@item.Hab.Cantidad</strong>
                     @if (item.Hab.Tipo == TipoHabilidad.Robar)
@@ -196,10 +234,6 @@
                         <span>a @TextoObjetivo(item.Hab.TipoObjetivo)</span>
                     }
                 </div>
-            }
-            @foreach (var textoCustom in lineasDescPersonalizada)
-            {
-                <div class="cc-line fst-italic">@textoCustom</div>
             }
         }
     </div>
