@@ -24,6 +24,7 @@ public sealed class CuentaController : Controller
     private readonly PartidaService _partidaService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IWebHostEnvironment _env;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<CuentaController> _logger;
 
     public CuentaController(
@@ -33,6 +34,7 @@ public sealed class CuentaController : Controller
         PartidaService partidaService,
         IUnitOfWorkFactory unitOfWorkFactory,
         IWebHostEnvironment env,
+        IConfiguration configuration,
         ILogger<CuentaController> logger)
     {
         _usuarioService = usuarioService;
@@ -41,6 +43,7 @@ public sealed class CuentaController : Controller
         _partidaService = partidaService;
         _unitOfWorkFactory = unitOfWorkFactory;
         _env = env;
+        _configuration = configuration;
         _logger = logger;
     }
 
@@ -139,6 +142,89 @@ public sealed class CuentaController : Controller
 
         await IniciarSesionAsync(nuevo);
         return RedirectToAction(nameof(Index));
+    }
+
+    // GET /Cuenta/AccesoGoogle -> Inicia el flujo OAuth 2.0 con Google
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult AccesoGoogle(string? returnUrl = null)
+    {
+        var clientId = _configuration["Authentication:Google:ClientId"];
+        var clientSecret = _configuration["Authentication:Google:ClientSecret"];
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            TempData["Error"] = "Google OAuth no está configurado todavía. Añade ClientId y ClientSecret en appsettings.Development.json (sección Authentication:Google).";
+            return RedirectToAction(nameof(Acceso), new { returnUrl });
+        }
+
+        var redirectUrl = Url.Action(nameof(GoogleCallback), "Cuenta", new { returnUrl });
+        var props = new AuthenticationProperties { RedirectUri = redirectUrl };
+        return Challenge(props, Microsoft.AspNetCore.Authentication.Google.GoogleDefaults.AuthenticationScheme);
+    }
+
+    // GET /Cuenta/GoogleCallback -> Recibe los claims de Google, busca o registra el Usuario en BD e inicia sesión
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> GoogleCallback(string? returnUrl = null)
+    {
+        var result = await HttpContext.AuthenticateAsync("GoogleExternal");
+        if (!result.Succeeded || result.Principal is null)
+        {
+            TempData["Error"] = "No se pudo completar el inicio de sesión con Google.";
+            return RedirectToAction(nameof(Acceso), new { returnUrl });
+        }
+
+        var email = result.Principal.FindFirstValue(ClaimTypes.Email)?.Trim();
+        var nombreGoogle = result.Principal.FindFirstValue(ClaimTypes.Name)?.Trim();
+        await HttpContext.SignOutAsync("GoogleExternal");
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            TempData["Error"] = "Google no devolvió un correo electrónico válido.";
+            return RedirectToAction(nameof(Acceso), new { returnUrl });
+        }
+
+        var existentes = await _usuarioService.ObtenerUsuarioPorEmailONombreAsync(email);
+        var usuario = existentes.FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+
+        if (usuario is null)
+        {
+            // Crear cuenta automáticamente con CustomTransaction registrarUsuario
+            var baseNombre = !string.IsNullOrWhiteSpace(nombreGoogle)
+                ? nombreGoogle.Replace(" ", "")
+                : email.Split('@')[0];
+            if (baseNombre.Length > 24) baseNombre = baseNombre[..24];
+            if (baseNombre.Length < 3) baseNombre = $"User{Random.Shared.Next(100, 999)}";
+
+            var nombreFinal = baseNombre;
+            var duplicados = await _usuarioService.ObtenerUsuarioPorEmailONombreAsync(nombreFinal);
+            if (duplicados.Any(u => string.Equals(u.NombreUsuario, nombreFinal, StringComparison.OrdinalIgnoreCase)))
+            {
+                nombreFinal = $"{baseNombre[..Math.Min(baseNombre.Length, 20)]}{Random.Shared.Next(100, 9999)}";
+            }
+
+            try
+            {
+                await using var unitOfWork = _unitOfWorkFactory.Create();
+                var useCase = new CraftCaster.Application.UseCases.Usuario.UsuarioUseCase(unitOfWork);
+                var passAleatoria = $"Ggl!{Guid.NewGuid():N}";
+                usuario = await useCase.RegistrarUsuarioAsync(nombreFinal, email, passAleatoria, 1);
+            }
+            catch (ModelException error)
+            {
+                TempData["Error"] = MensajeDe(error);
+                return RedirectToAction(nameof(Acceso), new { returnUrl });
+            }
+        }
+
+        if (usuario.EstadoCuenta == EstadoCuenta.Suspendida)
+        {
+            TempData["Error"] = "Tu cuenta está suspendida. Contacta con un administrador.";
+            return RedirectToAction(nameof(Acceso), new { returnUrl });
+        }
+
+        await IniciarSesionAsync(usuario);
+        return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
     }
 
     // GET /Cuenta/RecuperarContrasenia

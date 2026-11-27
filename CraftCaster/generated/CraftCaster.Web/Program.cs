@@ -11,7 +11,7 @@ CraftCaster.Web.Utils.Localization.HariaWebLocalization.AddHariaWebLocalization(
 CraftCaster.Web.Utils.Security.HariaWebClassSession.AddHariaWebClassSession(builder.Services);
 // HARIA-WEB: SECURITY BEGIN
 CraftCaster.Web.Configuration.HariaApplicationRegistration.AddHariaApplication(builder.Services, builder.Configuration, builder.Environment);
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+var authBuilder = builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(cookie =>
     {
         cookie.LoginPath = "/Cuenta/Acceso";
@@ -20,7 +20,25 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
         cookie.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         cookie.Cookie.SameSite = SameSiteMode.Lax;
         cookie.SlidingExpiration = true;
+    })
+    .AddCookie("GoogleExternal", cookie =>
+    {
+        cookie.Cookie.HttpOnly = true;
+        cookie.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        cookie.Cookie.SameSite = SameSiteMode.Lax;
     });
+
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+{
+    authBuilder.AddGoogle(options =>
+    {
+        options.SignInScheme = "GoogleExternal";
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+    });
+}
 builder.Services.AddAuthorization();
 // HARIA-WEB: SECURITY END
 
