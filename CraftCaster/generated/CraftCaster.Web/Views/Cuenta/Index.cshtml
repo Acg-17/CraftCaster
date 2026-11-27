@@ -76,7 +76,7 @@
                                 {
                                     <tr>
                                         <td class="ps-3">
-                                            <a asp-controller="Carta" asp-action="Details" asp-route-id="@carta.Id">@carta.Nombre</a>
+                                            <a asp-controller="MisCartas" asp-action="Detalle" asp-route-id="@carta.Id">@carta.Nombre</a>
                                             @if (!carta.EsPublica) { <span class="badge text-bg-secondary ms-1">Privada</span> }
                                         </td>
                                         <td>@carta.Tipo</td>

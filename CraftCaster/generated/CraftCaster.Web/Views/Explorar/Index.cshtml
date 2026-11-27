@@ -17,7 +17,7 @@
             <h1 class="h3 mb-1">Explorar</h1>
             <p class="text-body-secondary mb-0">Descubre los mazos que comparte la comunidad.</p>
         </div>
-        <a asp-controller="Mazo" asp-action="Create" class="btn btn-dark">+ Crear mazo</a>
+        <a asp-controller="EditorMazo" asp-action="Crear" class="btn btn-dark">+ Crear mazo</a>
     </div>
 </div>
 
@@ -93,7 +93,7 @@
                     </div>
                     <div class="card-footer bg-body border-0 pt-0 pb-3 d-flex gap-2">
                         <a asp-action="Detalle" asp-route-id="@mazo.Id" class="btn btn-dark btn-sm flex-fill">Ver mazo</a>
-                        <a asp-controller="Partida" asp-action="Index" class="btn btn-outline-dark btn-sm flex-fill">Luchar</a>
+                        <a asp-controller="Juego" asp-action="Index" class="btn btn-outline-dark btn-sm flex-fill">Luchar</a>
                     </div>
                 </div>
             </div>
