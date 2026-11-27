@@ -104,6 +104,21 @@ public sealed class ExplorarController : Controller
             return NotFound();
         }
 
+        // Cargar estados y habilidades de cada carta para la vista previa TCG en Explorar/Detalle
+        var cartasEntidad = mazo.Lineas
+            .Where(l => l.Carta is not null)
+            .Select(l => l.Carta)
+            .GroupBy(c => c.Id)
+            .Select(g => g.First())
+            .OrderBy(c => c.CosteMana)
+            .ThenBy(c => c.Nombre)
+            .ToList();
+        foreach (var c in cartasEntidad)
+        {
+            _ = c.Estados?.Select(e => e.Habilidades?.Count).ToList();
+        }
+        ViewBag.CartasEntidad = cartasEntidad;
+
         return View(new DetalleMazoViewModel
         {
             Mazo = MazoAssembler.ToViewModel(mazo),

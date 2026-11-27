@@ -1,10 +1,21 @@
 @model CraftCaster.Web.ViewModels.DetalleMazoViewModel
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment Env
 @{
     ViewData["Title"] = Model.Mazo.Nombre;
     var estrellas = (int)Math.Round(Model.Mazo.Valoracion);
     var curva = Model.CurvaMana;
     var maximo = Math.Max(1, curva.Max(c => c.Cantidad));
+    var cartasEntidad = ViewBag.CartasEntidad as List<CraftCaster.Domain.Entities.Carta> ?? new();
+    string? BuscarImagenCarta(int cartaId)
+    {
+        var dir = System.IO.Path.Combine(Env.WebRootPath, "uploads", "cartas");
+        if (!System.IO.Directory.Exists(dir)) return null;
+        var file = System.IO.Directory.GetFiles(dir, $"carta_{cartaId}.*").FirstOrDefault();
+        return file is null ? null : $"/uploads/cartas/{System.IO.Path.GetFileName(file)}";
+    }
 }
+
+<link rel="stylesheet" href="~/css/wireframe-cartas.css" asp-append-version="true" />
 
 @if (TempData["Mensaje"] is string mensaje)
 {
@@ -41,16 +52,19 @@
                 {
                     <div class="table-responsive">
                         <table class="table table-sm align-middle mb-0">
-                            <thead><tr><th class="ps-3">Maná</th><th>Carta</th><th>Tipo</th><th>Rareza</th><th class="text-end pe-3">Copias</th></tr></thead>
+                            <thead><tr><th class="ps-3">Maná</th><th>Carta</th><th>Tipo</th><th>Rareza</th><th class="text-end">Copias</th><th class="text-end pe-3">Vista</th></tr></thead>
                             <tbody>
                                 @foreach (var carta in Model.Cartas)
                                 {
-                                    <tr>
+                                    <tr class="js-fila-carta" data-carta-id="@carta.CartaId" style="cursor: pointer;">
                                         <td class="ps-3"><span class="badge rounded-pill text-bg-primary">@carta.CosteMana</span></td>
-                                        <td>@carta.Nombre</td>
+                                        <td class="fw-semibold">@carta.Nombre</td>
                                         <td>@carta.Tipo</td>
                                         <td>@carta.Rareza</td>
-                                        <td class="text-end pe-3">x@(carta.Cantidad)</td>
+                                        <td class="text-end">x@(carta.Cantidad)</td>
+                                        <td class="text-end pe-3">
+                                            <button type="button" class="btn btn-sm btn-outline-dark py-0 px-2 js-ver-carta" data-carta-id="@carta.CartaId" title="Previsualizar carta">Ver</button>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -66,6 +80,26 @@
     </div>
 
     <div class="col-lg-4 d-flex flex-column gap-4">
+        @if (cartasEntidad.Any())
+        {
+            <section class="card border-0 shadow-sm">
+                <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+                    <h2 class="h5 mb-0">Vista previa de carta</h2>
+                    <span class="small text-body-secondary">Haz clic en una fila</span>
+                </div>
+                <div class="card-body d-flex justify-content-center pb-4">
+                    @for (int idx = 0; idx < cartasEntidad.Count; idx++)
+                    {
+                        var entidad = cartasEntidad[idx];
+                        var vd = new ViewDataDictionary(ViewData) { ["ImagenUrl"] = BuscarImagenCarta(entidad.Id), ["Compacta"] = false };
+                        <div class="js-preview-carta @(idx == 0 ? "" : "d-none")" data-carta-id="@entidad.Id">
+                            <partial name="_CartaTcg" model="entidad" view-data="vd" />
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
         <section class="card border-0 shadow-sm">
             <div class="card-header bg-body p-3"><h2 class="h5 mb-0">Curva de maná</h2></div>
             <div class="card-body">
@@ -146,3 +180,26 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/cartas-alternancia.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            const filas = document.querySelectorAll('.js-fila-carta');
+            const previews = document.querySelectorAll('.js-preview-carta');
+            if (filas.length === 0 || previews.length === 0) return;
+
+            function seleccionarCarta(cartaId) {
+                previews.forEach(p => p.classList.toggle('d-none', p.dataset.cartaId !== cartaId));
+                filas.forEach(f => f.classList.toggle('table-active', f.dataset.cartaId === cartaId));
+            }
+
+            filas.forEach(fila => {
+                fila.addEventListener('click', () => seleccionarCarta(fila.dataset.cartaId));
+            });
+
+            // Marcar la primera carta por defecto
+            seleccionarCarta(filas[0].dataset.cartaId);
+        })();
+    </script>
+}

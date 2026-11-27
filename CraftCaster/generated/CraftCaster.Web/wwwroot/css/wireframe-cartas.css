@@ -238,10 +238,13 @@
 
 .cc-card-top-center .cc-heart-num {
     position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -56%);
     font-weight: 700;
     font-size: 0.9rem;
+    line-height: 1;
     color: #212529;
-    top: 8px;
 }
 
 .cc-card-top-right {
