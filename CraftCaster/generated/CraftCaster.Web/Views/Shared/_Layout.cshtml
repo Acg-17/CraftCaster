@@ -1,9 +1,17 @@
 @using CraftCaster.Web.Utils.Security
+@inject CraftCaster.Application.Services.UsuarioService UsuarioService
 @{
     var usuarioSesion = Context.Session.GetUser<UsuarioViewModel>();
-    var nombreMostrar = !string.IsNullOrWhiteSpace(usuarioSesion?.NombreUsuario)
-        ? usuarioSesion.NombreUsuario
-        : User.Identity?.Name;
+    var nombreMostrar = usuarioSesion?.NombreUsuario;
+    if (string.IsNullOrWhiteSpace(nombreMostrar) && User.Identity?.IsAuthenticated == true && int.TryParse(User.Identity?.Name, out var uid))
+    {
+        var usuarioDb = await UsuarioService.ReadOIDAsync(uid);
+        nombreMostrar = usuarioDb?.NombreUsuario;
+    }
+    if (string.IsNullOrWhiteSpace(nombreMostrar))
+    {
+        nombreMostrar = User.Identity?.Name;
+    }
 }
 <!DOCTYPE html>
 <html lang="@System.Globalization.CultureInfo.CurrentUICulture.Name" data-bs-theme="light">

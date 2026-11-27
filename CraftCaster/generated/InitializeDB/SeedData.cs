@@ -329,19 +329,19 @@ public static class SeedData
             var estadoRayo = await estadoService.NewAsync(TipoEstado.Entrar, rayo.Id);
             await habilidadService.NewAsync(TipoHabilidad.Danyo, 3, TipoObjetivo.Enemigo, 0, estadoRayo.Id);
 
-            // ---------- Mazos (numCartas y costeMedio cuadran con sus lineas) ----------
-            // Fuego y Acero: 10x2 + 8x3 + 6x4 + 2x6 + 4x1 = 84 de mana en 30 cartas -> coste medio 2,8
-            var mazoAna = await mazoService.NewAsync("Fuego y Acero", 2.8f, 30, EstadoMazo.Jugable, true, 4.5f, 1, ana.Id);
-            await lineaMazoService.NewAsync(10, mazoAna.Id, caballero.Id);
+            // ---------- Mazos (numCartas, costeMedio y cuotas de rareza: max 16+ comunes, 8 especiales, 4 epicas, 2 legendarias) ----------
+            // Fuego y Acero: 12x2 + 4x1 (16 comunes) + 8x3 (8 especiales) + 4x4 (4 epicas) + 2x6 (2 legendarias) = 80 / 30 = 2,67
+            var mazoAna = await mazoService.NewAsync("Fuego y Acero", 2.67f, 30, EstadoMazo.Jugable, true, 4.5f, 1, ana.Id);
+            await lineaMazoService.NewAsync(12, mazoAna.Id, caballero.Id);
             await lineaMazoService.NewAsync(8, mazoAna.Id, arquera.Id);
-            await lineaMazoService.NewAsync(6, mazoAna.Id, bolaFuego.Id);
+            await lineaMazoService.NewAsync(4, mazoAna.Id, bolaFuego.Id);
             await lineaMazoService.NewAsync(2, mazoAna.Id, dragon.Id);
             await lineaMazoService.NewAsync(4, mazoAna.Id, pocion.Id);
 
-            // Manada Nocturna: 16x2 + 14x2 = 60 de mana en 30 cartas -> coste medio 2
+            // Manada Nocturna: 22x2 (22 comunes) + 8x2 (8 especiales) = 60 de mana en 30 cartas -> coste medio 2
             var mazoBeto = await mazoService.NewAsync("Manada Nocturna", 2f, 30, EstadoMazo.Jugable, true, 3.5f, 1, beto.Id);
-            await lineaMazoService.NewAsync(16, mazoBeto.Id, lobo.Id);
-            await lineaMazoService.NewAsync(14, mazoBeto.Id, rayo.Id);
+            await lineaMazoService.NewAsync(22, mazoBeto.Id, lobo.Id);
+            await lineaMazoService.NewAsync(8, mazoBeto.Id, rayo.Id);
 
             // Pruebas: privado y sin terminar (5 cartas de coste 1)
             var mazoPruebas = await mazoService.NewAsync("Pruebas", 1f, 5, EstadoMazo.Incompleto, false, 0f, 1, ana.Id);
