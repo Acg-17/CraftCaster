@@ -8,7 +8,6 @@ using CraftCaster.Application.Services;
 using CraftCaster.Domain.Entities;
 using CraftCaster.Domain.Enums;
 using CraftCaster.Web.Assemblers;
-using CraftCaster.Web.Services;
 using CraftCaster.Web.Utils.Security;
 using CraftCaster.Web.ViewModels;
 
@@ -18,7 +17,8 @@ namespace CraftCaster.Web.Controllers;
 //   OPCIONES PARTIDA  -> Index (sala), Crear, Unirse, Abandonar, Historial
 //                        CustomTransaction Usuario.iniciarPartida / unirsePartida / abandonarPartida
 //   TABLERO PARTIDA   -> Tablero, EstadoTablero (polling ligero), Lanzar, Atacar, PasarTurno
-//                        CustomTransaction JugadorPartida.lanzarCarta, Partida.pasarTurno + MotorPartidaService
+//                        CustomTransaction JugadorPartida.lanzarCarta / atacar, Partida.pasarTurno / empezar.
+//                        Dentro de su transacción, cada habilidad se ejecuta con la Custom Habilidad.ejecutar.
 //   FIN DE PARTIDA    -> Fin (ganador)  CustomTransaction Partida.finalizar
 [Authorize(Roles = HariaWebAuthentication.RolCliente + "," + HariaWebAuthentication.RolAdmin)]
 public sealed class JuegoController : Controller
@@ -27,8 +27,8 @@ public sealed class JuegoController : Controller
     private readonly UsuarioService _usuarioService;
     private readonly MazoService _mazoService;
     private readonly ZonaPartidaService _zonaPartidaService;
+    private readonly CartaService _cartaService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly MotorPartidaService _motorPartida;
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<JuegoController> _logger;
 
@@ -37,8 +37,8 @@ public sealed class JuegoController : Controller
         UsuarioService usuarioService,
         MazoService mazoService,
         ZonaPartidaService zonaPartidaService,
+        CartaService cartaService,
         IUnitOfWorkFactory unitOfWorkFactory,
-        MotorPartidaService motorPartida,
         IWebHostEnvironment env,
         ILogger<JuegoController> logger)
     {
@@ -46,8 +46,8 @@ public sealed class JuegoController : Controller
         _usuarioService = usuarioService;
         _mazoService = mazoService;
         _zonaPartidaService = zonaPartidaService;
+        _cartaService = cartaService;
         _unitOfWorkFactory = unitOfWorkFactory;
-        _motorPartida = motorPartida;
         _env = env;
         _logger = logger;
     }
@@ -172,15 +172,11 @@ public sealed class JuegoController : Controller
             new CraftCaster.Application.UseCases.Usuario.UsuarioUseCase(uow).UnirsePartidaAsync(usuarioId, partidaId));
         if (!ok) return RedirectToAction(nameof(Index));
 
-        try
+        // CustomTransaction Partida.empezar: mano inicial y primer turno, en una transacción
+        if (await EjecutarCasoDeUsoAsync(uow =>
+                new CraftCaster.Application.UseCases.Partida.PartidaUseCase(uow).EmpezarAsync(partidaId)))
         {
-            await _motorPartida.PrepararInicioPartidaAsync(partidaId);
-            TempData["Mensaje"] = "¡Te has unido a la partida! Se han repartido 4 cartas iniciales y comienza el turno 1.";
-        }
-        catch (Exception error) when (error is not OperationCanceledException)
-        {
-            _logger.LogError(error, "No se pudo preparar el inicio de la partida {Id}.", partidaId);
-            TempData["Error"] = MensajeDe(error);
+            TempData["Mensaje"] = "¡Te has unido a la partida! Se han repartido las cartas iniciales y comienza el turno 1.";
         }
 
         return RedirectToAction(nameof(Tablero), new { id = partidaId });
@@ -271,8 +267,13 @@ public sealed class JuegoController : Controller
         if (partida.Estado == EstadoPartida.EnCurso && partida.Jugadores.Count >= 2 &&
             partida.Turnos.Count == 0 && !partida.Jugadores.Any(j => j.Activo))
         {
-            await _motorPartida.PrepararInicioPartidaAsync(id);
-            return RedirectToAction(nameof(Tablero), new { id });
+            // CustomTransaction Partida.empezar: mano inicial y primer turno, en una transacción.
+            // Si falla no se redirige (evita un bucle de redirecciones): se muestra el tablero con el error.
+            if (await EjecutarCasoDeUsoAsync(uow =>
+                    new CraftCaster.Application.UseCases.Partida.PartidaUseCase(uow).EmpezarAsync(id)))
+            {
+                return RedirectToAction(nameof(Tablero), new { id });
+            }
         }
 
         var miNumero = partida.Usuario1.Id == usuarioId ? 1 : 2;
@@ -361,7 +362,8 @@ public sealed class JuegoController : Controller
         });
     }
 
-    // POST /Juego/Robar/5 -> Deshabilitado como robo manual (se roba 1 carta automáticamente cada turno)
+    // POST /Juego/Robar/5 -> Sin robo manual: se roba al repartir la mano inicial (Partida.empezar), al empezar
+    // cada turno (Partida.pasarTurno) y con la habilidad Robar (Habilidad.ejecutar).
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult Robar(int id)
@@ -386,11 +388,16 @@ public sealed class JuegoController : Controller
 
         try
         {
-            var resultado = await _motorPartida.LanzarCartaConEfectosAsync(
-                id, yo!.Id, cartaId, lanzar.ObjetivoCartaId, lanzar.ObjetivoJugador);
+            // CustomTransaction JugadorPartida.lanzarCarta (objetivo 0 = sin carta objetivo)
+            string resumen;
+            await using (var uow = _unitOfWorkFactory.Create())
+            {
+                resumen = await new CraftCaster.Application.UseCases.JugadorPartida.JugadorPartidaUseCase(uow).LanzarCartaAsync(
+                    yo!.Id, cartaId, lanzar.ObjetivoCartaId ?? 0, lanzar.ObjetivoJugador);
+            }
 
-            TempData["Mensaje"] = resultado.Mensaje;
-            if (resultado.Finalizada) return RedirectToAction(nameof(Fin), new { id });
+            TempData["Mensaje"] = resumen;
+            if (await FinalizarSiHayPerdedorAsync(id)) return RedirectToAction(nameof(Fin), new { id });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -417,11 +424,16 @@ public sealed class JuegoController : Controller
 
         try
         {
-            var resultado = await _motorPartida.AtacarConCriaturaAsync(
-                id, yo!.Id, atacanteId, atacar.ObjetivoCartaId, atacar.ObjetivoJugador);
+            // CustomTransaction JugadorPartida.atacar (objetivo 0 = sin carta objetivo)
+            string resumen;
+            await using (var uow = _unitOfWorkFactory.Create())
+            {
+                resumen = await new CraftCaster.Application.UseCases.JugadorPartida.JugadorPartidaUseCase(uow).AtacarAsync(
+                    yo!.Id, atacanteId, atacar.ObjetivoCartaId ?? 0, atacar.ObjetivoJugador);
+            }
 
-            TempData["Mensaje"] = resultado.Mensaje;
-            if (resultado.Finalizada) return RedirectToAction(nameof(Fin), new { id });
+            TempData["Mensaje"] = resumen;
+            if (await FinalizarSiHayPerdedorAsync(id)) return RedirectToAction(nameof(Fin), new { id });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -450,16 +462,22 @@ public sealed class JuegoController : Controller
 
         try
         {
+            await using var uow = _unitOfWorkFactory.Create();
+            var partidaUseCase = new CraftCaster.Application.UseCases.Partida.PartidaUseCase(uow);
+
             if (sinEmpezar)
             {
-                await _motorPartida.PrepararInicioPartidaAsync(id);
+                await partidaUseCase.EmpezarAsync(id);
                 TempData["Mensaje"] = "¡Empieza la partida!";
                 return RedirectToAction(nameof(Tablero), new { id });
             }
 
-            var resultado = await _motorPartida.PasarTurnoConEfectosAsync(id, yo.Id);
-            TempData["Mensaje"] = resultado.Mensaje;
-            if (resultado.Finalizada) return RedirectToAction(nameof(Fin), new { id });
+            // CustomTransaction Partida.pasarTurno: devuelve el resumen de las habilidades de fin e inicio de turno
+            var resumen = await partidaUseCase.PasarTurnoAsync(id);
+            TempData["Mensaje"] = string.IsNullOrWhiteSpace(resumen)
+                ? "Has terminado tu turno."
+                : $"Has terminado tu turno. {resumen}";
+            if (await FinalizarSiHayPerdedorAsync(id)) return RedirectToAction(nameof(Fin), new { id });
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -563,6 +581,23 @@ public sealed class JuegoController : Controller
         }
     }
 
+    // FIN DE PARTIDA: si tras la jugada algún jugador se ha quedado sin vida, CustomTransaction Partida.finalizar
+    // (decide el ganador). Va en su propia transacción, después de confirmar la jugada.
+    private async Task<bool> FinalizarSiHayPerdedorAsync(int partidaId)
+    {
+        await using var uow = _unitOfWorkFactory.Create();
+        var partida = await uow.PartidaRepository.ReadAsync(partidaId);
+        if (partida is null) return false;
+        if (partida.Estado == EstadoPartida.Finalizada) return true;
+        if (partida.Estado != EstadoPartida.EnCurso || partida.Jugadores.Count < 2 || !partida.Jugadores.Any(j => j.Vida <= 0))
+        {
+            return false;
+        }
+
+        await new CraftCaster.Application.UseCases.Partida.PartidaUseCase(uow).FinalizarAsync(partidaId);
+        return true;
+    }
+
     private async Task<Partida?> PartidaActivaDeAsync(int usuarioId) =>
         (await _partidaService.ObtenerPartidasUsuarioAsync(usuarioId))
             .FirstOrDefault(p => p.Estado != EstadoPartida.Finalizada);
@@ -609,6 +644,13 @@ public sealed class JuegoController : Controller
             Descarte = descarte.Select(c => ToCarta(c, criaturasEnemigas, criaturasPropias)).ToList(),
         };
 
+        // Custom Carta.modoObjetivo: objetivo que pide cada carta de la mano al lanzarla
+        foreach (var carta in model.Mano)
+        {
+            carta.ModoObjetivo = (ModoObjetivoCarta)await _cartaService.ModoObjetivoAsync(
+                carta.CartaOriginalId, criaturasEnemigas, criaturasPropias);
+        }
+
         if (soyYo && esMiTurno)
         {
             foreach (var carta in model.Mano)
@@ -639,7 +681,6 @@ public sealed class JuegoController : Controller
         VidaActual = carta.VidaActual,
         AtaqueActual = carta.AtaqueActual,
         PuedeAtacar = carta.PuedeAtacar,
-        ModoObjetivo = MotorPartidaService.DeterminarModoObjetivo(carta.Original, criaturasEnemigas, criaturasPropias),
         Habilidades = (carta.Original.Estados ?? new List<Estado>())
             .SelectMany(estado => (estado.Habilidades ?? new List<Habilidad>()).Select(h => new HabilidadTableroViewModel
             {

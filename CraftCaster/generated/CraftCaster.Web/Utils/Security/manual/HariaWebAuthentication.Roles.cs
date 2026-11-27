@@ -9,7 +9,8 @@ namespace CraftCaster.Web.Utils.Security;
 // cargada en el servidor tras validar la contraseña (nunca del formulario).
 //   TipoUsuario.Cliente -> rol "Cliente"
 //   TipoUsuario.Admin   -> rol "Admin"
-// Tras cambiar el TipoUsuario de una cuenta hay que volver a iniciar sesión (los roles viajan en la cookie).
+// Los roles viajan en la cookie: si cambia el TipoUsuario, ValidacionCuentaActiva cierra la sesión
+// en la siguiente petición y el usuario vuelve a entrar con el rol nuevo.
 public static partial class HariaWebAuthentication
 {
     public const string RolCliente = "Cliente";

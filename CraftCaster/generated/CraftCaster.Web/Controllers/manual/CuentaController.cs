@@ -2,6 +2,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.AspNetCore.Mvc;
 using CraftCaster.Application.Abstractions;
 using CraftCaster.Application.Exceptions;
@@ -26,6 +28,10 @@ public sealed class CuentaController : Controller
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _configuration;
     private readonly ILogger<CuentaController> _logger;
+    private readonly ITimeLimitedDataProtector _protectorRecuperacion;
+
+    // Enlace de recuperación de contraseña: caduca y deja de valer en cuanto se cambia la contraseña
+    private static readonly TimeSpan CaducidadEnlaceRecuperacion = TimeSpan.FromMinutes(30);
 
     public CuentaController(
         UsuarioService usuarioService,
@@ -35,8 +41,12 @@ public sealed class CuentaController : Controller
         IUnitOfWorkFactory unitOfWorkFactory,
         IWebHostEnvironment env,
         IConfiguration configuration,
-        ILogger<CuentaController> logger)
+        ILogger<CuentaController> logger,
+        IDataProtectionProvider dataProtectionProvider)
     {
+        _protectorRecuperacion = dataProtectionProvider
+            .CreateProtector("CraftCaster.Cuenta.RecuperarContrasenia")
+            .ToTimeLimitedDataProtector();
         _usuarioService = usuarioService;
         _cartaService = cartaService;
         _mazoService = mazoService;
@@ -227,6 +237,17 @@ public sealed class CuentaController : Controller
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
     }
 
+    // =====================================================================
+    // Recuperar contraseña
+    // 1. El usuario escribe su correo y se genera un enlace firmado y con caducidad (30 min) para esa cuenta.
+    // 2. El enlace se "envía" al correo. La aplicación no tiene servidor de correo configurado, así que
+    //    se escribe en el log del servidor (consola de dotnet run). Para producción: sustituir
+    //    EnviarEnlaceRecuperacion por el envío real del correo.
+    // 3. Con el enlace se elige la contraseña nueva. Lleva una huella de la contraseña actual,
+    //    así que deja de valer en cuanto se usa (un solo uso).
+    // La respuesta es siempre la misma, exista o no la cuenta, para no revelar qué correos están registrados.
+    // =====================================================================
+
     // GET /Cuenta/RecuperarContrasenia
     [AllowAnonymous]
     [HttpGet]
@@ -244,30 +265,62 @@ public sealed class CuentaController : Controller
         if (!ModelState.IsValid) return View(model);
 
         var email = model.Email.Trim();
-        var nombre = model.NombreUsuario.Trim();
+        var usuario = (await _usuarioService.ObtenerUsuarioPorEmailONombreAsync(email))
+            .FirstOrDefault(u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+
+        if (usuario is not null && usuario.EstadoCuenta != EstadoCuenta.Suspendida)
+        {
+            var token = _protectorRecuperacion.Protect(
+                $"{usuario.Id}|{HuellaContrasenia(usuario)}", CaducidadEnlaceRecuperacion);
+            var enlace = Url.Action(nameof(RestablecerContrasenia), "Cuenta", new { token }, Request.Scheme)!;
+            EnviarEnlaceRecuperacion(usuario, enlace);
+        }
+
+        TempData["Exito"] = "Si el correo pertenece a una cuenta activa, te hemos enviado un enlace para cambiar la contraseña. Caduca en 30 minutos.";
+        return RedirectToAction(nameof(Acceso));
+    }
+
+    // GET /Cuenta/RestablecerContrasenia?token=...
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> RestablecerContrasenia(string? token)
+    {
+        if (await UsuarioDelTokenAsync(token) is null)
+        {
+            TempData["Error"] = "El enlace no es válido o ha caducado. Solicita uno nuevo.";
+            return RedirectToAction(nameof(RecuperarContrasenia));
+        }
+
+        return View(new RestablecerContraseniaViewModel { Token = token! });
+    }
+
+    // POST /Cuenta/RestablecerContrasenia
+    [AllowAnonymous]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RestablecerContrasenia(RestablecerContraseniaViewModel model)
+    {
+        var usuarioToken = await UsuarioDelTokenAsync(model.Token);
+        if (usuarioToken is null)
+        {
+            TempData["Error"] = "El enlace no es válido o ha caducado. Solicita uno nuevo.";
+            return RedirectToAction(nameof(RecuperarContrasenia));
+        }
+
+        if (!ModelState.IsValid) return View(model);
 
         await using var unitOfWork = _unitOfWorkFactory.Create();
         var service = new UsuarioService(unitOfWork);
-        var candidatos = await service.ObtenerUsuarioPorEmailONombreAsync(email);
-        var usuario = candidatos.FirstOrDefault(u =>
-            string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(u.NombreUsuario, nombre, StringComparison.OrdinalIgnoreCase));
-
+        var usuario = await service.ReadOIDAsync(usuarioToken.Id);
         if (usuario is null)
         {
-            ModelState.AddModelError(string.Empty, "No existe ninguna cuenta que coincida con ese usuario y correo electrónico.");
-            return View(model);
-        }
-
-        if (usuario.EstadoCuenta == CraftCaster.Domain.Enums.EstadoCuenta.Suspendida)
-        {
-            ModelState.AddModelError(string.Empty, "Esta cuenta está suspendida. Contacta con un administrador.");
-            return View(model);
+            TempData["Error"] = "El enlace no es válido o ha caducado. Solicita uno nuevo.";
+            return RedirectToAction(nameof(RecuperarContrasenia));
         }
 
         try
         {
-            await unitOfWork.BeginTransactionAsync("MVC.Cuenta.RecuperarContrasenia");
+            await unitOfWork.BeginTransactionAsync("MVC.Cuenta.RestablecerContrasenia");
             await service.ModifyAsync(
                 usuario.Id,
                 usuario.NombreUsuario,
@@ -277,9 +330,6 @@ public sealed class CuentaController : Controller
                 usuario.EstadoCuenta,
                 usuario.TipoUsuario);
             await unitOfWork.CommitAsync();
-
-            TempData["Exito"] = "Contraseña actualizada correctamente. Ya puedes iniciar sesión.";
-            return RedirectToAction(nameof(Acceso));
         }
         catch (ModelException error)
         {
@@ -287,6 +337,50 @@ public sealed class CuentaController : Controller
             ModelState.AddModelError(string.Empty, MensajeDe(error));
             return View(model);
         }
+
+        TempData["Exito"] = "Contraseña actualizada correctamente. Ya puedes iniciar sesión.";
+        return RedirectToAction(nameof(Acceso));
+    }
+
+    // Devuelve el usuario del enlace si la firma es válida, no ha caducado, la contraseña no ha cambiado
+    // desde que se pidió y la cuenta no está suspendida. Si no, null.
+    private async Task<CraftCaster.Domain.Entities.Usuario?> UsuarioDelTokenAsync(string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return null;
+
+        string contenido;
+        try
+        {
+            contenido = _protectorRecuperacion.Unprotect(token);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return null; // firma no válida o enlace caducado
+        }
+
+        var partes = contenido.Split('|', 2);
+        if (partes.Length != 2 || !int.TryParse(partes[0], out var usuarioId)) return null;
+
+        var usuario = await _usuarioService.ReadOIDAsync(usuarioId);
+        if (usuario is null || usuario.EstadoCuenta == EstadoCuenta.Suspendida) return null;
+
+        return string.Equals(partes[1], HuellaContrasenia(usuario), StringComparison.Ordinal) ? usuario : null;
+    }
+
+    // Huella de la contraseña guardada (ya cifrada) y del correo: cambia al cambiar cualquiera de los dos
+    private static string HuellaContrasenia(CraftCaster.Domain.Entities.Usuario usuario)
+    {
+        var bytes = System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes($"{usuario.Id}|{usuario.Email}|{usuario.Contrasenia}"));
+        return WebEncoders.Base64UrlEncode(bytes);
+    }
+
+    // Sustituir por el envío real del correo cuando haya un servidor SMTP configurado
+    private void EnviarEnlaceRecuperacion(CraftCaster.Domain.Entities.Usuario usuario, string enlace)
+    {
+        _logger.LogWarning(
+            "[Recuperar contraseña] Enlace para {Usuario} <{Email}> (caduca en 30 min): {Enlace}",
+            usuario.NombreUsuario, usuario.Email, enlace);
     }
 
     // GET /Cuenta (Mi cuenta)

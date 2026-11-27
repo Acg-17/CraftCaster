@@ -1,8 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 using CraftCaster.Domain.Enums;
-using CraftCaster.Web.Services;
 
 namespace CraftCaster.Web.ViewModels;
+
+// Objetivo que pide una carta al lanzarla. Son los valores que devuelve la Custom Carta.modoObjetivo
+// (los usa tablero-juego.js en data-target-mode).
+public enum ModoObjetivoCarta
+{
+    Ninguno = 0,
+    EnemigoOCriatura = 1,
+    SoloCriaturaEnemiga = 2,
+    SoloCriaturaPropia = 3,
+    SoloJugadorEnemigo = 4,
+}
 
 // ===================== OPCIONES PARTIDA (sala) =====================
 

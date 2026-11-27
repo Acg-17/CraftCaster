@@ -80,15 +80,15 @@ public partial class JugadorPartidaController
     [ValidateAntiForgeryToken]
     /*PROTECTED REGION ID(JugadorPartidaController_LanzarCarta_POST_attributes) START*/
     /*PROTECTED REGION END*/
-    public async Task<IActionResult> LanzarCarta(int p_oid, int p_carta_oid)
+    public async Task<IActionResult> LanzarCarta(int p_oid, int p_carta_oid, int p_objetivoCarta, bool p_objetivoJugador)
     {
     /*PROTECTED REGION ID(JugadorPartidaController_LanzarCarta_POST_body) ENABLED START*/
 
         if (!ModelState.IsValid) return BadRequest(ModelState);
         await using var unitOfWork = _useCaseUnitOfWorkFactory.Create();
         var useCase = new CraftCaster.Application.UseCases.JugadorPartida.JugadorPartidaUseCase(unitOfWork);
-        await useCase.LanzarCartaAsync(p_oid, p_carta_oid);
-        return NoContent();
+        var result = await useCase.LanzarCartaAsync(p_oid, p_carta_oid, p_objetivoCarta, p_objetivoJugador);
+        return Ok(result);
     /*PROTECTED REGION END*/
     }
 

@@ -218,6 +218,7 @@ ConceptualModel CraftCaster {
 
             // Customs
             public compartir::Custom (p_oid : OID -> Carta) : Void;
+            public modoObjetivo::Custom (p_oid : OID -> Carta, p_criaturasEnemigas : Integer, p_criaturasPropias : Integer) : Integer; //Objetivo que pide la carta al lanzarla: 0 ninguno, 1 enemigo o criatura, 2 criatura enemiga, 3 criatura propia, 4 jugador enemigo
 
             // LinQ
             public obtenerCartasUsuario::ReadFilter (p_oid : OID -> Usuario) : List<Object->Carta>
@@ -307,6 +308,9 @@ ConceptualModel CraftCaster {
             public readOID::ReadOID (p_oid : OID -> Habilidad) : Object->Habilidad;
             public readAll::ReadAll () : List<Object->Habilidad>;
 
+            // Customs
+            public ejecutar::Custom (p_oid : OID -> Habilidad, p_origen_oid : OID -> CartaPartida, p_objetivoCarta : Integer, p_objetivoJugador : Boolean) : String; //Ejecuta la habilidad desde la carta origen, sin transaccion (la usan lanzarCarta, atacar y pasarTurno). p_objetivoCarta = 0 si no hay carta objetivo. Devuelve el resumen del efecto
+
             // Transacciones
             public activar::CustomTransaction (p_oid : OID -> Habilidad, p_partida_oid : OID -> Partida) : Void; //Comprueba el tipo de habilidad y la ejecuta
         }
@@ -340,7 +344,8 @@ ConceptualModel CraftCaster {
 
             //Trannsacciones
             public finalizar::CustomTransaction (p_oid : OID -> Partida) : Void; //Establece la partida como finalizada y define al ganador
-            public pasarTurno::CustomTransaction (p_oid : OID -> Partida) : Void; //Llama a final turno del jugador activo e inicio del otro y crea un turno nuevo en su lista de turnos.
+            public pasarTurno::CustomTransaction (p_oid : OID -> Partida) : String; //Ejecuta las habilidades de fin de turno del jugador activo, pasa el turno (crea el turno, mana y robo) y ejecuta las de inicio de turno del otro. Devuelve el resumen de efectos
+            public empezar::CustomTransaction (p_oid : OID -> Partida) : Boolean; //Si la partida no ha empezado: reparte 4 cartas a cada jugador y da el primer turno al jugador 1. Devuelve false si ya habia empezado
 
             // Relationer
             public addTurno::Relationer -> PartidaTurno.turnos (p_oid : OID -> Partida, p_turno_oids : List<OID -> Turno>) : Void;
@@ -391,7 +396,8 @@ ConceptualModel CraftCaster {
             public addZona::Relationer -> JugadorPartidaZonasPartida.zonas (p_oid : OID -> JugadorPartida, p_zonaPartida_oids : List<OID -> ZonaPartida>) : Void;
             
             //Transacciones
-            public lanzarCarta::CustomTransaction (p_oid : OID -> JugadorPartida, p_carta_oid : OID -> CartaPartida) : Void; //Comprueba y consume el mana, cambia la carta de zona y activa sus habilidades de entrada
+            public lanzarCarta::CustomTransaction (p_oid : OID -> JugadorPartida, p_carta_oid : OID -> CartaPartida, p_objetivoCarta : Integer, p_objetivoJugador : Boolean) : String; //Comprueba el objetivo, consume el mana, cambia la carta de zona y ejecuta sus habilidades de entrada. p_objetivoCarta = 0 si no hay carta objetivo. Devuelve el resumen
+            public atacar::CustomTransaction (p_oid : OID -> JugadorPartida, p_atacante_oid : OID -> CartaPartida, p_objetivoCarta : Integer, p_objetivoJugador : Boolean) : String; //Ataca con una criatura propia a una criatura rival (p_objetivoCarta) o, si su mesa esta vacia, al jugador rival. Ejecuta las habilidades de atacar y morir. Devuelve el resumen
             public robarCarta::CustomTransaction (p_oid : OID -> JugadorPartida) : Void; //Igual que lanzar pero de mazo a mano (toma la primera del mazo)
             public inicioTurno::CustomTransaction (p_oid : OID -> JugadorPartida) : Void; //Establece activo true, regenera el mana, establece puedeAtacar en true para las criaturas y activa habilidades de inicio de turno
             public finalTurno::CustomTransaction (p_oid : OID -> JugadorPartida) : Void; //Establece activo falso y activa habilidades de fin de turno

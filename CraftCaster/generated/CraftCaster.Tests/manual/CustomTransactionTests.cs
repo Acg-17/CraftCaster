@@ -504,7 +504,7 @@ public sealed class CustomTransactionTests
         var useCase = new JugadorPartidaUseCase(db.UnitOfWork);
 
         // Act
-        await useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id);
+        await useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id, 0, false);
 
         // Assert
         var guardada = db.Verify(s =>
@@ -533,7 +533,7 @@ public sealed class CustomTransactionTests
         var useCase = new JugadorPartidaUseCase(db.UnitOfWork);
 
         // Act
-        await useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id);
+        await useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id, 0, false);
 
         // Assert
         Assert.Equal(TipoZona.Descarte, db.ZonaDe(carta.Id));
@@ -551,7 +551,7 @@ public sealed class CustomTransactionTests
         var useCase = new JugadorPartidaUseCase(db.UnitOfWork);
 
         // Act + Assert
-        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id));
+        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id, 0, false));
         Assert.Equal(TipoZona.Mano, db.ZonaDe(carta.Id));
         Assert.Equal(1, db.Verify(s => s.Get<JugadorPartida>(juego.Jugador1.Id).Mana));
         Assert.Equal(0, db.Contar<Accion>());
@@ -567,7 +567,7 @@ public sealed class CustomTransactionTests
         var useCase = new JugadorPartidaUseCase(db.UnitOfWork);
 
         // Act + Assert
-        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id));
+        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, carta.Id, 0, false));
         Assert.Equal(TipoZona.Mano, db.ZonaDe(carta.Id));
     }
 
@@ -581,7 +581,7 @@ public sealed class CustomTransactionTests
         var useCase = new JugadorPartidaUseCase(db.UnitOfWork);
 
         // Act + Assert
-        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, cartaDelMazo.Id));
+        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, cartaDelMazo.Id, 0, false));
         Assert.Equal(TipoZona.Mazo, db.ZonaDe(cartaDelMazo.Id));
         Assert.Equal(5, db.Verify(s => s.Get<JugadorPartida>(juego.Jugador1.Id).Mana));
     }
@@ -596,7 +596,7 @@ public sealed class CustomTransactionTests
         var useCase = new JugadorPartidaUseCase(db.UnitOfWork);
 
         // Act + Assert
-        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, cartaRival.Id));
+        await Assert.ThrowsAsync<ModelException>(() => useCase.LanzarCartaAsync(juego.Jugador1.Id, cartaRival.Id, 0, false));
         Assert.Equal(0, db.ContarCartas(juego.Jugador1.Id, TipoZona.Campo));
     }
 

@@ -12,8 +12,9 @@ using CraftCaster.Domain.Enums;
 namespace CraftCaster.Web.Controllers;
 
 /*PROTECTED REGION ID(LineaMazoController_manual_class_attributes) ENABLED START*/
-// Class-level authorization applies to both partial files.
-// [Authorize(Roles = "Admin")]
+// CRUD generado: solo para el administrador. Los jugadores usan MisCartas, EditorMazo y Explorar,
+// que comprueban que la carta o el mazo es suyo. Afecta también a las acciones JSON (Compartir, ValorarMazo...).
+[Authorize(Roles = "Admin")]
 /*PROTECTED REGION END*/
 public partial class LineaMazoController
 {

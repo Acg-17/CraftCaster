@@ -39,7 +39,7 @@ internal static class Program
             Console.WriteLine("Let's initialize the data of your database!");
             Console.WriteLine("-------------------------------------------------------");
 
-            /*PROTECTED REGION ID(seedData) START*/
+            /*PROTECTED REGION ID(seedData) ENABLED START*/
             // await SeedData.InitializeDataAsync(cfg, loggerFactory);
             await SeedData.InitializeDataManualAsync(cfg, loggerFactory);
             /*PROTECTED REGION END*/

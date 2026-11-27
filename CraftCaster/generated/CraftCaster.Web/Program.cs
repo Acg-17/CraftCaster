@@ -4,7 +4,6 @@ builder.Configuration.Sources.Insert(0, new Microsoft.Extensions.Configuration.J
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<CraftCaster.Web.Services.MotorPartidaService>();
 // HARIA-WEB: LOCALIZATION SERVICES
 CraftCaster.Web.Utils.Localization.HariaWebLocalization.AddHariaWebLocalization(builder.Services, builder.Configuration);
 // HARIA-WEB: USER SESSION SERVICES
@@ -20,6 +19,8 @@ var authBuilder = builder.Services.AddAuthentication(Microsoft.AspNetCore.Authen
         cookie.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         cookie.Cookie.SameSite = SameSiteMode.Lax;
         cookie.SlidingExpiration = true;
+        // En cada petición: cierra la sesión si la cuenta está suspendida, se ha borrado o ha cambiado de rol
+        cookie.Events.OnValidatePrincipal = CraftCaster.Web.Utils.Security.ValidacionCuentaActiva.ValidarAsync;
     })
     .AddCookie("GoogleExternal", cookie =>
     {

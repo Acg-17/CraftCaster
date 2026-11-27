@@ -1,0 +1,44 @@
+@model CraftCaster.Web.ViewModels.RestablecerContraseniaViewModel
+@{
+    ViewData["Title"] = "Nueva contraseña";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-1">Elige una contraseña nueva</h1>
+                <p class="text-body-secondary small mb-4">
+                    Después podrás iniciar sesión con ella. Este enlace deja de valer en cuanto la cambies.
+                </p>
+
+                <form asp-action="RestablecerContrasenia" method="post" novalidate>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Token" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="NuevaContrasenia" class="form-label fw-semibold"></label>
+                        <input asp-for="NuevaContrasenia" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="NuevaContrasenia" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmarContrasenia" class="form-label fw-semibold"></label>
+                        <input asp-for="ConfirmarContrasenia" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmarContrasenia" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark">Guardar contraseña</button>
+                        <a asp-action="Acceso" class="btn btn-outline-secondary">Volver a iniciar sesión</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

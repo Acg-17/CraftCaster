@@ -42,17 +42,20 @@ public sealed class RegistroFormViewModel
     public string Contrasenia { get; set; } = string.Empty;
 }
 
-// Recuperar contraseña (verificación por usuario + correo)
+// Recuperar contraseña: paso 1, pedir el enlace por correo
 public sealed class RecuperarContraseniaViewModel
 {
-    [Required(ErrorMessage = "Debes indicar {0}.")]
-    [Display(Name = "Nombre de usuario", Prompt = "Ej: ana")]
-    public string NombreUsuario { get; set; } = string.Empty;
-
     [Required(ErrorMessage = "Debes indicar {0}.")]
     [EmailAddress(ErrorMessage = "Escribe un correo electrónico válido.")]
     [Display(Name = "Correo electrónico", Prompt = "ana@craftcaster.com")]
     public string Email { get; set; } = string.Empty;
+}
+
+// Formulario del enlace de recuperación: el token firmado identifica la cuenta
+public sealed class RestablecerContraseniaViewModel
+{
+    [Required]
+    public string Token { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Debes indicar {0}.")]
     [StringLength(100, MinimumLength = 8, ErrorMessage = "La contraseña debe tener al menos {2} caracteres.")]
