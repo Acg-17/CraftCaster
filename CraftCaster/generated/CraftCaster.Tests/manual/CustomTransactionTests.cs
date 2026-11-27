@@ -954,6 +954,70 @@ public sealed class CustomTransactionTests
     }
 
     [Fact]
+    public async Task HabilidadActivar_Defensa_ConObjetivoCriatura_DevuelveDanyoAlAtacante()
+    {
+        // Arrange: criatura atacante rival con 5 de vida; Defensa de 2 con Objetivo = 1 (primera criatura rival)
+        await using var db = await CraftCasterTestDb.CreateAsync();
+        var (juego, habilidad) = await CrearJuegoConHabilidadAsync(db, TipoHabilidad.Defensa, 2, TipoObjetivo.Enemigo, 1);
+        Carta atacante = await db.CrearCartaAsync(juego.Visitante, "Atacante", vida: 5);
+        CartaPartida cartaAtacante = await db.PonerCartaAsync(juego.Jugador2, TipoZona.Campo, atacante);
+        var useCase = new HabilidadUseCase(db.UnitOfWork);
+
+        // Act
+        await useCase.ActivarAsync(habilidad.Id, juego.Partida.Id);
+
+        // Assert
+        Assert.Equal(3, db.Verify(s => s.Get<CartaPartida>(cartaAtacante.Id).VidaActual));
+    }
+
+    [Fact]
+    public async Task HabilidadActivar_Defensa_ConObjetivoCero_DevuelveDanyoAlJugadorRival()
+    {
+        // Arrange: Defensa de 2 con Objetivo = 0 (ataque de hechizo rival)
+        await using var db = await CraftCasterTestDb.CreateAsync();
+        var (juego, habilidad) = await CrearJuegoConHabilidadAsync(db, TipoHabilidad.Defensa, 2, TipoObjetivo.Enemigo, 0);
+        var useCase = new HabilidadUseCase(db.UnitOfWork);
+
+        // Act
+        await useCase.ActivarAsync(habilidad.Id, juego.Partida.Id);
+
+        // Assert
+        Assert.Equal(28, db.Verify(s => s.Get<JugadorPartida>(juego.Jugador2.Id).Vida));
+    }
+
+    [Fact]
+    public async Task HabilidadActivar_CuraSelfConCriaturaEnCampo_SumaVidaSuperandoElMaximo()
+    {
+        // Arrange: criatura propia en campo con vida inicial 3; Cura de 2 a Self -> pasa a 5
+        await using var db = await CraftCasterTestDb.CreateAsync();
+        var (juego, habilidad) = await CrearJuegoConHabilidadAsync(db, TipoHabilidad.Cura, 2, TipoObjetivo.Self, 0);
+        CartaPartida propia = await db.PonerCartaAsync(juego.Jugador1, TipoZona.Campo, juego.Criatura);
+        var useCase = new HabilidadUseCase(db.UnitOfWork);
+
+        // Act
+        await useCase.ActivarAsync(habilidad.Id, juego.Partida.Id);
+
+        // Assert
+        Assert.Equal(5, db.Verify(s => s.Get<CartaPartida>(propia.Id).VidaActual));
+    }
+
+    [Fact]
+    public async Task HabilidadActivar_DestruirConObjetivoJugador_EnviaCriaturaPropiaAlDescarte()
+    {
+        // Arrange: criatura propia en campo; Destruir con TipoObjetivo.Jugador la envia al descarte propio
+        await using var db = await CraftCasterTestDb.CreateAsync();
+        var (juego, habilidad) = await CrearJuegoConHabilidadAsync(db, TipoHabilidad.Destruir, 1, TipoObjetivo.Jugador, 0);
+        CartaPartida propia = await db.PonerCartaAsync(juego.Jugador1, TipoZona.Campo, juego.Criatura);
+        var useCase = new HabilidadUseCase(db.UnitOfWork);
+
+        // Act
+        await useCase.ActivarAsync(habilidad.Id, juego.Partida.Id);
+
+        // Assert
+        Assert.Equal(TipoZona.Descarte, db.ZonaDe(propia.Id));
+    }
+
+    [Fact]
     public async Task HabilidadActivar_HabilidadInexistente_LanzaModelException()
     {
         // Arrange

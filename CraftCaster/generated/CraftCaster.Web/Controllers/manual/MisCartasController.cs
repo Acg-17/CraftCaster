@@ -75,9 +75,9 @@ public sealed class MisCartasController : Controller
                     : "Un hechizo solo puede tener como máximo 3 efectos.");
         }
 
-        if (model.Tipo == TipoCarta.Hechizo && bloques.Any(b => b.TipoHabilidad == TipoHabilidad.Ataque))
+        if (model.Tipo == TipoCarta.Hechizo && bloques.Any(b => b.TipoHabilidad is TipoHabilidad.Ataque or TipoHabilidad.Defensa))
         {
-            ModelState.AddModelError(string.Empty, "Un hechizo no puede tener la habilidad de Daño al atacar.");
+            ModelState.AddModelError(string.Empty, "Un hechizo no puede tener Daño al atacar ni Daño al defender (solo Criaturas).");
         }
 
         // Normalizar reglas por habilidad
@@ -424,9 +424,9 @@ public sealed class MisCartasController : Controller
                     : "Un hechizo solo puede tener como máximo 3 efectos.");
         }
 
-        if (model.Tipo == TipoCarta.Hechizo && bloques.Any(b => b.TipoHabilidad == TipoHabilidad.Ataque))
+        if (model.Tipo == TipoCarta.Hechizo && bloques.Any(b => b.TipoHabilidad is TipoHabilidad.Ataque or TipoHabilidad.Defensa))
         {
-            ModelState.AddModelError(string.Empty, "Un hechizo no puede tener la habilidad de Daño al atacar.");
+            ModelState.AddModelError(string.Empty, "Un hechizo no puede tener Daño al atacar ni Daño al defender (solo Criaturas).");
         }
 
         foreach (var b in bloques)

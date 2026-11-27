@@ -76,7 +76,7 @@ public sealed class PartidaRepository : RepositoryBase<Partida>, IPartidaReposit
         {
             using var context = OpenSession();
             return await context.Session.Query<Partida>()
-                .Where(entity => entity.Usuario1.Id == p_oid || entity.Usuario2.Id == p_oid)
+                .Where(entity => entity.Usuario1.Id == p_oid || (entity.Usuario2 != null && entity.Usuario2.Id == p_oid))
                 .ToListAsync();
         }
         catch (Exception ex)

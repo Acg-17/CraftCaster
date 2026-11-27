@@ -102,7 +102,10 @@
                         <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="4">Robar carta</div>
                         <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="5">Descartar mano rival</div>
                         <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="6">Descartar carta objetivo</div>
-                        <div class="scratch-block block-palette" draggable="true" data-kind="efecto" data-value="7">Daño al defender</div>
+                        <div class="scratch-block block-palette" id="paletaDefensa" draggable="true" data-kind="efecto" data-value="7">
+                            <span>Daño al defender</span>
+                            <span class="small text-body-secondary ms-auto">Solo criatura</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -346,6 +349,9 @@
             function renderPila() {
                 pila.innerHTML = '';
 
+                // Daño al defender solo disponible en Criaturas
+                document.getElementById('paletaDefensa').classList.toggle('d-none', estado.tipo === 2);
+
                 const hat = document.createElement('div');
                 hat.className = 'scratch-block block-hat';
                 if (estado.tipo === 1) {
@@ -556,9 +562,12 @@
                         if (estado.bloques.length > 2) estado.bloques = estado.bloques.slice(0, 2);
                     } else {
                         mostrandoVida = false;
-                        estado.bloques = estado.bloques.map(b => ({ ...b, tipoEstado: 1 }));
+                        estado.bloques = estado.bloques
+                            .filter(b => b.tipoHabilidad !== 7)
+                            .map(b => ({ ...b, tipoEstado: 1 }));
                     }
                 } else if (kind === 'efecto') {
+                    if (estado.tipo === 2 && val === 7) return;
                     if (estado.bloques.length >= maxBloquesActual()) {
                         mostrarAvisoLimite(estado.tipo === 1
                             ? 'Una criatura puede tener como máximo 2 habilidades.'

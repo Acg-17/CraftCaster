@@ -57,8 +57,40 @@ public sealed partial class HabilidadUseCase
                         await cartaPartidaService.RecibirDanyoAsync(cartaObj, habilidad.Cantidad);
                     }
                     break;
-                case TipoHabilidad.Cura: //Ataque tiene tipoObjetivo = self
-                    await jugadorService.ActualizarVidaAsync(idSelf, -habilidad.Cantidad);
+                case TipoHabilidad.Cura: // Suma vida a la criatura propia (si esta en campo y objetivo Self) o al jugador activo
+                    if (habilidad.TipoObjetivo == TipoObjetivo.Self)
+                    {
+                        Domain.Entities.ZonaPartida? campoPropio = partida.Jugadores[self].Zonas.FirstOrDefault(z => z.TipoZona == TipoZona.Campo);
+                        CartaPartida? criaturaPropia = campoPropio is not null && campoPropio.Cartas.Count > 0
+                            ? (habilidad.Objetivo >= 0 && habilidad.Objetivo < campoPropio.Cartas.Count
+                                ? campoPropio.Cartas[habilidad.Objetivo]
+                                : campoPropio.Cartas.FirstOrDefault(c => c.Original?.Id == habilidad.Estado?.Carta?.Id))
+                            : null;
+                        if (criaturaPropia is not null)
+                        {
+                            criaturaPropia.VidaActual += habilidad.Cantidad;
+                            await _unitOfWork.CartaPartidaRepository.SaveAsync(criaturaPropia);
+                        }
+                        else
+                        {
+                            await jugadorService.ActualizarVidaAsync(idSelf, -habilidad.Cantidad);
+                        }
+                    }
+                    else
+                    {
+                        await jugadorService.ActualizarVidaAsync(idSelf, -habilidad.Cantidad);
+                    }
+                    break;
+                case TipoHabilidad.Defensa: // Daño al defender: devuelve daño al atacante (criatura rival o jugador rival si fue hechizo)
+                    if (habilidad.Objetivo == 0)
+                    {
+                        await jugadorService.ActualizarVidaAsync(idEnemigo, habilidad.Cantidad);
+                    }
+                    else
+                    {
+                        int cartaAtacante = await partidaService.GetCartaAsync(p_partida_oid, enemigo, (int)TipoZona.Campo, habilidad.Objetivo - 1);
+                        await cartaPartidaService.RecibirDanyoAsync(cartaAtacante, habilidad.Cantidad);
+                    }
                     break;
                 case TipoHabilidad.Danyo: //Ataque tiene tipoObjetivo = enemigo/jugador/libre/todosEnemigos
                     switch(habilidad.TipoObjetivo)
@@ -100,8 +132,9 @@ public sealed partial class HabilidadUseCase
                     descarte.Cartas.Add(carta);
                     break;
                 case TipoHabilidad.Destruir:
-                    Domain.Entities.ZonaPartida campo = partida.Jugadores[enemigo].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Campo) ?? throw new ModelException("No existe la zona de destino");;
-                    Domain.Entities.ZonaPartida pilaDescarte = partida.Jugadores[enemigo].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Descarte) ?? throw new ModelException("No existe la zona de destino");;
+                    int jugadorObjetivoIdx = habilidad.TipoObjetivo == TipoObjetivo.Jugador ? self : enemigo;
+                    Domain.Entities.ZonaPartida campo = partida.Jugadores[jugadorObjetivoIdx].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Campo) ?? throw new ModelException("No existe la zona de destino");
+                    Domain.Entities.ZonaPartida pilaDescarte = partida.Jugadores[jugadorObjetivoIdx].Zonas.FirstOrDefault(x=> x.TipoZona == TipoZona.Descarte) ?? throw new ModelException("No existe la zona de destino");
                     CartaPartida criatura = campo.Cartas.Count() > habilidad.Objetivo ?  campo.Cartas[habilidad.Objetivo] : throw new ModelException($"El objetivo está fuera de rango");
                     Estado? estado = criatura.Original.Estados.FirstOrDefault(x=> x.Tipo == TipoEstado.Morir);
                     if (estado != null)
