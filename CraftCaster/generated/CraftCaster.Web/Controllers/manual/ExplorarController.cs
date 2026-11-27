@@ -216,7 +216,7 @@ public sealed class ExplorarController : Controller
         }
     }
 
-    // POST /Explorar/Reportar/5 -> Invoca Usuario.reportarUsuario para enviarlo al Panel de Admin
+    // POST /Explorar/Reportar/5 -> Registra el reporte del mazo para revisión en el Panel de Admin (sin suspender automáticamente la cuenta)
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -229,43 +229,39 @@ public sealed class ExplorarController : Controller
         var mazoService = new MazoService(unitOfWork);
         var usuarioService = new UsuarioService(unitOfWork);
 
-        try
+        var mazo = await mazoService.ReadOIDAsync(id);
+        if (mazo is null || !mazo.EsPublico || mazo.Usuario is null)
         {
-            await unitOfWork.BeginTransactionAsync("MVC.Explorar.Reportar");
-
-            var mazo = await mazoService.ReadOIDAsync(id);
-            if (mazo is null || !mazo.EsPublico || mazo.Usuario is null)
-            {
-                await unitOfWork.RollbackAsync();
-                return NotFound();
-            }
-
-            if (mazo.Usuario.Id == usuarioId.Value)
-            {
-                await unitOfWork.RollbackAsync();
-                TempData["Error"] = "No puedes reportar tu propio mazo.";
-                return RedirectToAction(nameof(Detalle), new { id });
-            }
-
-            if (mazo.Usuario.TipoUsuario == CraftCaster.Domain.Enums.TipoUsuario.Admin)
-            {
-                await unitOfWork.RollbackAsync();
-                TempData["Error"] = "No se puede reportar una cuenta de administrador.";
-                return RedirectToAction(nameof(Detalle), new { id });
-            }
-
-            await usuarioService.ReportarUsuarioAsync(mazo.Usuario.Id);
-            await unitOfWork.CommitAsync();
-
-            var motivoTexto = string.IsNullOrWhiteSpace(motivo) ? "Contenido inadecuado" : motivo.Trim();
-            TempData["Mensaje"] = $"Reporte enviado ({motivoTexto}). La cuenta del autor ha quedado marcada para revisión en el Panel de Admin.";
-        }
-        catch (ModelException error)
-        {
-            await unitOfWork.RollbackAsync();
-            TempData["Error"] = error.Message;
+            return NotFound();
         }
 
+        if (mazo.Usuario.Id == usuarioId.Value)
+        {
+            TempData["Error"] = "No puedes reportar tu propio mazo.";
+            return RedirectToAction(nameof(Detalle), new { id });
+        }
+
+        if (mazo.Usuario.TipoUsuario == CraftCaster.Domain.Enums.TipoUsuario.Admin)
+        {
+            TempData["Error"] = "No se puede reportar una cuenta de administrador.";
+            return RedirectToAction(nameof(Detalle), new { id });
+        }
+
+        var reportador = await usuarioService.ReadOIDAsync(usuarioId.Value);
+        var motivoTexto = string.IsNullOrWhiteSpace(motivo) ? "Contenido inadecuado" : motivo.Trim();
+
+        CraftCaster.Web.Services.ReporteMazoStore.Agregar(new CraftCaster.Web.Services.ReporteMazoItem
+        {
+            AutorId = mazo.Usuario.Id,
+            AutorNombre = mazo.Usuario.NombreUsuario,
+            MazoId = mazo.Id,
+            MazoNombre = mazo.Nombre,
+            Motivo = motivoTexto,
+            ReportadoPor = reportador?.NombreUsuario ?? $"Usuario #{usuarioId.Value}",
+            Fecha = DateTime.Now,
+        });
+
+        TempData["Mensaje"] = $"Reporte enviado ({motivoTexto}). El administrador podrá revisarlo en el Panel de Admin.";
         return RedirectToAction(nameof(Detalle), new { id });
     }
 

@@ -14,12 +14,15 @@
             <span class="badge text-bg-secondary">@Model.Usuario.TipoUsuario</span>
         </div>
         <div class="d-flex flex-wrap align-items-start gap-2">
-            <a asp-controller="MisCartas" asp-action="Index" class="btn btn-outline-dark">Mis cartas</a>
-            <a asp-controller="EditorMazo" asp-action="Index" class="btn btn-outline-dark">Mis mazos</a>
-            <a asp-controller="Juego" asp-action="Historial" class="btn btn-outline-dark">Mis partidas</a>
-                @if (User.IsInRole(HariaWebAuthentication.RolAdmin))
+            @if (User.IsInRole(HariaWebAuthentication.RolAdmin))
             {
                 <a asp-controller="Admin" asp-action="Index" class="btn btn-dark">Panel de Admin</a>
+            }
+            else
+            {
+                <a asp-controller="MisCartas" asp-action="Index" class="btn btn-outline-dark">Mis cartas</a>
+                <a asp-controller="EditorMazo" asp-action="Index" class="btn btn-outline-dark">Mis mazos</a>
+                <a asp-controller="Juego" asp-action="Historial" class="btn btn-outline-dark">Mis partidas</a>
             }
             <form asp-action="Salir" method="post" class="m-0">
                 <button type="submit" class="btn btn-outline-secondary">Cerrar sesión</button>

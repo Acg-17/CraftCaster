@@ -50,8 +50,12 @@
     <div class="col">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="small text-body-secondary">Suspendidas / Reportadas</div>
-                <div class="h3 mb-0 text-danger">@Model.UsuariosSuspendidos</div>
+                <div class="small text-body-secondary">Reportadas / Suspendidas</div>
+                <div class="d-flex align-items-baseline gap-3 mt-1">
+                    <span class="h4 mb-0 text-warning">@Model.UsuariosReportados <span class="small fw-normal text-body-secondary">rep.</span></span>
+                    <span class="h4 mb-0 text-danger">@Model.UsuariosSuspendidos <span class="small fw-normal text-body-secondary">susp.</span></span>
+                </div>
+                <div class="small text-body-secondary">@Model.ReportesMazos.Count reporte(s) de mazos</div>
             </div>
         </div>
     </div>
@@ -122,6 +126,7 @@
                         {
                             var esActual = usuario.Id == Model.UsuarioActualId;
                             var estaSuspendida = usuario.EstadoCuenta == EstadoCuenta.Suspendida;
+                            var numReportes = Model.ReportesPorUsuario.TryGetValue(usuario.Id, out var rCount) ? rCount : 0;
                             <tr>
                                 <td class="ps-3">@usuario.Id</td>
                                 <td>
@@ -136,7 +141,18 @@
                                     <span class="badge @(usuario.TipoUsuario == TipoUsuario.Admin ? "text-bg-dark" : "text-bg-secondary")">@usuario.TipoUsuario</span>
                                 </td>
                                 <td>
-                                    <span class="badge @(estaSuspendida ? "text-bg-danger" : "text-bg-success")">@usuario.EstadoCuenta</span>
+                                    @if (estaSuspendida)
+                                    {
+                                        <span class="badge text-bg-danger">Suspendida</span>
+                                    }
+                                    else if (numReportes > 0)
+                                    {
+                                        <a href="#reportes-mazos" class="badge text-bg-warning text-dark text-decoration-none" title="Ver mazos reportados">Reportado (@numReportes)</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-success">Activa</span>
+                                    }
                                 </td>
                                 <td class="text-end text-nowrap pe-3">
                                     @if (!esActual)
@@ -156,12 +172,7 @@
                                                 @Html.AntiForgeryToken()
                                                 <input type="hidden" name="id" value="@usuario.Id" />
                                                 <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Suspendida" />
-                                                <button type="submit" class="btn btn-sm btn-outline-warning">Suspender</button>
-                                            </form>
-                                            <form asp-action="Reportar" method="post" class="d-inline">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" name="id" value="@usuario.Id" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Reportar</button>
+                                                <button type="submit" class="btn btn-sm btn-danger">Suspender</button>
                                             </form>
                                         }
                                     }
@@ -187,9 +198,54 @@
     </div>
 </section>
 
+<section id="reportes-mazos" class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0">Mazos reportados pendientes</h2>
+        <span class="badge text-bg-warning text-dark">@Model.ReportesMazos.Count</span>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.ReportesMazos.Any())
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var rep in Model.ReportesMazos)
+                {
+                    <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                        <div>
+                            <div class="fw-semibold">
+                                Mazo: <a asp-controller="Explorar" asp-action="Detalle" asp-route-id="@rep.MazoId">@rep.MazoNombre</a>
+                                <span class="badge text-bg-warning text-dark ms-1">@rep.Motivo</span>
+                            </div>
+                            <div class="small text-body-secondary">
+                                Autor: <strong>@rep.AutorNombre</strong> · Reportado por @rep.ReportadoPor · @rep.Fecha.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            <form asp-action="DesestimarReporte" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="reporteId" value="@rep.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Desestimar</button>
+                            </form>
+                            <form asp-action="CambiarEstado" method="post" class="m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@rep.AutorId" />
+                                <input type="hidden" name="nuevoEstado" value="@EstadoCuenta.Suspendida" />
+                                <button type="submit" class="btn btn-sm btn-danger">Suspender cuenta</button>
+                            </form>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="p-3 mb-0 text-body-secondary">No hay mazos reportados pendientes de revisión.</p>
+        }
+    </div>
+</section>
+
 <section class="card border-0 shadow-sm">
     <div class="card-header bg-body p-3 d-flex justify-content-between align-items-center">
-        <h2 class="h5 mb-0">Cuentas suspendidas y reportes</h2>
+        <h2 class="h5 mb-0">Cuentas suspendidas</h2>
         <span class="badge text-bg-danger">@Model.UsuariosSuspendidosLista.Count</span>
     </div>
     <div class="card-body p-0">

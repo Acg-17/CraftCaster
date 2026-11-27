@@ -68,6 +68,11 @@ public sealed class AdminController : Controller
             filtrados = filtrados.Where(u => u.TipoUsuario == tipoFiltro);
         }
 
+        var reportes = CraftCaster.Web.Services.ReporteMazoStore.ObtenerTodos();
+        var reportesPorUsuario = reportes
+            .GroupBy(r => r.AutorId)
+            .ToDictionary(g => g.Key, g => g.Count());
+
         var viewModel = new AdminPanelViewModel
         {
             Busqueda = busqueda,
@@ -75,6 +80,7 @@ public sealed class AdminController : Controller
             FiltroTipo = tipo,
             TotalUsuarios = todosUsuarios.Count,
             UsuariosActivos = todosUsuarios.Count(u => u.EstadoCuenta == EstadoCuenta.Activa),
+            UsuariosReportados = todosUsuarios.Count(u => u.EstadoCuenta == EstadoCuenta.Activa && reportesPorUsuario.ContainsKey(u.Id)),
             UsuariosSuspendidos = todosUsuarios.Count(u => u.EstadoCuenta == EstadoCuenta.Suspendida),
             TotalAdmins = todosUsuarios.Count(u => u.TipoUsuario == TipoUsuario.Admin),
             TotalMazos = mazos.Count,
@@ -90,6 +96,8 @@ public sealed class AdminController : Controller
                 .OrderBy(u => u.NombreUsuario)
                 .Select(UsuarioAssembler.ToViewModel)
                 .ToList(),
+            ReportesMazos = reportes,
+            ReportesPorUsuario = reportesPorUsuario,
         };
 
         return View(viewModel);
@@ -113,6 +121,10 @@ public sealed class AdminController : Controller
             await unitOfWork.BeginTransactionAsync("MVC.Admin.CambiarEstado");
             await service.CambiarEstadoCuentaAsync(id, nuevoEstado);
             await unitOfWork.CommitAsync();
+            if (nuevoEstado == EstadoCuenta.Activa)
+            {
+                CraftCaster.Web.Services.ReporteMazoStore.EliminarPorAutor(id);
+            }
             TempData["Mensaje"] = nuevoEstado == EstadoCuenta.Suspendida
                 ? "Cuenta suspendida correctamente."
                 : "Cuenta reactivada correctamente.";
@@ -164,6 +176,19 @@ public sealed class AdminController : Controller
             TempData["Error"] = "No se pudo procesar el reporte del usuario.";
         }
 
+        return RedirectToAction(nameof(Index));
+    }
+
+    // POST /Admin/DesestimarReporte
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult DesestimarReporte(string reporteId)
+    {
+        if (!string.IsNullOrWhiteSpace(reporteId))
+        {
+            CraftCaster.Web.Services.ReporteMazoStore.Eliminar(reporteId);
+            TempData["Mensaje"] = "Reporte desestimado correctamente.";
+        }
         return RedirectToAction(nameof(Index));
     }
 
