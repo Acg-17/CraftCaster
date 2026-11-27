@@ -14,7 +14,7 @@ CraftCaster.Web.Configuration.HariaApplicationRegistration.AddHariaApplication(b
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(cookie =>
     {
-        cookie.LoginPath = "/Account/Login";
+        cookie.LoginPath = "/Cuenta/Acceso";
         cookie.AccessDeniedPath = "/Account/AccessDenied";
         cookie.Cookie.HttpOnly = true;
         cookie.Cookie.SecurePolicy = CookieSecurePolicy.Always;

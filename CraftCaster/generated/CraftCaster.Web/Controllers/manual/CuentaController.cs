@@ -138,6 +138,68 @@ public sealed class CuentaController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    // GET /Cuenta/RecuperarContrasenia
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult RecuperarContrasenia()
+    {
+        return View(new RecuperarContraseniaViewModel());
+    }
+
+    // POST /Cuenta/RecuperarContrasenia
+    [AllowAnonymous]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RecuperarContrasenia(RecuperarContraseniaViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var email = model.Email.Trim();
+        var nombre = model.NombreUsuario.Trim();
+
+        await using var unitOfWork = _unitOfWorkFactory.Create();
+        var service = new UsuarioService(unitOfWork);
+        var candidatos = await service.ObtenerUsuarioPorEmailONombreAsync(email);
+        var usuario = candidatos.FirstOrDefault(u =>
+            string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(u.NombreUsuario, nombre, StringComparison.OrdinalIgnoreCase));
+
+        if (usuario is null)
+        {
+            ModelState.AddModelError(string.Empty, "No existe ninguna cuenta que coincida con ese usuario y correo electrónico.");
+            return View(model);
+        }
+
+        if (usuario.EstadoCuenta == CraftCaster.Domain.Enums.EstadoCuenta.Suspendida)
+        {
+            ModelState.AddModelError(string.Empty, "Esta cuenta está suspendida. Contacta con un administrador.");
+            return View(model);
+        }
+
+        try
+        {
+            await unitOfWork.BeginTransactionAsync("MVC.Cuenta.RecuperarContrasenia");
+            await service.ModifyAsync(
+                usuario.Id,
+                usuario.NombreUsuario,
+                usuario.Email,
+                model.NuevaContrasenia,
+                usuario.FotoPerfil,
+                usuario.EstadoCuenta,
+                usuario.TipoUsuario);
+            await unitOfWork.CommitAsync();
+
+            TempData["Exito"] = "Contraseña actualizada correctamente. Ya puedes iniciar sesión.";
+            return RedirectToAction(nameof(Acceso));
+        }
+        catch (ModelException error)
+        {
+            await unitOfWork.RollbackAsync();
+            ModelState.AddModelError(string.Empty, MensajeDe(error));
+            return View(model);
+        }
+    }
+
     // GET /Cuenta (Mi cuenta)
     [HttpGet]
     public async Task<IActionResult> Index()

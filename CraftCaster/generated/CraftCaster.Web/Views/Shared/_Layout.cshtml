@@ -65,6 +65,16 @@
     </header>
 
     <main class="container flex-grow-1 py-4 py-lg-5">
+        @{
+            var controladorActual = ViewContext.RouteData.Values["controller"]?.ToString();
+        }
+        @if (User.IsInRole(HariaWebAuthentication.RolAdmin) && !string.Equals(controladorActual, "Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            <div class="d-flex justify-content-between align-items-center bg-body rounded-3 shadow-sm px-3 py-2 mb-4">
+                <span class="small text-body-secondary">Sesión de administrador</span>
+                <a asp-controller="Admin" asp-action="Index" class="btn btn-dark btn-sm">Volver al Panel de Admin</a>
+            </div>
+        }
         @RenderBody()
     </main>
 

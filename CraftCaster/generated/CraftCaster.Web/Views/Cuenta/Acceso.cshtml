@@ -18,6 +18,10 @@
                 <p class="text-body-secondary small mb-4">Accede a tu perfil y recupera tus mazos y creaciones.</p>
 
                 <form asp-action="Entrar" method="post" novalidate>
+                    @if (TempData["Exito"] is string exito)
+                    {
+                        <div class="alert alert-success py-2" role="status">@exito</div>
+                    }
                     @if (errorLogin is not null)
                     {
                         <div class="alert alert-danger py-2" role="alert">@errorLogin</div>
@@ -53,6 +57,9 @@
                             </button>
                         </div>
                         <span asp-validation-for="Login.Contrasenia" class="text-danger small"></span>
+                        <div class="text-end mt-1">
+                            <a asp-action="RecuperarContrasenia" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-dark w-100">Entrar a CraftCaster</button>
                 </form>

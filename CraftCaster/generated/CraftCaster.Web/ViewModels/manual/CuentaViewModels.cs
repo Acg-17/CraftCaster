@@ -42,6 +42,31 @@ public sealed class RegistroFormViewModel
     public string Contrasenia { get; set; } = string.Empty;
 }
 
+// Recuperar contraseña (verificación por usuario + correo)
+public sealed class RecuperarContraseniaViewModel
+{
+    [Required(ErrorMessage = "Debes indicar {0}.")]
+    [Display(Name = "Nombre de usuario", Prompt = "Ej: ana")]
+    public string NombreUsuario { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Debes indicar {0}.")]
+    [EmailAddress(ErrorMessage = "Escribe un correo electrónico válido.")]
+    [Display(Name = "Correo electrónico", Prompt = "ana@craftcaster.com")]
+    public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Debes indicar {0}.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "La contraseña debe tener al menos {2} caracteres.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Nueva contraseña", Prompt = "Mínimo 8 caracteres")]
+    public string NuevaContrasenia { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Debes confirmar la nueva contraseña.")]
+    [Compare(nameof(NuevaContrasenia), ErrorMessage = "Las contraseñas no coinciden.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Repetir nueva contraseña")]
+    public string ConfirmarContrasenia { get; set; } = string.Empty;
+}
+
 // Mi cuenta: datos del usuario y sus cartas, mazos y partidas.
 public sealed class MiCuentaViewModel
 {
